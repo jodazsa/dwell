@@ -322,6 +322,135 @@
     }
     .thought-text { font-family: 'Lora', serif; font-size: 13px; color: var(--text-mid); line-height: 1.5; }
 
+    /* ── Streak ── */
+    .streak-display {
+      display: flex; align-items: center; gap: 5px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--text-dim); user-select: none; transition: color 0.4s;
+    }
+    .streak-display.active { color: var(--gold); }
+    .streak-flame {
+      font-size: 13px; opacity: 0.4; transition: opacity 0.4s, filter 0.4s;
+      filter: grayscale(1);
+    }
+    .streak-display.active .streak-flame {
+      opacity: 1; filter: grayscale(0) drop-shadow(0 0 4px rgba(200,140,50,0.5));
+    }
+    @keyframes streak-pulse {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(1.3); }
+    }
+    .streak-flame.bump { animation: streak-pulse 0.5s ease; }
+
+    /* ── XP & Level ── */
+    .level-display {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 2px;
+    }
+    .level-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--gold-dim); letter-spacing: 0.08em;
+      transition: color 0.4s;
+    }
+    .xp-bar-wrap {
+      width: 60px; height: 3px; background: var(--surface3);
+      border-radius: 2px; overflow: hidden;
+    }
+    .xp-bar {
+      height: 100%; background: var(--gold); border-radius: 2px;
+      transition: width 0.6s ease; width: 0%;
+    }
+    @keyframes levelup-glow {
+      0%   { box-shadow: 0 0 0 rgba(200,144,60,0); }
+      50%  { box-shadow: 0 0 20px rgba(200,144,60,0.3), 0 0 40px rgba(200,144,60,0.15); }
+      100% { box-shadow: 0 0 0 rgba(200,144,60,0); }
+    }
+    .levelup-flash { animation: levelup-glow 1.2s ease; }
+
+    /* ── Daily Goal Ring ── */
+    .daily-goal-wrap {
+      position: relative; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .daily-goal-svg { width: 36px; height: 36px; transform: rotate(-90deg); }
+    .daily-goal-bg {
+      fill: none; stroke: var(--surface3); stroke-width: 2.5;
+    }
+    .daily-goal-progress {
+      fill: none; stroke: var(--gold); stroke-width: 2.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s ease;
+    }
+    .daily-goal-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--text-dim); user-select: none;
+    }
+    @keyframes goal-complete {
+      0%   { stroke: var(--gold); filter: none; }
+      50%  { stroke: var(--green); filter: drop-shadow(0 0 6px rgba(90,138,106,0.5)); }
+      100% { stroke: var(--green); filter: none; }
+    }
+    .daily-goal-progress.complete {
+      stroke: var(--green);
+      animation: goal-complete 1s ease;
+    }
+
+    /* ── Achievement Toast ── */
+    .achievement-toast {
+      position: fixed; top: 24px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--surface2); border: 1px solid rgba(200,144,60,0.15);
+      color: var(--text); font-family: 'Lora', serif; font-size: 13px;
+      padding: 12px 20px; opacity: 0;
+      transition: opacity 0.5s, transform 0.5s;
+      pointer-events: none; z-index: 101; white-space: nowrap;
+      text-align: center; max-width: 320px;
+    }
+    .achievement-toast .ach-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: var(--gold); letter-spacing: 0.15em;
+      text-transform: uppercase; display: block; margin-bottom: 4px;
+    }
+    .achievement-toast .ach-title {
+      font-family: 'Instrument Serif', serif; font-style: italic;
+      font-size: 15px; color: var(--text);
+    }
+    .achievement-toast .ach-desc {
+      font-size: 11px; color: var(--text-mid); margin-top: 2px;
+    }
+    .achievement-toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-between; margin-top: 4px; margin-bottom: 2px;
+    }
+    .stats-left { display: flex; align-items: center; gap: 12px; }
+
+    /* ── Creature level glow ── */
+    .creature-aura {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 120px; border-radius: 50%;
+      pointer-events: none; z-index: 1;
+      opacity: 0; transition: opacity 1s;
+    }
+    .creature-aura.visible { opacity: 1; }
+    .creature-aura.tier-1 {
+      background: radial-gradient(circle, rgba(200,144,60,0.08) 0%, transparent 70%);
+    }
+    .creature-aura.tier-2 {
+      background: radial-gradient(circle, rgba(200,144,60,0.14) 0%, transparent 70%);
+      width: 140px; height: 140px;
+    }
+    .creature-aura.tier-3 {
+      background: radial-gradient(circle, rgba(200,144,60,0.20) 0%, rgba(90,138,106,0.06) 50%, transparent 70%);
+      width: 160px; height: 160px;
+    }
+
     /* ── Misc ── */
     .session-flash {
       position: fixed; inset: 0;
@@ -347,6 +476,11 @@
 <div class="bg-glow"></div>
 <div class="session-flash" id="session-flash"></div>
 <div class="notif" id="notif"></div>
+<div class="achievement-toast" id="achievement-toast">
+  <span class="ach-label">achievement</span>
+  <span class="ach-title" id="ach-title"></span>
+  <span class="ach-desc" id="ach-desc"></span>
+</div>
 
 <div class="settings-overlay" id="settings-overlay"></div>
 <div class="settings-panel" id="settings-panel">
@@ -401,12 +535,34 @@
       <span class="app-name">dwell</span>
       <button class="btn-settings" id="btn-settings">cfg</button>
     </div>
-    <div class="pomo-dots" id="pomo-dots"></div>
+    <div class="stats-left">
+      <div class="streak-display" id="streak-display">
+        <span class="streak-flame" id="streak-flame">🔥</span>
+        <span id="streak-count">0</span>
+      </div>
+      <div class="pomo-dots" id="pomo-dots"></div>
+    </div>
   </header>
+
+  <div class="stats-bar">
+    <div class="level-display" id="level-display">
+      <span class="level-badge" id="level-badge">lv 1</span>
+      <div class="xp-bar-wrap"><div class="xp-bar" id="xp-bar"></div></div>
+    </div>
+    <div class="daily-goal-wrap" id="daily-goal-wrap" title="daily goal">
+      <svg class="daily-goal-svg" viewBox="0 0 36 36">
+        <circle class="daily-goal-bg" cx="18" cy="18" r="15.5"/>
+        <circle class="daily-goal-progress" id="daily-goal-ring" cx="18" cy="18" r="15.5"
+          stroke-dasharray="97.4" stroke-dashoffset="97.4"/>
+      </svg>
+      <span class="daily-goal-text" id="daily-goal-text">0/4</span>
+    </div>
+  </div>
 
   <!-- Habitat -->
   <div class="habitat">
     <div class="habitat-glow"></div>
+    <div class="creature-aura" id="creature-aura"></div>
     <div class="creature-float">
       <svg id="creature-svg" viewBox="0 0 130 200" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -526,11 +682,19 @@
   const longBreakSecs  = () => CFG.longBreakMins * 60;
 
   // ── State ─────────────────────────────────────────────────────────────
+  function todayStr() { return new Date().toISOString().slice(0,10); }
+
   const S = {
     mode:'idle', timeLeft:focusSecs(), running:false,
     pomosTotal:0, interval:null,
     sessionThoughts:[], allSessions:[],
     glanceTimeout:null, lastGlance:0,
+    // Gamification
+    xp:0, level:1,
+    streak:0, lastActiveDay:null, bestStreak:0,
+    todayPomos:0, todayDate:todayStr(),
+    dailyGoal:4,
+    unlockedAch:[],
   };
 
   try {
@@ -538,17 +702,174 @@
     if (sv.pomosTotal)  S.pomosTotal  = sv.pomosTotal;
     if (sv.allSessions) S.allSessions = sv.allSessions;
     if (sv.name) document.getElementById('creature-name').value = sv.name;
+    if (sv.xp != null) S.xp = sv.xp;
+    if (sv.level) S.level = sv.level;
+    if (sv.streak) S.streak = sv.streak;
+    if (sv.lastActiveDay) S.lastActiveDay = sv.lastActiveDay;
+    if (sv.bestStreak) S.bestStreak = sv.bestStreak;
+    if (sv.todayPomos) S.todayPomos = sv.todayPomos;
+    if (sv.todayDate) S.todayDate = sv.todayDate;
+    if (sv.unlockedAch) S.unlockedAch = sv.unlockedAch;
   } catch(e){}
   S.timeLeft = focusSecs();
+
+  // Reset daily counter if it's a new day
+  if (S.todayDate !== todayStr()) {
+    S.todayPomos = 0;
+    S.todayDate = todayStr();
+  }
 
   function persist() {
     localStorage.setItem('dwell_state', JSON.stringify({
       pomosTotal:S.pomosTotal, allSessions:S.allSessions,
       name: document.getElementById('creature-name').value,
+      xp:S.xp, level:S.level,
+      streak:S.streak, lastActiveDay:S.lastActiveDay,
+      todayPomos:S.todayPomos, todayDate:S.todayDate,
+      unlockedAch:S.unlockedAch, bestStreak:S.bestStreak,
     }));
   }
 
   function saveCFG() { localStorage.setItem('dwell_cfg', JSON.stringify(CFG)); }
+
+  // ── Gamification ─────────────────────────────────────────────────────
+
+  // XP required per level: 40, 80, 130, 190, 260, ...
+  function xpForLevel(lv) { return 30*lv + 10*(lv); }
+  function xpToNext() { return xpForLevel(S.level); }
+
+  function grantXP(amount) {
+    S.xp += amount;
+    let leveledUp = false;
+    while (S.xp >= xpToNext()) {
+      S.xp -= xpToNext();
+      S.level++;
+      leveledUp = true;
+    }
+    renderLevel();
+    if (leveledUp) {
+      showAchievementToast(`Level ${S.level}`, `${document.getElementById('creature-name').value || 'companion'} grew stronger`);
+      document.querySelector('.app').classList.add('levelup-flash');
+      setTimeout(()=>document.querySelector('.app').classList.remove('levelup-flash'), 1200);
+      updateCreatureAura();
+    }
+    persist();
+  }
+
+  function renderLevel() {
+    document.getElementById('level-badge').textContent = `lv ${S.level}`;
+    const pct = Math.min(100, (S.xp / xpToNext()) * 100);
+    document.getElementById('xp-bar').style.width = pct + '%';
+  }
+
+  // Streak
+  function updateStreak() {
+    const today = todayStr();
+    if (S.lastActiveDay === today) return; // already counted today
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0,10);
+
+    if (S.lastActiveDay === yStr) {
+      S.streak++;
+    } else if (S.lastActiveDay !== today) {
+      S.streak = 1;
+    }
+    S.lastActiveDay = today;
+    if (S.streak > S.bestStreak) S.bestStreak = S.streak;
+    renderStreak();
+    persist();
+  }
+
+  function renderStreak() {
+    const el = document.getElementById('streak-display');
+    const cnt = document.getElementById('streak-count');
+    const flame = document.getElementById('streak-flame');
+    cnt.textContent = S.streak;
+    el.classList.toggle('active', S.streak > 0);
+    // bump animation
+    flame.classList.remove('bump'); void flame.offsetWidth;
+    flame.classList.add('bump');
+  }
+
+  // Daily goal
+  function renderDailyGoal() {
+    const ring = document.getElementById('daily-goal-ring');
+    const text = document.getElementById('daily-goal-text');
+    const pct = Math.min(1, S.todayPomos / S.dailyGoal);
+    const circumference = 97.4; // 2*π*15.5
+    ring.style.strokeDashoffset = circumference * (1 - pct);
+    text.textContent = `${Math.min(S.todayPomos, S.dailyGoal)}/${S.dailyGoal}`;
+    ring.classList.toggle('complete', S.todayPomos >= S.dailyGoal);
+  }
+
+  // Creature aura based on level
+  function updateCreatureAura() {
+    const aura = document.getElementById('creature-aura');
+    aura.className = 'creature-aura';
+    if (S.level >= 10) { aura.classList.add('visible', 'tier-3'); }
+    else if (S.level >= 5) { aura.classList.add('visible', 'tier-2'); }
+    else if (S.level >= 2) { aura.classList.add('visible', 'tier-1'); }
+  }
+
+  // Achievements
+  const ACHIEVEMENTS = [
+    { id:'first_focus',   title:'First Step',        desc:'Complete your first focus session',   check:()=>S.pomosTotal>=1 },
+    { id:'ten_sessions',  title:'Getting Serious',   desc:'Complete 10 focus sessions',          check:()=>S.pomosTotal>=10 },
+    { id:'twentyfive',    title:'Quarter Century',    desc:'Complete 25 focus sessions',          check:()=>S.pomosTotal>=25 },
+    { id:'fifty',         title:'Half Century',       desc:'Complete 50 focus sessions',          check:()=>S.pomosTotal>=50 },
+    { id:'hundred',       title:'Centurion',          desc:'Complete 100 focus sessions',         check:()=>S.pomosTotal>=100 },
+    { id:'streak_3',      title:'Three-peat',         desc:'Maintain a 3-day streak',             check:()=>S.streak>=3 },
+    { id:'streak_7',      title:'Week Warrior',       desc:'Maintain a 7-day streak',             check:()=>S.streak>=7 },
+    { id:'streak_30',     title:'Monthly Master',     desc:'Maintain a 30-day streak',            check:()=>S.streak>=30 },
+    { id:'daily_goal',    title:'Daily Dose',         desc:'Hit your daily focus goal',           check:()=>S.todayPomos>=S.dailyGoal },
+    { id:'level_5',       title:'Rising Star',        desc:'Reach level 5',                       check:()=>S.level>=5 },
+    { id:'level_10',      title:'Veteran',            desc:'Reach level 10',                      check:()=>S.level>=10 },
+    { id:'thought_first', title:'Mindful',            desc:'Log your first thought',              check:()=>S.allSessions.some(s=>s.thoughts.length>0)||S.sessionThoughts.length>0 },
+    { id:'marathon',      title:'Marathon',            desc:'Complete 8 sessions in one day',      check:()=>S.todayPomos>=8 },
+  ];
+
+  let achQueue = [];
+  let achShowing = false;
+
+  function checkAchievements() {
+    ACHIEVEMENTS.forEach(a => {
+      if (!S.unlockedAch.includes(a.id) && a.check()) {
+        S.unlockedAch.push(a.id);
+        achQueue.push(a);
+      }
+    });
+    if (achQueue.length && !achShowing) showNextAchievement();
+    persist();
+  }
+
+  function showNextAchievement() {
+    if (!achQueue.length) { achShowing = false; return; }
+    achShowing = true;
+    const a = achQueue.shift();
+    showAchievementToast(a.title, a.desc);
+    setTimeout(showNextAchievement, 3500);
+  }
+
+  function showAchievementToast(title, desc) {
+    const el = document.getElementById('achievement-toast');
+    document.getElementById('ach-title').textContent = title;
+    document.getElementById('ach-desc').textContent = desc;
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 3000);
+  }
+
+  // Called when a focus session completes
+  function onSessionComplete() {
+    S.todayPomos++;
+    updateStreak();
+    const xpEarned = 10 + Math.floor(CFG.focusMins / 5) * 5 + (S.streak > 1 ? S.streak * 2 : 0);
+    grantXP(xpEarned);
+    renderDailyGoal();
+    checkAchievements();
+    showNotif(`+${xpEarned} xp`, 1800);
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────
   const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
@@ -694,7 +1015,7 @@
     if (!S.running) return;
     S.timeLeft--; updateTimerDisplay();
     if (S.timeLeft<=0) {
-      if (S.mode==='focus') { S.pomosTotal++; renderDots(); enterBreak(); }
+      if (S.mode==='focus') { S.pomosTotal++; renderDots(); onSessionComplete(); enterBreak(); }
       else { enterFocus(); showNotif('back to it'); }
     }
   }
@@ -712,7 +1033,7 @@
     updateTimerDisplay(); updateModeLabel(); updateStartBtn();
   }
   function skipTimer() {
-    if (S.mode==='focus') { S.pomosTotal++; renderDots(); enterBreak(); if(S.running) startTimer(); }
+    if (S.mode==='focus') { S.pomosTotal++; renderDots(); onSessionComplete(); enterBreak(); if(S.running) startTimer(); }
     else if (S.mode==='break') { enterFocus(); if(S.running) startTimer(); }
   }
 
@@ -738,7 +1059,7 @@
   }
   function logThought(text) {
     S.sessionThoughts.push({time:now12(),text});
-    renderThoughts(); creatureGlance();
+    renderThoughts(); creatureGlance(); checkAchievements();
   }
 
   // ── Events ────────────────────────────────────────────────────────────
@@ -759,6 +1080,7 @@
   // ── Init ──────────────────────────────────────────────────────────────
   setCS('idle'); startEyeWander(); updateTimerDisplay(); updateModeLabel();
   updateStartBtn(); renderDots(); renderThoughts();
+  renderLevel(); renderStreak(); renderDailyGoal(); updateCreatureAura();
 </script>
 </body>
 </html>
