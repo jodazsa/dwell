@@ -487,7 +487,7 @@
   </div>
 
   <div class="creature-name-wrap">
-    <input type="text" id="creature-name" maxlength="20" placeholder="companion" spellcheck="false"/>
+    <input type="text" id="creature-name" maxlength="20" spellcheck="false"/>
   </div>
 
   <div class="mode-label" id="mode-label"></div>
@@ -549,6 +549,43 @@
   }
 
   function saveCFG() { localStorage.setItem('dwell_cfg', JSON.stringify(CFG)); }
+
+  // ── Oblique Strategies ────────────────────────────────────────────────
+  const STRATEGIES = [
+    "Abandon normal instruments","Accept advice","Ask your body",
+    "Breathe more deeply","Change instrument roles","Courage!",
+    "Cut a vital connection","Discard an axiom","Do nothing for as long as possible",
+    "Don't be afraid of things because they're easy to do",
+    "Don't be frightened of clichés","Don't break the silence",
+    "Emphasize differences","Emphasize the flaws","Faced with a choice, do both",
+    "Give the game away","Give way to your worst impulse","Go outside. Shut the door.",
+    "Honor thy error as a hidden intention","How would you have done it?",
+    "Humanize something free of error","Idiot glee","Ignore the instructions",
+    "Is it finished?","It is quite possible (after all)","Just carry on",
+    "Look closely at the most embarrassing details and amplify them",
+    "Make a blank valuable by putting it in an exquisite frame",
+    "Move towards the unimportant","Mute and continue",
+    "Once the search is in progress, something will be found",
+    "Only one element of each kind","Overtly resist change",
+    "Remove ambiguities and convert to specifics",
+    "Remove specifics and convert to ambiguities",
+    "Repetition is a form of change","Retrace your steps",
+    "Simply a matter of work","Slow preparation, fast execution",
+    "State the problem in words as clearly as possible",
+    "Take away the elements in order of apparent non-importance",
+    "The most important thing is the thing most easily forgotten",
+    "Think of the radio","Tidy up","Trust in the you of now",
+    "Turn it upside down","Use an old idea","Use fewer notes",
+    "Water","What are you really thinking about just now?",
+    "What is the simplest thing?","What mistakes did you make last time?",
+    "What wouldn't you do?","Work at a different speed",
+    "You can only make one dot at a time","Your mistakes are hidden",
+  ];
+
+  function updateStrategyPlaceholder() {
+    const el = document.getElementById('creature-name');
+    el.placeholder = STRATEGIES[S.pomosTotal % STRATEGIES.length];
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────
   const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
@@ -694,7 +731,7 @@
     if (!S.running) return;
     S.timeLeft--; updateTimerDisplay();
     if (S.timeLeft<=0) {
-      if (S.mode==='focus') { S.pomosTotal++; renderDots(); enterBreak(); }
+      if (S.mode==='focus') { S.pomosTotal++; renderDots(); updateStrategyPlaceholder(); enterBreak(); }
       else { enterFocus(); showNotif('back to it'); }
     }
   }
@@ -758,7 +795,7 @@
 
   // ── Init ──────────────────────────────────────────────────────────────
   setCS('idle'); startEyeWander(); updateTimerDisplay(); updateModeLabel();
-  updateStartBtn(); renderDots(); renderThoughts();
+  updateStartBtn(); renderDots(); renderThoughts(); updateStrategyPlaceholder();
 </script>
 </body>
 </html>
