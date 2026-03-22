@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dwell</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:ital,wght@0,300;0,400;1,300&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #06080d;
+      --surface2: #141b26;
+      --surface3: #1c2435;
+      --text:     #cec5b6;
+      --text-dim: #3e3c3a;
+      --text-mid: #7a7470;
+      --gold:     #c8903c;
+      --gold-dim: #5a3e1a;
+      --green:    #5a8a6a;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Lora', Georgia, serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .bg-glow {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 50% 40% at 50% 35%, rgba(120,150,220,0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(10,20,35,0.8) 0%, transparent 80%);
+    }
+
+    .app {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; max-width: 560px;
+      height: 100vh;
+      padding: 24px 24px 0;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 8px;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .app-name {
+      font-family: 'Instrument Serif', serif; font-style: italic;
+      font-size: 18px; color: var(--text-dim); user-select: none;
+    }
+    .btn-settings {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim); font-size: 13px; opacity: 0.45;
+      padding: 2px 4px; transition: opacity 0.2s, color 0.2s;
+      font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;
+    }
+    .btn-settings:hover { opacity: 0.9; color: var(--text-mid); }
+
+    .pomo-dots { display: flex; gap: 5px; align-items: center; }
+    .pomo-group { display: flex; gap: 4px; align-items: center; }
+    .pomo-group + .pomo-group { margin-left: 8px; }
+    .dot {
+      width: 6px; height: 6px; border-radius: 1px;
+      border: 1px solid var(--gold-dim); background: transparent;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    }
+    .dot.filled {
+      background: var(--gold); border-color: var(--gold);
+      box-shadow: 0 0 6px rgba(200,140,50,0.4);
+    }
+
+    /* ── Settings overlay ── */
+    .settings-overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(6,8,13,0.7);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .settings-overlay.open { opacity: 1; pointer-events: all; }
+
+    .settings-panel {
+      position: fixed; top: 50%; left: 50%; z-index: 51;
+      width: 300px;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 28px 28px 24px;
+      opacity: 0; pointer-events: none;
+      transform: translate(-50%, -48%) scale(0.96);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .settings-panel.open {
+      opacity: 1; pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .settings-title {
+      font-family: 'Instrument Serif', serif; font-style: italic;
+      font-size: 15px; color: var(--text-mid); margin-bottom: 20px;
+    }
+    .setting-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 16px;
+    }
+    .setting-label { font-family: 'Lora', serif; font-size: 13px; color: var(--text-mid); }
+    .setting-control { display: flex; align-items: center; gap: 8px; }
+    .setting-btn {
+      background: none; border: 1px solid var(--surface3);
+      color: var(--text-mid); width: 22px; height: 22px;
+      cursor: pointer; font-size: 14px; display: flex;
+      align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .setting-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+    .setting-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--text); width: 28px; text-align: center;
+    }
+    .setting-unit { font-size: 11px; color: var(--text-dim); margin-left: 2px; }
+    .settings-done {
+      margin-top: 8px; width: 100%; background: none; border: none;
+      border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;
+      font-family: 'Lora', serif; font-size: 12px; color: var(--text-dim);
+      cursor: pointer; letter-spacing: 0.1em; text-align: center;
+      text-transform: lowercase; transition: color 0.2s; display: block;
+    }
+    .settings-done:hover { color: var(--text-mid); }
+
+    /* ── Habitat ── */
+    .habitat {
+      position: relative; width: 240px; height: 210px;
+      display: flex; align-items: flex-end; justify-content: center;
+      flex-shrink: 0;
+    }
+    .habitat-glow {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 260px; height: 170px;
+      background: radial-gradient(ellipse 60% 55% at 50% 75%, rgba(120,160,255,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .habitat-floor {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 180px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(120,160,255,0.1), transparent);
+    }
+
+    /* ── Creature SVG ── */
+    #creature-svg {
+      position: relative; z-index: 2;
+      width: 130px; height: 185px;
+      cursor: default;
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.7))
+              drop-shadow(0 0 22px rgba(120,160,255,0.08));
+    }
+
+    @keyframes sway-idle {
+      0%,100% { transform: rotate(0deg) translateY(0); }
+      30%     { transform: rotate(1.1deg) translateY(-1px); }
+      70%     { transform: rotate(-0.7deg) translateY(1px); }
+    }
+    @keyframes sway-focus {
+      0%,100% { transform: rotate(-0.5deg); }
+      50%     { transform: rotate(0.5deg); }
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-5px); }
+    }
+    @keyframes arm-l-idle {
+      0%,100% { transform: rotate(6deg); }
+      50%     { transform: rotate(12deg); }
+    }
+    @keyframes arm-r-idle {
+      0%,100% { transform: rotate(-6deg); }
+      50%     { transform: rotate(-14deg); }
+    }
+    @keyframes arm-l-break {
+      0%,100% { transform: rotate(-22deg) translateY(-5px); }
+      50%     { transform: rotate(-52deg) translateY(-16px); }
+    }
+    @keyframes arm-r-break {
+      0%,100% { transform: rotate(22deg) translateY(-5px); }
+      50%     { transform: rotate(52deg) translateY(-16px); }
+    }
+    @keyframes blink-main {
+      0%,88%,100% { transform: scaleY(0); }
+      93%         { transform: scaleY(1); }
+    }
+    @keyframes blink-sm {
+      0%,75%,100% { transform: scaleY(0); }
+      81%         { transform: scaleY(1); }
+    }
+    @keyframes pupil-focus {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(1.5px); }
+    }
+    @keyframes glance-pupils {
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(-7px); }
+      75%  { transform: translateX(-7px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes spin-in {
+      from { transform: rotate(-180deg) scale(0); opacity: 0; }
+      to   { transform: rotate(0deg) scale(1); opacity: 1; }
+    }
+
+    .creature-float { animation: float 7s ease-in-out infinite; }
+    .creature-root  { transform-origin: 65px 155px; animation: sway-idle 5s ease-in-out infinite; }
+    #arm-l { transform-origin: 34px 88px; animation: arm-l-idle 4.5s ease-in-out infinite; }
+    #arm-r { transform-origin: 96px 88px; animation: arm-r-idle 4.5s ease-in-out 0.9s infinite; }
+    #eyelid-main { animation: blink-main 6s ease-in-out infinite; }
+    #eyelid-sm   { animation: blink-sm 9s ease-in-out 1.5s infinite; }
+
+    #creature-svg.state-focus .creature-root { animation: sway-focus 4s ease-in-out infinite; }
+    #creature-svg.state-focus #arm-l { animation: arm-l-idle 7s ease-in-out infinite; }
+    #creature-svg.state-focus #arm-r { animation: arm-r-idle 7s ease-in-out 1.2s infinite; }
+    #creature-svg.state-focus #pupil-main { animation: pupil-focus 4s ease-in-out infinite; }
+    #creature-svg.state-break .creature-root { animation: sway-idle 9s ease-in-out infinite; }
+    #creature-svg.state-break #arm-l { animation: arm-l-break 3.5s ease-in-out infinite; }
+    #creature-svg.state-break #arm-r { animation: arm-r-break 3.5s ease-in-out 0.4s infinite; }
+    #creature-svg.state-glance .pupils-group { animation: glance-pupils 1.4s ease-in-out forwards; }
+
+    /* ── Creature name ── */
+    .creature-name-wrap { margin-top: 2px; text-align: center; }
+    #creature-name {
+      font-family: 'Instrument Serif', serif; font-style: italic;
+      font-size: 13px; color: var(--text-dim);
+      background: none; border: none; outline: none;
+      text-align: center; cursor: text; width: 140px;
+      transition: color 0.3s; caret-color: var(--gold);
+    }
+    #creature-name:focus { color: var(--text-mid); border-bottom: 1px solid var(--gold-dim); }
+    #creature-name::placeholder { color: var(--text-dim); }
+
+    /* ── Mode label ── */
+    .mode-label {
+      font-family: 'Instrument Serif', serif; font-style: italic;
+      font-size: 13px; color: var(--text-dim); letter-spacing: 0.03em;
+      min-height: 18px; text-align: center; margin-top: 4px; transition: color 0.6s;
+    }
+    .mode-label.active { color: var(--text-mid); }
+
+    /* ── Timer ── */
+    .timer-section { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace; font-weight: 300;
+      font-size: 72px; letter-spacing: -0.02em; color: var(--text);
+      line-height: 1; transition: color 0.6s; user-select: none;
+    }
+    .timer-display.mode-break { color: var(--green); }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 20px; align-items: center; margin-top: 16px; }
+    .btn {
+      background: none; border: none; cursor: pointer;
+      padding: 8px 16px; font-family: 'Lora', serif;
+      font-size: 13px; color: var(--text-dim); letter-spacing: 0.08em;
+      text-transform: lowercase; transition: color 0.2s; position: relative;
+    }
+    .btn::after {
+      content: ''; position: absolute; bottom: 4px; left: 16px; right: 16px;
+      height: 1px; background: currentColor;
+      transform: scaleX(0); transition: transform 0.2s;
+    }
+    .btn:hover { color: var(--text); }
+    .btn:hover::after { transform: scaleX(1); }
+    .btn-primary { font-size: 14px; color: var(--gold); padding: 8px 24px; }
+    .btn-primary:hover { color: #e0a84a; }
+
+    /* ── Thought log ── */
+    .thought-section {
+      width: 100%; flex: 1; display: flex; flex-direction: column;
+      margin-top: 20px; min-height: 0;
+    }
+    #thought-input {
+      width: 100%; background: none; border: none;
+      border-bottom: 1px solid var(--surface2); outline: none;
+      font-family: 'Lora', serif; font-size: 14px; color: var(--text);
+      padding: 8px 0; caret-color: var(--gold);
+      transition: border-color 0.3s; margin-bottom: 12px;
+    }
+    #thought-input::placeholder { color: var(--text-dim); font-style: italic; }
+    #thought-input:focus { border-color: var(--gold-dim); }
+
+    .thought-list {
+      flex: 1; overflow-y: auto; padding-right: 4px;
+      scrollbar-width: thin; scrollbar-color: var(--surface2) transparent;
+    }
+    .thought-list::-webkit-scrollbar { width: 3px; }
+    .thought-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+    .thought-session-group { margin-bottom: 16px; }
+    .session-separator {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--text-dim); letter-spacing: 0.1em;
+      margin-bottom: 8px; opacity: 0.6;
+    }
+    .thought-item {
+      display: flex; align-items: baseline; gap: 12px;
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.025);
+      animation: thought-in 0.35s ease forwards;
+    }
+    @keyframes thought-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .thought-time {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: var(--text-dim); flex-shrink: 0; opacity: 0.6;
+    }
+    .thought-text { font-family: 'Lora', serif; font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+
+    /* ── Misc ── */
+    .session-flash {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, rgba(120,160,255,0.07), transparent 70%);
+      pointer-events: none; opacity: 0; z-index: 99; transition: opacity 0.5s;
+    }
+    .session-flash.active { opacity: 1; }
+    .notif {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2); border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-mid); font-family: 'Instrument Serif', serif;
+      font-style: italic; font-size: 14px; padding: 10px 20px;
+      opacity: 0; transition: opacity 0.4s, transform 0.4s;
+      pointer-events: none; z-index: 100; white-space: nowrap;
+    }
+    .notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .bottom-pad { height: 20px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="session-flash" id="session-flash"></div>
+<div class="notif" id="notif"></div>
+
+<div class="settings-overlay" id="settings-overlay"></div>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-title">intervals</div>
+
+  <div class="setting-row">
+    <span class="setting-label">focus</span>
+    <div class="setting-control">
+      <button class="setting-btn" data-key="focusMins" data-delta="-1">−</button>
+      <span class="setting-value" id="val-focusMins">20</span>
+      <button class="setting-btn" data-key="focusMins" data-delta="1">+</button>
+      <span class="setting-unit">min</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <span class="setting-label">short break</span>
+    <div class="setting-control">
+      <button class="setting-btn" data-key="shortBreakMins" data-delta="-1">−</button>
+      <span class="setting-value" id="val-shortBreakMins">5</span>
+      <button class="setting-btn" data-key="shortBreakMins" data-delta="1">+</button>
+      <span class="setting-unit">min</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <span class="setting-label">long break</span>
+    <div class="setting-control">
+      <button class="setting-btn" data-key="longBreakMins" data-delta="-1">−</button>
+      <span class="setting-value" id="val-longBreakMins">15</span>
+      <button class="setting-btn" data-key="longBreakMins" data-delta="1">+</button>
+      <span class="setting-unit">min</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <span class="setting-label">long break every</span>
+    <div class="setting-control">
+      <button class="setting-btn" data-key="longBreakEvery" data-delta="-1">−</button>
+      <span class="setting-value" id="val-longBreakEvery">4</span>
+      <button class="setting-btn" data-key="longBreakEvery" data-delta="1">+</button>
+      <span class="setting-unit">sessions</span>
+    </div>
+  </div>
+
+  <button class="settings-done" id="settings-done">done</button>
+</div>
+
+<div class="app">
+  <header>
+    <div class="header-left">
+      <span class="app-name">dwell</span>
+      <button class="btn-settings" id="btn-settings">cfg</button>
+    </div>
+    <div class="pomo-dots" id="pomo-dots"></div>
+  </header>
+
+  <!-- Habitat -->
+  <div class="habitat">
+    <div class="habitat-glow"></div>
+    <div class="creature-float">
+      <svg id="creature-svg" viewBox="0 0 130 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="body-g" cx="38%" cy="28%" r="65%">
+            <stop offset="0%"   stop-color="#3a4560"/>
+            <stop offset="55%"  stop-color="#222d42"/>
+            <stop offset="100%" stop-color="#141926"/>
+          </radialGradient>
+          <radialGradient id="inner-g" cx="50%" cy="45%" r="50%">
+            <stop offset="0%"   stop-color="rgba(100,140,220,0.1)"/>
+            <stop offset="100%" stop-color="rgba(100,140,220,0)"/>
+          </radialGradient>
+          <radialGradient id="eye-big-g" cx="36%" cy="30%" r="58%">
+            <stop offset="0%"   stop-color="#ddeeff"/>
+            <stop offset="35%"  stop-color="#7ab2e0"/>
+            <stop offset="100%" stop-color="#2060a0"/>
+          </radialGradient>
+          <radialGradient id="eye-sm-g" cx="38%" cy="32%" r="55%">
+            <stop offset="0%"   stop-color="#c8e2ff"/>
+            <stop offset="100%" stop-color="#3a70a0"/>
+          </radialGradient>
+          <filter id="eye-glow">
+            <feGaussianBlur stdDeviation="2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="clip-big">
+            <ellipse cx="52" cy="66" rx="21" ry="23"/>
+          </clipPath>
+          <clipPath id="clip-sm">
+            <circle cx="86" cy="75" r="10"/>
+          </clipPath>
+        </defs>
+
+        <g class="creature-root">
+
+          <!-- Left arm (behind body) -->
+          <g id="arm-l" style="transform-origin:34px 88px">
+            <path d="M 30 88 C 22 100 16 120 14 150 C 12 168 14 178 17 182"
+              stroke="#1e2838" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 30 88 C 22 100 16 120 14 150 C 12 168 14 178 17 182"
+              stroke="#252f40" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <!-- fingers -->
+            <line x1="14" y1="179" x2="9"  y2="190" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+            <line x1="17" y1="182" x2="14" y2="194" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+            <line x1="20" y1="183" x2="20" y2="195" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+          </g>
+
+          <!-- Right arm (behind body) -->
+          <g id="arm-r" style="transform-origin:96px 88px">
+            <path d="M 100 88 C 108 100 114 120 116 150 C 118 168 116 178 113 182"
+              stroke="#1e2838" stroke-width="9" fill="none" stroke-linecap="round"/>
+            <path d="M 100 88 C 108 100 114 120 116 150 C 118 168 116 178 113 182"
+              stroke="#252f40" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <line x1="116" y1="179" x2="121" y2="190" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+            <line x1="113" y1="182" x2="116" y2="194" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+            <line x1="110" y1="183" x2="110" y2="195" stroke="#1a2232" stroke-width="4" stroke-linecap="round"/>
+          </g>
+
+          <!-- Body: tall, narrow, slightly asymmetric -->
+          <path d="
+            M 65 12
+            C 42 12 24 34 22 62
+            C 20 90 26 124 34 148
+            C 40 164 52 174 65 174
+            C 79 174 90 163 96 147
+            C 104 122 108 88 106 60
+            C 104 32 86 12 65 12 Z
+          " fill="url(#body-g)"/>
+
+          <!-- Interior glow -->
+          <ellipse cx="62" cy="90" rx="30" ry="48" fill="url(#inner-g)"/>
+
+          <!-- Subtle surface markings -->
+          <path d="M 36 100 Q 46 96 56 101" stroke="rgba(80,110,160,0.18)" fill="none" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M 36 115 Q 48 110 57 115" stroke="rgba(80,110,160,0.13)" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 74 98 Q 85 93 94 99" stroke="rgba(80,110,160,0.13)" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+
+          <!-- Large eye (dominant, left-center) -->
+          <g filter="url(#eye-glow)">
+            <ellipse cx="52" cy="66" rx="21" ry="23" fill="white" opacity="0.9"/>
+            <ellipse cx="52" cy="66" rx="21" ry="23" fill="url(#eye-big-g)"/>
+          </g>
+          <ellipse cx="52" cy="66" rx="21" ry="23" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="2"/>
+
+          <!-- Pupil group for glance animation -->
+          <g class="pupils-group">
+            <g clip-path="url(#clip-big)">
+              <ellipse id="pupil-main" cx="52" cy="69" rx="11.5" ry="12.5" fill="#080c18"/>
+              <!-- iris detail -->
+              <ellipse cx="52" cy="69" rx="11.5" ry="12.5" fill="none" stroke="rgba(80,150,220,0.25)" stroke-width="1.5"/>
+              <ellipse cx="52" cy="69" rx="6.5" ry="7" fill="none" stroke="rgba(120,180,240,0.18)" stroke-width="1"/>
+              <!-- highlights -->
+              <circle cx="56" cy="62" r="4" fill="rgba(255,255,255,0.82)"/>
+              <circle cx="47" cy="73" r="2" fill="rgba(255,255,255,0.28)"/>
+              <circle cx="58" cy="70" r="1.2" fill="rgba(255,255,255,0.5)"/>
+            </g>
+            <!-- Small eye (right, lower, unsettlingly offset) -->
+            <g filter="url(#eye-glow)">
+              <circle cx="86" cy="75" r="10" fill="white" opacity="0.82"/>
+              <circle cx="86" cy="75" r="10" fill="url(#eye-sm-g)"/>
+            </g>
+            <circle cx="86" cy="75" r="10" fill="none" stroke="rgba(0,0,0,0.38)" stroke-width="1.5"/>
+            <g clip-path="url(#clip-sm)">
+              <circle cx="87" cy="76" r="6" fill="#080c18"/>
+              <circle cx="89" cy="72" r="2.2" fill="rgba(255,255,255,0.78)"/>
+              <circle cx="84" cy="79" r="1" fill="rgba(255,255,255,0.28)"/>
+            </g>
+          </g>
+
+          <!-- Eyelids for blink -->
+          <g clip-path="url(#clip-big)">
+            <ellipse id="eyelid-main" cx="52" cy="43" rx="21" ry="23"
+              fill="#222d42"
+              style="transform-origin:52px 43px; transform:scaleY(0);"/>
+          </g>
+          <g clip-path="url(#clip-sm)">
+            <circle id="eyelid-sm" cx="86" cy="65" r="10"
+              fill="#222d42"
+              style="transform-origin:86px 65px; transform:scaleY(0);"/>
+          </g>
+
+          <!-- Mouth: thin, slightly wrong placement -->
+          <path d="M 44 118 Q 57 125 72 120"
+            stroke="rgba(70,95,145,0.45)" fill="none"
+            stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Feet: two uneven stumps -->
+          <ellipse cx="51" cy="175" rx="16" ry="7.5" fill="#131825"/>
+          <ellipse cx="76" cy="177" rx="12" ry="6.5" fill="#111622"/>
+
+          <!-- Texture pores -->
+          <circle cx="76"  cy="50"  r="1.3" fill="rgba(90,130,200,0.14)"/>
+          <circle cx="40"  cy="140" r="1.1" fill="rgba(90,130,200,0.11)"/>
+          <circle cx="92"  cy="125" r="1"   fill="rgba(90,130,200,0.1)"/>
+          <circle cx="55"  cy="160" r="0.9" fill="rgba(90,130,200,0.09)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="habitat-floor"></div>
+  </div>
+
+  <div class="creature-name-wrap">
+    <input type="text" id="creature-name" maxlength="20" placeholder="companion" spellcheck="false"/>
+  </div>
+
+  <div class="mode-label" id="mode-label"></div>
+
+  <div class="timer-section">
+    <div class="timer-display" id="timer-display">20:00</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-reset">reset</button>
+    <button class="btn btn-primary" id="btn-start">start</button>
+    <button class="btn" id="btn-skip">skip</button>
+  </div>
+
+  <div class="thought-section">
+    <input type="text" id="thought-input" placeholder="a thought…" autocomplete="off" spellcheck="false"/>
+    <div class="thought-list" id="thought-list"></div>
+  </div>
+
+  <div class="bottom-pad"></div>
+</div>
+
+<script>
+  // ── Config ────────────────────────────────────────────────────────────
+  const DEFAULTS = { focusMins:20, shortBreakMins:5, longBreakMins:15, longBreakEvery:4 };
+  const LIMITS   = { focusMins:[1,90], shortBreakMins:[1,30], longBreakMins:[1,60], longBreakEvery:[2,10] };
+
+  let CFG = { ...DEFAULTS };
+  try {
+    const s = JSON.parse(localStorage.getItem('dwell_cfg') || '{}');
+    Object.keys(DEFAULTS).forEach(k => { if (s[k] != null) CFG[k] = s[k]; });
+  } catch(e){}
+
+  const focusSecs      = () => CFG.focusMins * 60;
+  const shortBreakSecs = () => CFG.shortBreakMins * 60;
+  const longBreakSecs  = () => CFG.longBreakMins * 60;
+
+  // ── State ─────────────────────────────────────────────────────────────
+  const S = {
+    mode:'idle', timeLeft:focusSecs(), running:false,
+    pomosTotal:0, interval:null,
+    sessionThoughts:[], allSessions:[],
+    glanceTimeout:null, lastGlance:0,
+  };
+
+  try {
+    const sv = JSON.parse(localStorage.getItem('dwell_state') || '{}');
+    if (sv.pomosTotal)  S.pomosTotal  = sv.pomosTotal;
+    if (sv.allSessions) S.allSessions = sv.allSessions;
+    if (sv.name) document.getElementById('creature-name').value = sv.name;
+  } catch(e){}
+  S.timeLeft = focusSecs();
+
+  function persist() {
+    localStorage.setItem('dwell_state', JSON.stringify({
+      pomosTotal:S.pomosTotal, allSessions:S.allSessions,
+      name: document.getElementById('creature-name').value,
+    }));
+  }
+
+  function saveCFG() { localStorage.setItem('dwell_cfg', JSON.stringify(CFG)); }
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  function now12() {
+    const d = new Date(); let h = d.getHours(), m = d.getMinutes();
+    const ap = h>=12?'pm':'am'; h = h%12||12;
+    return `${h}:${String(m).padStart(2,'0')}${ap}`;
+  }
+  function showNotif(msg, dur=2400) {
+    const el = document.getElementById('notif');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), dur);
+  }
+
+  // ── Settings ──────────────────────────────────────────────────────────
+  function renderCFG() {
+    Object.keys(DEFAULTS).forEach(k => {
+      const el = document.getElementById('val-'+k);
+      if (el) el.textContent = CFG[k];
+    });
+  }
+
+  function openSettings() {
+    renderCFG();
+    document.getElementById('settings-overlay').classList.add('open');
+    document.getElementById('settings-panel').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.getElementById('settings-panel').classList.remove('open');
+    if (S.mode === 'idle') { S.timeLeft = focusSecs(); updateTimerDisplay(); }
+    saveCFG();
+  }
+
+  document.getElementById('btn-settings').addEventListener('click', openSettings);
+  document.getElementById('settings-done').addEventListener('click', closeSettings);
+  document.getElementById('settings-overlay').addEventListener('click', closeSettings);
+
+  document.querySelectorAll('.setting-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.key, d = parseInt(btn.dataset.delta);
+      const [mn, mx] = LIMITS[k];
+      CFG[k] = Math.max(mn, Math.min(mx, CFG[k]+d));
+      renderCFG();
+      if (S.mode === 'idle') { S.timeLeft = focusSecs(); updateTimerDisplay(); }
+    });
+  });
+
+  // ── Dots ──────────────────────────────────────────────────────────────
+  function renderDots() {
+    const c = document.getElementById('pomo-dots'); c.innerHTML = '';
+    const ev = CFG.longBreakEvery;
+    const total = Math.max(S.pomosTotal, ev);
+    const groups = Math.ceil(total/ev) || 1;
+    for (let g=0; g<groups; g++) {
+      const ge = document.createElement('div'); ge.className = 'pomo-group';
+      for (let i=0; i<ev; i++) {
+        const dot = document.createElement('div');
+        const idx = g*ev+i;
+        dot.className = 'dot'+(idx<S.pomosTotal?' filled':'');
+        if (idx===S.pomosTotal-1) dot.style.animation = 'spin-in 0.4s ease';
+        ge.appendChild(dot);
+      }
+      c.appendChild(ge);
+    }
+  }
+
+  // ── Creature ──────────────────────────────────────────────────────────
+  const cr = document.getElementById('creature-svg');
+  function setCS(s) {
+    cr.classList.remove('state-idle','state-focus','state-break','state-glance');
+    cr.classList.add('state-'+s);
+  }
+
+  function creatureGlance() {
+    const now = Date.now();
+    if (now - S.lastGlance < 1500) return;
+    S.lastGlance = now;
+    cr.classList.remove('state-glance'); void cr.offsetWidth;
+    cr.classList.add('state-glance');
+    clearTimeout(S.glanceTimeout);
+    S.glanceTimeout = setTimeout(()=>{
+      cr.classList.remove('state-glance');
+      if (S.mode!=='idle') setCS(S.mode);
+    }, 1500);
+  }
+
+  let wanderInt;
+  function startEyeWander() {
+    clearInterval(wanderInt);
+    wanderInt = setInterval(()=>{
+      if (S.mode==='focus') return;
+      const pm = document.getElementById('pupil-main');
+      const dx = (Math.random()-0.5)*9, dy = (Math.random()-0.5)*7;
+      if (pm) { pm.setAttribute('cx', 52+dx); pm.setAttribute('cy', 69+dy); }
+    }, 3000+Math.random()*2500);
+  }
+
+  function resetEyes() {
+    const pm = document.getElementById('pupil-main');
+    if (pm) { pm.setAttribute('cx', 52); pm.setAttribute('cy', 69); }
+  }
+
+  // ── Timer ─────────────────────────────────────────────────────────────
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-display');
+    el.textContent = fmt(S.timeLeft);
+    el.className = 'timer-display'+(S.mode==='break'?' mode-break':'');
+  }
+  function updateModeLabel() {
+    const el = document.getElementById('mode-label');
+    el.textContent = {idle:'', focus:'focusing', break:'resting'}[S.mode]||'';
+    el.className = 'mode-label'+(S.mode!=='idle'?' active':'');
+  }
+  function updateStartBtn() {
+    const btn = document.getElementById('btn-start');
+    const resuming = S.mode!=='idle' && !S.running &&
+      S.timeLeft < (S.mode==='focus' ? focusSecs() : shortBreakSecs());
+    btn.textContent = S.running ? 'pause' : (resuming ? 'resume' : 'start');
+  }
+  function flashSession() {
+    const el = document.getElementById('session-flash');
+    el.classList.add('active'); setTimeout(()=>el.classList.remove('active'), 900);
+  }
+
+  function enterFocus() {
+    S.mode='focus'; S.timeLeft=focusSecs(); S.sessionThoughts=[];
+    setCS('focus'); resetEyes(); updateTimerDisplay(); updateModeLabel();
+  }
+  function enterBreak() {
+    S.mode='break';
+    const isLong = S.pomosTotal % CFG.longBreakEvery === 0;
+    S.timeLeft = isLong ? longBreakSecs() : shortBreakSecs();
+    if (S.sessionThoughts.length)
+      S.allSessions.push({ time:now12(), thoughts:[...S.sessionThoughts] });
+    flashSession(); setCS('break'); startEyeWander();
+    renderThoughts(); updateTimerDisplay(); updateModeLabel();
+    showNotif(isLong ? "long break — you've earned it" : 'a little rest');
+    persist();
+  }
+  function tick() {
+    if (!S.running) return;
+    S.timeLeft--; updateTimerDisplay();
+    if (S.timeLeft<=0) {
+      if (S.mode==='focus') { S.pomosTotal++; renderDots(); enterBreak(); }
+      else { enterFocus(); showNotif('back to it'); }
+    }
+  }
+  function startTimer() {
+    if (S.mode==='idle') enterFocus();
+    S.running=true; clearInterval(S.interval); S.interval=setInterval(tick,1000);
+    setCS(S.mode);
+    if (S.mode==='focus') { resetEyes(); clearInterval(wanderInt); }
+    updateStartBtn(); updateModeLabel();
+  }
+  function pauseTimer() { S.running=false; clearInterval(S.interval); updateStartBtn(); }
+  function resetTimer() {
+    pauseTimer(); S.mode='idle'; S.timeLeft=focusSecs();
+    setCS('idle'); startEyeWander();
+    updateTimerDisplay(); updateModeLabel(); updateStartBtn();
+  }
+  function skipTimer() {
+    if (S.mode==='focus') { S.pomosTotal++; renderDots(); enterBreak(); if(S.running) startTimer(); }
+    else if (S.mode==='break') { enterFocus(); if(S.running) startTimer(); }
+  }
+
+  // ── Thoughts ──────────────────────────────────────────────────────────
+  function renderThoughts() {
+    const list = document.getElementById('thought-list'); list.innerHTML='';
+    const groups = [...S.allSessions.map(s=>({time:s.time,thoughts:s.thoughts}))];
+    if (S.sessionThoughts.length) groups.push({time:'now',thoughts:S.sessionThoughts});
+    groups.reverse().forEach(group=>{
+      const ge = document.createElement('div'); ge.className='thought-session-group';
+      if (group.time!=='now') {
+        const sep = document.createElement('div'); sep.className='session-separator';
+        sep.textContent=group.time; ge.appendChild(sep);
+      }
+      [...group.thoughts].reverse().forEach(t=>{
+        const item=document.createElement('div'); item.className='thought-item';
+        const te=document.createElement('span'); te.className='thought-time'; te.textContent=t.time;
+        const tx=document.createElement('span'); tx.className='thought-text'; tx.textContent=t.text;
+        item.appendChild(te); item.appendChild(tx); ge.appendChild(item);
+      });
+      list.appendChild(ge);
+    });
+  }
+  function logThought(text) {
+    S.sessionThoughts.push({time:now12(),text});
+    renderThoughts(); creatureGlance();
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────
+  document.getElementById('btn-start').addEventListener('click', ()=>{ if(S.running) pauseTimer(); else startTimer(); });
+  document.getElementById('btn-reset').addEventListener('click', resetTimer);
+  document.getElementById('btn-skip').addEventListener('click', skipTimer);
+  document.getElementById('thought-input').addEventListener('keydown', e=>{
+    if (e.key==='Enter') { const v=e.target.value.trim(); if(v){logThought(v);e.target.value='';} }
+  });
+  document.getElementById('creature-name').addEventListener('change', persist);
+  document.addEventListener('keydown', e=>{
+    if (e.target.tagName==='INPUT') return;
+    if (e.code==='Space') { e.preventDefault(); if(S.running) pauseTimer(); else startTimer(); }
+    if (e.key==='Escape') closeSettings();
+  });
+  cr.addEventListener('click', creatureGlance);
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  setCS('idle'); startEyeWander(); updateTimerDisplay(); updateModeLabel();
+  updateStartBtn(); renderDots(); renderThoughts();
+</script>
+</body>
+</html>
