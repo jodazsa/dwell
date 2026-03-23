@@ -446,8 +446,7 @@
       gap: 10px;
     }
 
-    .notes-form input,
-    .notes-form textarea {
+    .notes-form input {
       width: 100%;
       background: rgba(0, 0, 0, 0.22);
       color: var(--text);
@@ -457,13 +456,7 @@
       outline: none;
     }
 
-    .notes-form textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-
-    .notes-form input:focus,
-    .notes-form textarea:focus {
+    .notes-form input:focus {
       border-color: var(--glow);
       box-shadow: 0 0 0 3px rgba(97,255,141,0.08);
     }
@@ -477,10 +470,48 @@
     }
 
     .thought-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
       border: 1px solid rgba(97,255,141,0.16);
       border-radius: 12px;
       padding: 10px 12px;
       background: rgba(97,255,141,0.035);
+    }
+
+    .thought-toggle {
+      width: 24px;
+      height: 24px;
+      margin-top: 2px;
+      border-radius: 999px;
+      border: 1px solid rgba(97,255,141,0.28);
+      background: rgba(0, 0, 0, 0.18);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .thought-toggle:hover {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 2px rgba(97,255,141,0.08);
+    }
+
+    .thought-toggle.is-marked {
+      color: var(--danger);
+      border-color: rgba(255,107,107,0.4);
+    }
+
+    .thought-toggle.is-crossed {
+      color: var(--warn);
+      border-color: rgba(255,209,102,0.42);
+    }
+
+    .thought-content {
+      min-width: 0;
     }
 
     .thought-meta {
@@ -494,16 +525,16 @@
       margin-bottom: 6px;
     }
 
-    .thought-title {
-      font-size: 0.9rem;
-      margin-bottom: 4px;
-    }
-
     .thought-body {
       color: var(--text-soft);
       white-space: pre-wrap;
       font-size: 0.86rem;
       line-height: 1.45;
+    }
+
+    .thought-card.is-crossed .thought-body {
+      text-decoration: line-through;
+      opacity: 0.72;
     }
 
     .terminal-feed {
@@ -719,8 +750,7 @@
 
           <div class="module-stack">
             <form class="notes-form" id="thoughtForm">
-              <input type="text" id="thoughtTitle" placeholder="Entry title" maxlength="80" />
-              <textarea id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection..."></textarea>
+              <input type="text" id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection, then press Enter..." maxlength="200" />
               <div class="controls">
                 <button type="submit">Log Entry</button>
                 <button type="button" id="clearThoughtsBtn" class="secondary">Clear All</button>
@@ -1027,10 +1057,23 @@
       localStorage.setItem('retroThoughtLog', JSON.stringify(appState.thoughts));
     }
 
+    function normalizeThought(entry) {
+      if (!entry) return null;
+      const body = String(entry.body ?? entry.text ?? '').trim();
+      if (!body) return null;
+      return {
+        body,
+        time: entry.time || new Date().toLocaleString(),
+        tag: entry.tag || 'FOCUS',
+        status: ['active', 'marked', 'crossed'].includes(entry.status) ? entry.status : 'active',
+      };
+    }
+
     function loadThoughts() {
       try {
         const raw = localStorage.getItem('retroThoughtLog');
-        appState.thoughts = raw ? JSON.parse(raw) : [];
+        const parsed = raw ? JSON.parse(raw) : [];
+        appState.thoughts = Array.isArray(parsed) ? parsed.map(normalizeThought).filter(Boolean) : [];
       } catch {
         appState.thoughts = [];
       }
@@ -1219,27 +1262,41 @@
       logFeed(`Pomodoro preset loaded: ${focus}/${breakMin}.`);
     }
 
+    function getThoughtToggleSymbol(status) {
+      if (status === 'marked') return 'X';
+      return '•';
+    }
+
+    function getNextThoughtStatus(status) {
+      if (status === 'active') return 'marked';
+      if (status === 'marked') return 'crossed';
+      return 'active';
+    }
+
     function renderThoughts() {
       const root = $('#thoughtLog');
       root.innerHTML = '';
       if (!appState.thoughts.length) {
         const empty = document.createElement('div');
         empty.className = 'thought-card';
-        empty.innerHTML = '<div class="thought-body">No entries logged yet.</div>';
+        empty.innerHTML = '<div></div><div class="thought-body">No entries logged yet.</div>';
         root.appendChild(empty);
         return;
       }
 
-      appState.thoughts.forEach((entry) => {
+      appState.thoughts.forEach((entry, index) => {
         const card = document.createElement('div');
-        card.className = 'thought-card';
+        card.className = `thought-card${entry.status === 'crossed' ? ' is-crossed' : ''}`;
+        const statusClass = entry.status === 'active' ? '' : ` is-${entry.status}`;
         card.innerHTML = `
-          <div class="thought-meta">
-            <span>${entry.tag}</span>
-            <span>${entry.time}</span>
+          <button type="button" class="thought-toggle${statusClass}" data-thought-index="${index}" aria-label="Toggle thought status">${getThoughtToggleSymbol(entry.status)}</button>
+          <div class="thought-content">
+            <div class="thought-meta">
+              <span>${escapeHtml(entry.tag)}</span>
+              <span>${escapeHtml(entry.time)}</span>
+            </div>
+            <div class="thought-body">${escapeHtml(entry.body)}</div>
           </div>
-          <div class="thought-title">${escapeHtml(entry.title || 'Untitled Entry')}</div>
-          <div class="thought-body">${escapeHtml(entry.body)}</div>
         `;
         root.appendChild(card);
       });
@@ -1254,11 +1311,12 @@
         .replaceAll("'", '&#039;');
     }
 
-    function addThought(title, body) {
+    function addThought(body) {
+      const trimmedBody = body.trim();
+      if (!trimmedBody) return;
       const now = new Date();
       appState.thoughts.unshift({
-        title: title.trim(),
-        body: body.trim(),
+        body: trimmedBody,
         time: now.toLocaleString([], {
           month: 'short',
           day: 'numeric',
@@ -1266,11 +1324,20 @@
           minute: '2-digit'
         }),
         tag: appState.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
+        status: 'active',
       });
       appState.thoughts = appState.thoughts.slice(0, 50);
       saveThoughts();
       renderThoughts();
       logFeed('Thought captured to local log.');
+    }
+
+    function cycleThoughtStatus(index) {
+      const thought = appState.thoughts[index];
+      if (!thought) return;
+      thought.status = getNextThoughtStatus(thought.status || 'active');
+      saveThoughts();
+      renderThoughts();
     }
 
     function bindEvents() {
@@ -1287,12 +1354,16 @@
 
       $('#thoughtForm').addEventListener('submit', (event) => {
         event.preventDefault();
-        const title = $('#thoughtTitle').value;
         const body = $('#thoughtBody').value;
         if (!body.trim()) return;
-        addThought(title, body);
-        $('#thoughtTitle').value = '';
+        addThought(body);
         $('#thoughtBody').value = '';
+      });
+
+      $('#thoughtLog').addEventListener('click', (event) => {
+        const toggle = event.target.closest('[data-thought-index]');
+        if (!toggle) return;
+        cycleThoughtStatus(Number(toggle.dataset.thoughtIndex));
       });
 
       $('#clearThoughtsBtn').addEventListener('click', () => {
