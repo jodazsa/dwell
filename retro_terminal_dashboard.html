@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retro Terminal Dashboard</title>
+  <style>
+    :root {
+      --bg: #07110a;
+      --panel: #0b1b0f;
+      --panel-2: #0d2313;
+      --line: #1f6b31;
+      --glow: #61ff8d;
+      --glow-dim: #2fb95a;
+      --text: #b7ffca;
+      --text-soft: #85d79d;
+      --warn: #ffd166;
+      --danger: #ff6b6b;
+      --shadow: rgba(97, 255, 141, 0.12);
+      --radius: 14px;
+      --gap: 16px;
+      --font-mono: "Courier New", Courier, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top, rgba(97,255,141,0.08), transparent 28%),
+        linear-gradient(180deg, #040a05 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: var(--font-mono);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,0.03) 0px,
+          rgba(255,255,255,0.03) 1px,
+          transparent 2px,
+          transparent 4px
+        );
+      opacity: 0.2;
+      mix-blend-mode: screen;
+    }
+
+    .shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(10,35,17,0.95), rgba(5,16,9,0.95));
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: 0 0 0 1px rgba(97,255,141,0.06), 0 0 18px var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 2rem);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(97,255,141,0.35);
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .statusbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      background: rgba(97,255,141,0.04);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      gap: var(--gap);
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      min-width: 0;
+    }
+
+    .panel {
+      position: relative;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(10,27,15,0.96), rgba(7,17,10,0.96));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(97,255,141,0.03), 0 0 18px var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 18%);
+      opacity: 0.18;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(97,255,141,0.15);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .panel-label {
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .module-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pet-stage {
+      border: 1px solid rgba(97,255,141,0.2);
+      background:
+        linear-gradient(180deg, rgba(6, 20, 10, 0.9), rgba(10, 39, 17, 0.7)),
+        repeating-linear-gradient(
+          to right,
+          rgba(97,255,141,0.05) 0,
+          rgba(97,255,141,0.05) 1px,
+          transparent 1px,
+          transparent 16px
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(97,255,141,0.05) 0,
+          rgba(97,255,141,0.05) 1px,
+          transparent 1px,
+          transparent 16px
+        );
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 260px;
+    }
+
+    canvas#petCanvas {
+      width: 224px;
+      height: 224px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 0 10px rgba(97,255,141,0.25));
+      border: 1px solid rgba(97,255,141,0.22);
+      background: rgba(0,0,0,0.18);
+    }
+
+    .meters {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meter-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 44px;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+
+    .meter {
+      height: 10px;
+      border: 1px solid rgba(97,255,141,0.22);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.35);
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 50%;
+      background: linear-gradient(90deg, var(--glow-dim), var(--glow));
+      box-shadow: 0 0 8px rgba(97,255,141,0.35);
+      transition: width 180ms ease;
+    }
+
+    .controls, .timer-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(20,55,28,0.95), rgba(10,29,15,0.95));
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      box-shadow: 0 0 10px rgba(97,255,141,0.06);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 14px rgba(97,255,141,0.12);
+      border-color: var(--glow-dim);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      color: var(--text-soft);
+      background: rgba(97,255,141,0.05);
+    }
+
+    .timer-display {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .big-time {
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      line-height: 1;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 14px rgba(97,255,141,0.3);
+    }
+
+    .phase {
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .ring-wrap {
+      width: 110px;
+      height: 110px;
+      position: relative;
+    }
+
+    .ring {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(var(--glow) 0deg, rgba(97,255,141,0.09) 0deg);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 16px rgba(97,255,141,0.16);
+    }
+
+    .ring::before {
+      content: "";
+      width: 72%;
+      height: 72%;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid rgba(97,255,141,0.14);
+    }
+
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .timer-presets {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .notes-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notes-form input,
+    .notes-form textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.22);
+      color: var(--text);
+      border: 1px solid rgba(97,255,141,0.22);
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .notes-form textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .notes-form input:focus,
+    .notes-form textarea:focus {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 3px rgba(97,255,141,0.08);
+    }
+
+    .thought-log {
+      display: grid;
+      gap: 10px;
+      max-height: 560px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .thought-card {
+      border: 1px solid rgba(97,255,141,0.16);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(97,255,141,0.035);
+    }
+
+    .thought-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .thought-title {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .thought-body {
+      color: var(--text-soft);
+      white-space: pre-wrap;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .terminal-feed {
+      min-height: 160px;
+      max-height: 240px;
+      overflow: auto;
+      display: grid;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-soft);
+    }
+
+    .feed-line::before {
+      content: "> ";
+      color: var(--glow-dim);
+    }
+
+    .footnote {
+      margin-top: 12px;
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .muted {
+      color: var(--text-soft);
+    }
+
+    @media (max-width: 1120px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Retro Command Habitat</h1>
+        <div class="subtitle">Modular terminal dashboard · mainframe / DOS film aesthetic</div>
+      </div>
+      <div class="statusbar">
+        <div class="badge" id="clockBadge">00:00:00</div>
+        <div class="badge">SYS: ONLINE</div>
+        <div class="badge">MEM: STABLE</div>
+        <div class="badge">BUILD: v0.1</div>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Pixel Pet</h2>
+            <span class="panel-label">Module 01</span>
+          </div>
+
+          <div class="module-stack">
+            <div class="pet-stage">
+              <canvas id="petCanvas" width="32" height="32" aria-label="Pixel art pet"></canvas>
+            </div>
+
+            <div class="meters">
+              <div class="meter-row">
+                <span>MOOD</span>
+                <div class="meter"><div class="meter-fill" id="moodMeter"></div></div>
+                <span id="moodValue">82%</span>
+              </div>
+              <div class="meter-row">
+                <span>ENERGY</span>
+                <div class="meter"><div class="meter-fill" id="energyMeter"></div></div>
+                <span id="energyValue">74%</span>
+              </div>
+              <div class="meter-row">
+                <span>FOCUS</span>
+                <div class="meter"><div class="meter-fill" id="focusMeter"></div></div>
+                <span id="focusValue">68%</span>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button id="petFeedBtn">Feed</button>
+              <button id="petPlayBtn">Play</button>
+              <button id="petRestBtn" class="secondary">Rest</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">System Feed</h2>
+            <span class="panel-label">Events</span>
+          </div>
+          <div class="terminal-feed" id="terminalFeed"></div>
+          <div class="footnote">Use this panel as your future event bus for new modules.</div>
+        </article>
+      </section>
+
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Pomodoro Core</h2>
+            <span class="panel-label">Module 02</span>
+          </div>
+
+          <div class="module-stack">
+            <div class="timer-display">
+              <div>
+                <div class="big-time" id="timeDisplay">25:00</div>
+                <div class="phase" id="phaseDisplay">Focus Session</div>
+              </div>
+              <div class="ring-wrap">
+                <div class="ring" id="timerRing"></div>
+                <div class="ring-label" id="sessionCount">S1</div>
+              </div>
+            </div>
+
+            <div class="timer-controls">
+              <button id="startTimerBtn">Start</button>
+              <button id="pauseTimerBtn" class="secondary">Pause</button>
+              <button id="resetTimerBtn" class="secondary">Reset</button>
+              <button id="skipTimerBtn">Skip</button>
+            </div>
+
+            <div class="timer-presets">
+              <button class="presetBtn secondary" data-focus="25" data-break="5">25 / 5</button>
+              <button class="presetBtn secondary" data-focus="50" data-break="10">50 / 10</button>
+              <button class="presetBtn secondary" data-focus="15" data-break="3">15 / 3</button>
+            </div>
+
+            <div class="footnote muted">Current cycle alternates focus and break automatically.</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Build Notes</h2>
+            <span class="panel-label">Scaffold</span>
+          </div>
+          <div class="module-stack muted" style="font-size:0.86rem; line-height:1.5;">
+            <div>• Each module is a self-contained panel with its own state hooks.</div>
+            <div>• Data persists through localStorage for the timer settings and thought log.</div>
+            <div>• Add future modules by cloning a <code>.panel</code> block and attaching JS init logic.</div>
+            <div>• The visual language is intentionally CRT-like: scanlines, green phosphor glow, grid overlays.</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Thought Log</h2>
+            <span class="panel-label">Module 03</span>
+          </div>
+
+          <div class="module-stack">
+            <form class="notes-form" id="thoughtForm">
+              <input type="text" id="thoughtTitle" placeholder="Entry title" maxlength="80" />
+              <textarea id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection..."></textarea>
+              <div class="controls">
+                <button type="submit">Log Entry</button>
+                <button type="button" id="clearThoughtsBtn" class="secondary">Clear All</button>
+              </div>
+            </form>
+
+            <div class="thought-log" id="thoughtLog"></div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+
+    const appState = {
+      pet: {
+        mood: 82,
+        energy: 74,
+        focus: 68,
+        blink: false,
+        bounce: 0,
+      },
+      timer: {
+        focusMinutes: 25,
+        breakMinutes: 5,
+        totalSeconds: 25 * 60,
+        remainingSeconds: 25 * 60,
+        running: false,
+        mode: 'focus',
+        session: 1,
+        tickHandle: null,
+      },
+      thoughts: [],
+    };
+
+    function logFeed(message) {
+      const feed = $('#terminalFeed');
+      const line = document.createElement('div');
+      line.className = 'feed-line';
+      const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      line.textContent = `[${ts}] ${message}`;
+      feed.prepend(line);
+      while (feed.children.length > 18) feed.removeChild(feed.lastChild);
+    }
+
+    function saveThoughts() {
+      localStorage.setItem('retroThoughtLog', JSON.stringify(appState.thoughts));
+    }
+
+    function loadThoughts() {
+      try {
+        const raw = localStorage.getItem('retroThoughtLog');
+        appState.thoughts = raw ? JSON.parse(raw) : [];
+      } catch {
+        appState.thoughts = [];
+      }
+    }
+
+    function saveTimerSettings() {
+      const payload = {
+        focusMinutes: appState.timer.focusMinutes,
+        breakMinutes: appState.timer.breakMinutes,
+        session: appState.timer.session,
+      };
+      localStorage.setItem('retroPomodoroSettings', JSON.stringify(payload));
+    }
+
+    function loadTimerSettings() {
+      try {
+        const raw = localStorage.getItem('retroPomodoroSettings');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        appState.timer.focusMinutes = Number(saved.focusMinutes) || 25;
+        appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
+        appState.timer.session = Number(saved.session) || 1;
+        appState.timer.totalSeconds = appState.timer.focusMinutes * 60;
+        appState.timer.remainingSeconds = appState.timer.totalSeconds;
+      } catch {}
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function updatePetMeters() {
+      const { mood, energy, focus } = appState.pet;
+      $('#moodMeter').style.width = `${mood}%`;
+      $('#energyMeter').style.width = `${energy}%`;
+      $('#focusMeter').style.width = `${focus}%`;
+      $('#moodValue').textContent = `${mood}%`;
+      $('#energyValue').textContent = `${energy}%`;
+      $('#focusValue').textContent = `${focus}%`;
+    }
+
+    function drawPet() {
+      const canvas = $('#petCanvas');
+      const ctx = canvas.getContext('2d');
+      const { mood, blink } = appState.pet;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const px = (x, y, w, h, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      };
+
+      const baseY = mood > 60 ? 1 : 2;
+      const bodyColor = mood > 45 ? '#8fffb0' : '#6ccf89';
+      const accentColor = '#2e7d45';
+      const eyeColor = '#07110a';
+
+      px(11, 6 + baseY, 10, 2, bodyColor);
+      px(9, 8 + baseY, 14, 2, bodyColor);
+      px(8, 10 + baseY, 16, 8, bodyColor);
+      px(9, 18 + baseY, 14, 4, bodyColor);
+      px(11, 22 + baseY, 3, 4, bodyColor);
+      px(18, 22 + baseY, 3, 4, bodyColor);
+
+      px(9, 6 + baseY, 2, 2, accentColor);
+      px(21, 6 + baseY, 2, 2, accentColor);
+      px(12, 5 + baseY, 2, 1, accentColor);
+      px(18, 5 + baseY, 2, 1, accentColor);
+
+      if (blink) {
+        px(12, 12 + baseY, 3, 1, eyeColor);
+        px(17, 12 + baseY, 3, 1, eyeColor);
+      } else {
+        px(12, 11 + baseY, 2, 2, eyeColor);
+        px(18, 11 + baseY, 2, 2, eyeColor);
+      }
+
+      if (mood > 60) {
+        px(13, 15 + baseY, 6, 1, eyeColor);
+        px(12, 14 + baseY, 1, 1, eyeColor);
+        px(19, 14 + baseY, 1, 1, eyeColor);
+      } else {
+        px(13, 15 + baseY, 6, 1, eyeColor);
+      }
+
+      px(7, 16 + baseY, 1, 2, accentColor);
+      px(24, 16 + baseY, 1, 2, accentColor);
+      px(6, 17 + baseY, 1, 1, accentColor);
+      px(25, 17 + baseY, 1, 1, accentColor);
+    }
+
+    function animatePet() {
+      appState.pet.blink = Math.random() < 0.15;
+      drawPet();
+    }
+
+    function petAction(type) {
+      if (type === 'feed') {
+        appState.pet.mood = clamp(appState.pet.mood + 6, 0, 100);
+        appState.pet.energy = clamp(appState.pet.energy + 8, 0, 100);
+        logFeed('Pet fed. Energy reserves increased.');
+      }
+      if (type === 'play') {
+        appState.pet.mood = clamp(appState.pet.mood + 9, 0, 100);
+        appState.pet.energy = clamp(appState.pet.energy - 5, 0, 100);
+        appState.pet.focus = clamp(appState.pet.focus + 4, 0, 100);
+        logFeed('Pet played. Morale spike detected.');
+      }
+      if (type === 'rest') {
+        appState.pet.energy = clamp(appState.pet.energy + 10, 0, 100);
+        appState.pet.focus = clamp(appState.pet.focus + 6, 0, 100);
+        logFeed('Pet resting. Systems stabilizing.');
+      }
+      updatePetMeters();
+      drawPet();
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function updateTimerUI() {
+      const t = appState.timer;
+      $('#timeDisplay').textContent = formatTime(t.remainingSeconds);
+      $('#phaseDisplay').textContent = t.mode === 'focus' ? 'Focus Session' : 'Break Session';
+      $('#sessionCount').textContent = `S${t.session}`;
+      const pct = 1 - (t.remainingSeconds / t.totalSeconds || 0);
+      $('#timerRing').style.background = `conic-gradient(var(--glow) ${Math.max(0, pct) * 360}deg, rgba(97,255,141,0.09) 0deg)`;
+    }
+
+    function switchTimerMode() {
+      const t = appState.timer;
+      if (t.mode === 'focus') {
+        t.mode = 'break';
+        t.totalSeconds = t.breakMinutes * 60;
+        t.remainingSeconds = t.totalSeconds;
+        logFeed(`Focus session complete. Starting ${t.breakMinutes}-minute break.`);
+      } else {
+        t.mode = 'focus';
+        t.session += 1;
+        t.totalSeconds = t.focusMinutes * 60;
+        t.remainingSeconds = t.totalSeconds;
+        appState.pet.focus = clamp(appState.pet.focus + 5, 0, 100);
+        updatePetMeters();
+        logFeed(`Break complete. Starting focus session ${t.session}.`);
+      }
+      saveTimerSettings();
+      updateTimerUI();
+    }
+
+    function startTimer() {
+      const t = appState.timer;
+      if (t.running) return;
+      t.running = true;
+      logFeed(`Timer started: ${t.mode} mode.`);
+      t.tickHandle = setInterval(() => {
+        if (t.remainingSeconds > 0) {
+          t.remainingSeconds -= 1;
+          if (t.mode === 'focus' && t.remainingSeconds % 60 === 0) {
+            appState.pet.energy = clamp(appState.pet.energy - 1, 0, 100);
+            appState.pet.focus = clamp(appState.pet.focus + 1, 0, 100);
+            updatePetMeters();
+          }
+          updateTimerUI();
+        } else {
+          clearInterval(t.tickHandle);
+          t.running = false;
+          switchTimerMode();
+          startTimer();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      const t = appState.timer;
+      if (!t.running) return;
+      t.running = false;
+      clearInterval(t.tickHandle);
+      logFeed('Timer paused.');
+    }
+
+    function resetTimer() {
+      const t = appState.timer;
+      pauseTimer();
+      t.totalSeconds = (t.mode === 'focus' ? t.focusMinutes : t.breakMinutes) * 60;
+      t.remainingSeconds = t.totalSeconds;
+      updateTimerUI();
+      logFeed('Timer reset.');
+    }
+
+    function skipTimer() {
+      pauseTimer();
+      switchTimerMode();
+      logFeed('Current timer phase skipped.');
+    }
+
+    function applyPreset(focus, breakMin) {
+      const t = appState.timer;
+      pauseTimer();
+      t.focusMinutes = focus;
+      t.breakMinutes = breakMin;
+      if (t.mode === 'focus') {
+        t.totalSeconds = focus * 60;
+        t.remainingSeconds = t.totalSeconds;
+      } else {
+        t.totalSeconds = breakMin * 60;
+        t.remainingSeconds = t.totalSeconds;
+      }
+      saveTimerSettings();
+      updateTimerUI();
+      logFeed(`Pomodoro preset loaded: ${focus}/${breakMin}.`);
+    }
+
+    function renderThoughts() {
+      const root = $('#thoughtLog');
+      root.innerHTML = '';
+      if (!appState.thoughts.length) {
+        const empty = document.createElement('div');
+        empty.className = 'thought-card';
+        empty.innerHTML = '<div class="thought-body">No entries logged yet.</div>';
+        root.appendChild(empty);
+        return;
+      }
+
+      appState.thoughts.forEach((entry) => {
+        const card = document.createElement('div');
+        card.className = 'thought-card';
+        card.innerHTML = `
+          <div class="thought-meta">
+            <span>${entry.tag}</span>
+            <span>${entry.time}</span>
+          </div>
+          <div class="thought-title">${escapeHtml(entry.title || 'Untitled Entry')}</div>
+          <div class="thought-body">${escapeHtml(entry.body)}</div>
+        `;
+        root.appendChild(card);
+      });
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function addThought(title, body) {
+      const now = new Date();
+      appState.thoughts.unshift({
+        title: title.trim(),
+        body: body.trim(),
+        time: now.toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        tag: appState.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
+      });
+      appState.thoughts = appState.thoughts.slice(0, 50);
+      saveThoughts();
+      renderThoughts();
+      logFeed('Thought captured to local log.');
+    }
+
+    function bindEvents() {
+      $('#petFeedBtn').addEventListener('click', () => petAction('feed'));
+      $('#petPlayBtn').addEventListener('click', () => petAction('play'));
+      $('#petRestBtn').addEventListener('click', () => petAction('rest'));
+
+      $('#startTimerBtn').addEventListener('click', startTimer);
+      $('#pauseTimerBtn').addEventListener('click', pauseTimer);
+      $('#resetTimerBtn').addEventListener('click', resetTimer);
+      $('#skipTimerBtn').addEventListener('click', skipTimer);
+
+      document.querySelectorAll('.presetBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyPreset(Number(btn.dataset.focus), Number(btn.dataset.break));
+        });
+      });
+
+      $('#thoughtForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const title = $('#thoughtTitle').value;
+        const body = $('#thoughtBody').value;
+        if (!body.trim()) return;
+        addThought(title, body);
+        $('#thoughtTitle').value = '';
+        $('#thoughtBody').value = '';
+      });
+
+      $('#clearThoughtsBtn').addEventListener('click', () => {
+        appState.thoughts = [];
+        saveThoughts();
+        renderThoughts();
+        logFeed('Thought log cleared.');
+      });
+    }
+
+    function initClock() {
+      const update = () => {
+        $('#clockBadge').textContent = new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    function init() {
+      loadThoughts();
+      loadTimerSettings();
+      bindEvents();
+      renderThoughts();
+      updatePetMeters();
+      updateTimerUI();
+      drawPet();
+      initClock();
+      logFeed('Retro Command Habitat initialized.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log.');
+      setInterval(animatePet, 1200);
+    }
+
+    init();
+  </script>
+</body>
+</html>
