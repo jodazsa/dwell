@@ -180,50 +180,47 @@
           transparent 16px
         );
       border-radius: 12px;
-      padding: 16px;
+      padding: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 260px;
+      min-height: 96px;
     }
 
     canvas#petCanvas {
-      width: 224px;
-      height: 224px;
+      width: 16px;
+      height: 16px;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      filter: drop-shadow(0 0 10px rgba(97,255,141,0.25));
-      border: 1px solid rgba(97,255,141,0.22);
-      background: rgba(0,0,0,0.18);
+      filter: drop-shadow(0 0 6px rgba(97,255,141,0.4));
     }
 
-    .meters {
+    .pet-stats {
       display: grid;
       gap: 10px;
     }
 
-    .meter-row {
-      display: grid;
-      grid-template-columns: 72px 1fr 44px;
-      gap: 8px;
-      align-items: center;
-      font-size: 0.82rem;
+    .pet-stat-card {
+      border: 1px solid rgba(97,255,141,0.18);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
     }
 
-    .meter {
-      height: 10px;
-      border: 1px solid rgba(97,255,141,0.22);
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(0,0,0,0.35);
+    .pet-stat-label {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .meter-fill {
-      height: 100%;
-      width: 50%;
-      background: linear-gradient(90deg, var(--glow-dim), var(--glow));
-      box-shadow: 0 0 8px rgba(97,255,141,0.35);
-      transition: width 180ms ease;
+    .pet-stat-value {
+      font-size: 1rem;
+      color: var(--text);
     }
 
     .controls, .timer-controls {
@@ -449,32 +446,21 @@
 
           <div class="module-stack">
             <div class="pet-stage">
-              <canvas id="petCanvas" width="32" height="32" aria-label="Pixel art pet"></canvas>
+              <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
             </div>
 
-            <div class="meters">
-              <div class="meter-row">
-                <span>MOOD</span>
-                <div class="meter"><div class="meter-fill" id="moodMeter"></div></div>
-                <span id="moodValue">82%</span>
+            <div class="pet-stats">
+              <div class="pet-stat-card">
+                <span class="pet-stat-label">Completed Pomodoros</span>
+                <span class="pet-stat-value" id="pomodoroCountValue">0</span>
               </div>
-              <div class="meter-row">
-                <span>ENERGY</span>
-                <div class="meter"><div class="meter-fill" id="energyMeter"></div></div>
-                <span id="energyValue">74%</span>
-              </div>
-              <div class="meter-row">
-                <span>FOCUS</span>
-                <div class="meter"><div class="meter-fill" id="focusMeter"></div></div>
-                <span id="focusValue">68%</span>
+              <div class="pet-stat-card">
+                <span class="pet-stat-label">Growth Stage</span>
+                <span class="pet-stat-value" id="growthStageValue">Sprout</span>
               </div>
             </div>
 
-            <div class="controls">
-              <button id="petFeedBtn">Feed</button>
-              <button id="petPlayBtn">Play</button>
-              <button id="petRestBtn" class="secondary">Rest</button>
-            </div>
+            <div class="footnote muted">Your pet starts tiny and grows a little each time you finish a focus session.</div>
           </div>
         </article>
 
@@ -565,13 +551,17 @@
   <script>
     const $ = (selector) => document.querySelector(selector);
 
+    const growthStages = [
+      { name: 'Sprout', threshold: 0, size: 4 },
+      { name: 'Bud', threshold: 2, size: 6 },
+      { name: 'Bloom', threshold: 5, size: 8 },
+      { name: 'Mega Bloom', threshold: 9, size: 10 },
+    ];
+
     const appState = {
       pet: {
-        mood: 82,
-        energy: 74,
-        focus: 68,
+        completedPomodoros: 0,
         blink: false,
-        bounce: 0,
       },
       timer: {
         focusMinutes: 25,
@@ -614,6 +604,7 @@
         focusMinutes: appState.timer.focusMinutes,
         breakMinutes: appState.timer.breakMinutes,
         session: appState.timer.session,
+        completedPomodoros: appState.pet.completedPomodoros,
       };
       localStorage.setItem('retroPomodoroSettings', JSON.stringify(payload));
     }
@@ -626,29 +617,37 @@
         appState.timer.focusMinutes = Number(saved.focusMinutes) || 25;
         appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
         appState.timer.session = Number(saved.session) || 1;
+        appState.pet.completedPomodoros = Number(saved.completedPomodoros) || 0;
         appState.timer.totalSeconds = appState.timer.focusMinutes * 60;
         appState.timer.remainingSeconds = appState.timer.totalSeconds;
       } catch {}
     }
 
-    function clamp(n, min, max) {
-      return Math.max(min, Math.min(max, n));
+    function getGrowthStage() {
+      return growthStages.reduce((current, stage) => (
+        appState.pet.completedPomodoros >= stage.threshold ? stage : current
+      ), growthStages[0]);
     }
 
-    function updatePetMeters() {
-      const { mood, energy, focus } = appState.pet;
-      $('#moodMeter').style.width = `${mood}%`;
-      $('#energyMeter').style.width = `${energy}%`;
-      $('#focusMeter').style.width = `${focus}%`;
-      $('#moodValue').textContent = `${mood}%`;
-      $('#energyValue').textContent = `${energy}%`;
-      $('#focusValue').textContent = `${focus}%`;
+    function updatePetStats() {
+      const stage = getGrowthStage();
+      $('#pomodoroCountValue').textContent = String(appState.pet.completedPomodoros);
+      $('#growthStageValue').textContent = stage.name;
     }
 
     function drawPet() {
       const canvas = $('#petCanvas');
       const ctx = canvas.getContext('2d');
-      const { mood, blink } = appState.pet;
+      const { blink } = appState.pet;
+      const stage = getGrowthStage();
+      const size = stage.size;
+      const bodyX = Math.floor((canvas.width - size) / 2);
+      const bodyY = canvas.height - size - 2;
+      const bodyColor = '#8fffb0';
+      const accentColor = '#2e7d45';
+      const eyeColor = '#07110a';
+      const leafColor = '#b8ffcb';
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const px = (x, y, w, h, color) => {
@@ -656,68 +655,33 @@
         ctx.fillRect(x, y, w, h);
       };
 
-      const baseY = mood > 60 ? 1 : 2;
-      const bodyColor = mood > 45 ? '#8fffb0' : '#6ccf89';
-      const accentColor = '#2e7d45';
-      const eyeColor = '#07110a';
+      px(bodyX + 1, bodyY, Math.max(2, size - 2), 1, bodyColor);
+      px(bodyX, bodyY + 1, size, Math.max(2, size - 2), bodyColor);
+      px(bodyX + 1, bodyY + Math.max(2, size - 1), Math.max(2, size - 2), 1, bodyColor);
 
-      px(11, 6 + baseY, 10, 2, bodyColor);
-      px(9, 8 + baseY, 14, 2, bodyColor);
-      px(8, 10 + baseY, 16, 8, bodyColor);
-      px(9, 18 + baseY, 14, 4, bodyColor);
-      px(11, 22 + baseY, 3, 4, bodyColor);
-      px(18, 22 + baseY, 3, 4, bodyColor);
+      const stemX = bodyX + Math.floor(size / 2);
+      px(stemX, bodyY - 2, 1, 2, accentColor);
+      px(stemX - 1, bodyY - 3, 2, 1, leafColor);
+      px(stemX, bodyY - 4, 2, 1, leafColor);
 
-      px(9, 6 + baseY, 2, 2, accentColor);
-      px(21, 6 + baseY, 2, 2, accentColor);
-      px(12, 5 + baseY, 2, 1, accentColor);
-      px(18, 5 + baseY, 2, 1, accentColor);
+      const eyeY = bodyY + Math.max(1, Math.floor(size / 3));
+      const leftEyeX = bodyX + Math.max(1, Math.floor(size / 3));
+      const rightEyeX = bodyX + size - Math.max(2, Math.floor(size / 3)) - 1;
 
       if (blink) {
-        px(12, 12 + baseY, 3, 1, eyeColor);
-        px(17, 12 + baseY, 3, 1, eyeColor);
+        px(leftEyeX, eyeY, 1, 1, eyeColor);
+        px(rightEyeX, eyeY, 1, 1, eyeColor);
       } else {
-        px(12, 11 + baseY, 2, 2, eyeColor);
-        px(18, 11 + baseY, 2, 2, eyeColor);
+        px(leftEyeX, eyeY, 1, 2, eyeColor);
+        px(rightEyeX, eyeY, 1, 2, eyeColor);
       }
 
-      if (mood > 60) {
-        px(13, 15 + baseY, 6, 1, eyeColor);
-        px(12, 14 + baseY, 1, 1, eyeColor);
-        px(19, 14 + baseY, 1, 1, eyeColor);
-      } else {
-        px(13, 15 + baseY, 6, 1, eyeColor);
-      }
-
-      px(7, 16 + baseY, 1, 2, accentColor);
-      px(24, 16 + baseY, 1, 2, accentColor);
-      px(6, 17 + baseY, 1, 1, accentColor);
-      px(25, 17 + baseY, 1, 1, accentColor);
+      const mouthWidth = Math.max(2, Math.floor(size / 3));
+      px(bodyX + Math.floor((size - mouthWidth) / 2), bodyY + size - 2, mouthWidth, 1, eyeColor);
     }
 
     function animatePet() {
       appState.pet.blink = Math.random() < 0.15;
-      drawPet();
-    }
-
-    function petAction(type) {
-      if (type === 'feed') {
-        appState.pet.mood = clamp(appState.pet.mood + 6, 0, 100);
-        appState.pet.energy = clamp(appState.pet.energy + 8, 0, 100);
-        logFeed('Pet fed. Energy reserves increased.');
-      }
-      if (type === 'play') {
-        appState.pet.mood = clamp(appState.pet.mood + 9, 0, 100);
-        appState.pet.energy = clamp(appState.pet.energy - 5, 0, 100);
-        appState.pet.focus = clamp(appState.pet.focus + 4, 0, 100);
-        logFeed('Pet played. Morale spike detected.');
-      }
-      if (type === 'rest') {
-        appState.pet.energy = clamp(appState.pet.energy + 10, 0, 100);
-        appState.pet.focus = clamp(appState.pet.focus + 6, 0, 100);
-        logFeed('Pet resting. Systems stabilizing.');
-      }
-      updatePetMeters();
       drawPet();
     }
 
@@ -736,20 +700,25 @@
       $('#timerRing').style.background = `conic-gradient(var(--glow) ${Math.max(0, pct) * 360}deg, rgba(97,255,141,0.09) 0deg)`;
     }
 
-    function switchTimerMode() {
+    function switchTimerMode(countCompletedPomodoro = true) {
       const t = appState.timer;
       if (t.mode === 'focus') {
         t.mode = 'break';
         t.totalSeconds = t.breakMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
-        logFeed(`Focus session complete. Starting ${t.breakMinutes}-minute break.`);
+        if (countCompletedPomodoro) {
+          appState.pet.completedPomodoros += 1;
+          updatePetStats();
+          drawPet();
+          logFeed(`Focus session complete. Pet grew after pomodoro ${appState.pet.completedPomodoros}. Starting ${t.breakMinutes}-minute break.`);
+        } else {
+          logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
+        }
       } else {
         t.mode = 'focus';
         t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
-        appState.pet.focus = clamp(appState.pet.focus + 5, 0, 100);
-        updatePetMeters();
         logFeed(`Break complete. Starting focus session ${t.session}.`);
       }
       saveTimerSettings();
@@ -764,11 +733,6 @@
       t.tickHandle = setInterval(() => {
         if (t.remainingSeconds > 0) {
           t.remainingSeconds -= 1;
-          if (t.mode === 'focus' && t.remainingSeconds % 60 === 0) {
-            appState.pet.energy = clamp(appState.pet.energy - 1, 0, 100);
-            appState.pet.focus = clamp(appState.pet.focus + 1, 0, 100);
-            updatePetMeters();
-          }
           updateTimerUI();
         } else {
           clearInterval(t.tickHandle);
@@ -798,8 +762,7 @@
 
     function skipTimer() {
       pauseTimer();
-      switchTimerMode();
-      logFeed('Current timer phase skipped.');
+      switchTimerMode(false);
     }
 
     function applyPreset(focus, breakMin) {
@@ -874,10 +837,6 @@
     }
 
     function bindEvents() {
-      $('#petFeedBtn').addEventListener('click', () => petAction('feed'));
-      $('#petPlayBtn').addEventListener('click', () => petAction('play'));
-      $('#petRestBtn').addEventListener('click', () => petAction('rest'));
-
       $('#startTimerBtn').addEventListener('click', startTimer);
       $('#pauseTimerBtn').addEventListener('click', pauseTimer);
       $('#resetTimerBtn').addEventListener('click', resetTimer);
@@ -924,7 +883,7 @@
       loadTimerSettings();
       bindEvents();
       renderThoughts();
-      updatePetMeters();
+      updatePetStats();
       updateTimerUI();
       drawPet();
       initClock();
