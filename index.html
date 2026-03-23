@@ -16,6 +16,7 @@
       --text-soft: #85d79d;
       --warn: #ffd166;
       --danger: #ff6b6b;
+      --info: #7dd3fc;
       --shadow: rgba(97, 255, 141, 0.12);
       --radius: 14px;
       --gap: 16px;
@@ -99,6 +100,123 @@
       font-size: 0.78rem;
       color: var(--text-soft);
       background: rgba(97,255,141,0.04);
+    }
+
+    .weather-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) auto;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(8, 27, 14, 0.95), rgba(5, 15, 9, 0.92));
+      box-shadow: inset 0 0 0 1px rgba(97,255,141,0.03), 0 0 14px var(--shadow);
+    }
+
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .weather-sigil {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(97,255,141,0.2);
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+      background: rgba(97,255,141,0.06);
+      box-shadow: inset 0 0 10px rgba(97,255,141,0.05);
+      flex-shrink: 0;
+    }
+
+    .weather-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .weather-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .weather-title {
+      font-size: 0.88rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .weather-summary {
+      font-size: 0.82rem;
+      color: var(--text-soft);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .weather-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.74rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .weather-pill {
+      padding: 2px 8px;
+      border: 1px solid rgba(97,255,141,0.18);
+      border-radius: 999px;
+      background: rgba(97,255,141,0.05);
+    }
+
+    .weather-pill.warn {
+      border-color: rgba(255,209,102,0.34);
+      color: var(--warn);
+    }
+
+    .weather-pill.info {
+      border-color: rgba(125,211,252,0.34);
+      color: var(--info);
+    }
+
+    .weather-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .weather-input {
+      width: min(240px, 42vw);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(97,255,141,0.22);
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text);
+      outline: none;
+    }
+
+    .weather-input:focus {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 3px rgba(97,255,141,0.08);
+    }
+
+    .weather-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.76rem;
     }
 
     .grid {
@@ -415,8 +533,46 @@
     }
 
     @media (max-width: 1120px) {
+      .weather-strip {
+        grid-template-columns: 1fr;
+        border-radius: 18px;
+      }
+
+      .weather-controls {
+        justify-content: flex-start;
+      }
+
+      .weather-input {
+        width: min(100%, 320px);
+      }
+
       .grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .weather-main {
+        align-items: flex-start;
+      }
+
+      .weather-row,
+      .weather-meta {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+      }
+
+      .weather-summary {
+        white-space: normal;
+      }
+
+      .weather-controls {
+        width: 100%;
+      }
+
+      .weather-input {
+        width: 100%;
       }
     }
   </style>
@@ -435,6 +591,36 @@
         <div class="badge">BUILD: v0.1</div>
       </div>
     </header>
+
+    <section class="weather-strip" aria-label="Local weather strip">
+      <div class="weather-main">
+        <div class="weather-sigil" id="weatherSigil" aria-hidden="true">⌛</div>
+        <div class="weather-copy">
+          <div class="weather-row">
+            <strong class="weather-title" id="weatherTitle">WEATHER STRIP //</strong>
+            <span class="weather-summary" id="weatherSummary">Acquiring local conditions…</span>
+          </div>
+          <div class="weather-meta">
+            <span class="weather-pill" id="weatherTemp">--°F</span>
+            <span class="weather-pill" id="weatherWind">WIND -- MPH</span>
+            <span class="weather-pill info" id="weatherSource">BOOT: GEO</span>
+            <span class="weather-pill" id="weatherUpdated">SYNC --</span>
+          </div>
+        </div>
+      </div>
+      <form class="weather-controls" id="weatherForm">
+        <input
+          class="weather-input"
+          id="weatherLocationInput"
+          type="text"
+          name="location"
+          placeholder="Manual location fallback (city or ZIP)"
+          autocomplete="off"
+          aria-label="Enter a city or ZIP code for weather fallback"
+        />
+        <button type="submit" class="weather-btn secondary">Tune Location</button>
+      </form>
+    </section>
 
     <main class="grid">
       <section class="column">
@@ -574,7 +760,258 @@
         tickHandle: null,
       },
       thoughts: [],
+      weather: {
+        source: 'geo',
+        label: 'Awaiting fix',
+        status: 'Acquiring local conditions…',
+        temperatureF: null,
+        windMph: null,
+        updatedAt: null,
+        sigil: '⌛',
+      },
     };
+
+
+    const WEATHER_CODES = {
+      0: { label: 'Clear sky', sigil: '☼' },
+      1: { label: 'Mostly clear', sigil: '◔' },
+      2: { label: 'Partly cloudy', sigil: '◑' },
+      3: { label: 'Overcast', sigil: '☁' },
+      45: { label: 'Fog', sigil: '≋' },
+      48: { label: 'Rime fog', sigil: '≋' },
+      51: { label: 'Light drizzle', sigil: '☂' },
+      53: { label: 'Drizzle', sigil: '☂' },
+      55: { label: 'Dense drizzle', sigil: '☂' },
+      56: { label: 'Freezing drizzle', sigil: '❄' },
+      57: { label: 'Dense freezing drizzle', sigil: '❄' },
+      61: { label: 'Light rain', sigil: '☂' },
+      63: { label: 'Rain', sigil: '☂' },
+      65: { label: 'Heavy rain', sigil: '☂' },
+      66: { label: 'Freezing rain', sigil: '❄' },
+      67: { label: 'Heavy freezing rain', sigil: '❄' },
+      71: { label: 'Light snow', sigil: '❄' },
+      73: { label: 'Snow', sigil: '❄' },
+      75: { label: 'Heavy snow', sigil: '❄' },
+      77: { label: 'Snow grains', sigil: '❄' },
+      80: { label: 'Rain showers', sigil: '☔' },
+      81: { label: 'Strong showers', sigil: '☔' },
+      82: { label: 'Violent showers', sigil: '☔' },
+      85: { label: 'Snow showers', sigil: '❅' },
+      86: { label: 'Heavy snow showers', sigil: '❅' },
+      95: { label: 'Thunderstorm', sigil: '⚡' },
+      96: { label: 'Storm + hail', sigil: '⚡' },
+      99: { label: 'Severe storm', sigil: '⚡' },
+    };
+
+    function setWeatherState(nextState) {
+      appState.weather = { ...appState.weather, ...nextState };
+      renderWeather();
+    }
+
+    function renderWeather() {
+      const weather = appState.weather;
+      $('#weatherSigil').textContent = weather.sigil || '⌛';
+      $('#weatherTitle').textContent = `WEATHER STRIP // ${weather.label}`;
+      $('#weatherSummary').textContent = weather.status;
+      $('#weatherTemp').textContent = weather.temperatureF == null ? '--°F' : `${weather.temperatureF}°F`;
+      $('#weatherWind').textContent = weather.windMph == null ? 'WIND -- MPH' : `WIND ${weather.windMph} MPH`;
+      $('#weatherSource').textContent = `BOOT: ${String(weather.source || 'geo').toUpperCase()}`;
+      $('#weatherUpdated').textContent = weather.updatedAt || 'SYNC --';
+    }
+
+    function getWeatherDescriptor(code) {
+      return WEATHER_CODES[code] || { label: 'Uncoded sky', sigil: '⌘' };
+    }
+
+    function roundNumber(value) {
+      return Number.isFinite(value) ? Math.round(value) : null;
+    }
+
+    function formatUpdatedTime(value) {
+      const date = value ? new Date(value) : new Date();
+      return `SYNC ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    function formatForecastStatus(locationLabel, descriptor, isDay) {
+      return `${locationLabel} · ${descriptor.label} · ${isDay ? 'day cycle' : 'night cycle'}`;
+    }
+
+    async function fetchWeatherForCoordinates(latitude, longitude, locationLabel, sourceLabel) {
+      setWeatherState({
+        source: sourceLabel,
+        label: locationLabel,
+        status: `Fetching Open-Meteo conditions for ${locationLabel}…`,
+        temperatureF: null,
+        windMph: null,
+        updatedAt: 'SYNC --',
+        sigil: '⌛',
+      });
+
+      const url = new URL('https://api.open-meteo.com/v1/forecast');
+      url.search = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        current: 'temperature_2m,weather_code,wind_speed_10m,is_day',
+        temperature_unit: 'fahrenheit',
+        wind_speed_unit: 'mph',
+        timezone: 'auto',
+      }).toString();
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`forecast ${response.status}`);
+      const payload = await response.json();
+      const current = payload.current;
+      if (!current) throw new Error('forecast missing current weather');
+
+      const descriptor = getWeatherDescriptor(current.weather_code);
+      setWeatherState({
+        source: sourceLabel,
+        label: locationLabel,
+        status: formatForecastStatus(locationLabel, descriptor, Boolean(current.is_day)),
+        temperatureF: roundNumber(current.temperature_2m),
+        windMph: roundNumber(current.wind_speed_10m),
+        updatedAt: formatUpdatedTime(current.time),
+        sigil: descriptor.sigil,
+      });
+      logFeed(`Weather strip synced via Open-Meteo for ${locationLabel}.`);
+    }
+
+    async function geocodeLocation(query) {
+      const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
+      url.search = new URLSearchParams({
+        name: query,
+        count: '1',
+        language: 'en',
+        format: 'json',
+      }).toString();
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`geocode ${response.status}`);
+      const payload = await response.json();
+      const match = payload.results?.[0];
+      if (!match) throw new Error('no geocode result');
+
+      const parts = [match.name, match.admin1, match.country_code].filter(Boolean);
+      return {
+        latitude: match.latitude,
+        longitude: match.longitude,
+        label: parts.join(', '),
+      };
+    }
+
+    function loadSavedWeatherLocation() {
+      return localStorage.getItem('retroWeatherManualLocation') || '';
+    }
+
+    function saveWeatherLocation(query) {
+      localStorage.setItem('retroWeatherManualLocation', query);
+    }
+
+    function clearWeatherLocation() {
+      localStorage.removeItem('retroWeatherManualLocation');
+    }
+
+    async function useManualLocation(query) {
+      const cleanQuery = query.trim();
+      if (!cleanQuery) {
+        setWeatherState({
+          source: 'manual',
+          status: 'Enter a city or ZIP to override geolocation.',
+          sigil: '⌕',
+        });
+        return;
+      }
+
+      setWeatherState({
+        source: 'manual',
+        label: cleanQuery,
+        status: `Resolving ${cleanQuery}…`,
+        temperatureF: null,
+        windMph: null,
+        updatedAt: 'SYNC --',
+        sigil: '⌕',
+      });
+
+      try {
+        const match = await geocodeLocation(cleanQuery);
+        saveWeatherLocation(cleanQuery);
+        await fetchWeatherForCoordinates(match.latitude, match.longitude, match.label, 'manual');
+      } catch (error) {
+        setWeatherState({
+          source: 'manual',
+          label: cleanQuery,
+          status: `Manual fallback failed for ${cleanQuery}. Try a broader city or ZIP.`,
+          sigil: '!',
+        });
+        logFeed(`Weather fallback failed for ${cleanQuery}: ${error.message}.`);
+      }
+    }
+
+    function triggerSavedWeatherFallback() {
+      const saved = loadSavedWeatherLocation().trim();
+      if (!saved) return false;
+      useManualLocation(saved);
+      return true;
+    }
+
+    function requestGeolocationWeather() {
+      if (!('geolocation' in navigator)) {
+        const restored = triggerSavedWeatherFallback();
+        if (!restored) {
+          setWeatherState({
+            source: 'manual',
+            status: 'Geolocation unavailable. Use the manual fallback field.',
+            sigil: '!',
+          });
+        }
+        logFeed('Weather strip: geolocation unavailable, manual fallback armed.');
+        return;
+      }
+
+      setWeatherState({
+        source: 'geo',
+        label: 'Current position',
+        status: 'Requesting one-time geolocation fix…',
+        sigil: '⌛',
+      });
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        clearWeatherLocation();
+        try {
+          await fetchWeatherForCoordinates(latitude, longitude, 'Current position', 'geo');
+        } catch (error) {
+          setWeatherState({
+            source: 'manual',
+            label: 'Fallback ready',
+            status: 'Weather lookup failed after geolocation. Try the manual location fallback.',
+            sigil: '!',
+          });
+          logFeed(`Weather fetch failed after geolocation: ${error.message}.`);
+        }
+      }, (error) => {
+        const restored = triggerSavedWeatherFallback();
+        if (!restored) {
+          setWeatherState({
+            source: 'manual',
+            label: 'Fallback ready',
+            status: 'Geolocation denied or timed out. Use the manual location fallback.',
+            sigil: '!',
+          });
+        }
+        logFeed(`Weather strip geolocation skipped (${error.code}). Manual fallback enabled.`);
+      }, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000,
+      });
+    }
+
+    function initWeather() {
+      $('#weatherLocationInput').value = loadSavedWeatherLocation();
+      renderWeather();
+      requestGeolocationWeather();
+    }
 
     function logFeed(message) {
       const feed = $('#terminalFeed');
@@ -864,6 +1301,11 @@
         renderThoughts();
         logFeed('Thought log cleared.');
       });
+
+      $('#weatherForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        useManualLocation($('#weatherLocationInput').value);
+      });
     }
 
     function initClock() {
@@ -887,8 +1329,9 @@
       updateTimerUI();
       drawPet();
       initClock();
+      initWeather();
       logFeed('Retro Command Habitat initialized.');
-      logFeed('Modules loaded: pixel pet, pomodoro, thought log.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip.');
       setInterval(animatePet, 1200);
     }
 
