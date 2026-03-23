@@ -587,6 +587,135 @@
     }
     .stats-left { display: flex; align-items: center; gap: 10px; }
 
+    /* ── Weather strip ── */
+    .weather-strip {
+      width: calc(100% - 24px);
+      margin: 10px 12px 0;
+      background: #f8f4e6;
+      border-top: 2px solid var(--btn-hi);
+      border-left: 2px solid var(--btn-hi);
+      border-right: 2px solid var(--btn-dk);
+      border-bottom: 2px solid var(--btn-dk);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .weather-strip.loading .weather-summary { color: #666666; }
+    .weather-strip.error .weather-summary { color: #cc0000; }
+    .weather-strip-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-family: Verdana, Arial, sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #333333;
+    }
+    .weather-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .weather-glyph {
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      border: 1px inset #808080;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .weather-reading {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .weather-temp {
+      font-family: 'Courier New', monospace;
+      font-size: 28px;
+      color: #000080;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .weather-summary {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 13px;
+      color: #333333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .weather-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-family: Verdana, Arial, sans-serif;
+      font-size: 10px;
+      color: #333333;
+      text-align: right;
+      line-height: 1.4;
+    }
+    .weather-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .weather-btn,
+    .weather-search-btn {
+      background: var(--btn-face);
+      border-top: 2px solid var(--btn-hi);
+      border-left: 2px solid var(--btn-hi);
+      border-right: 2px solid var(--btn-dk);
+      border-bottom: 2px solid var(--btn-dk);
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'Trebuchet MS', Verdana, sans-serif;
+      font-size: 11px;
+      padding: 3px 8px;
+    }
+    .weather-btn:active,
+    .weather-search-btn:active {
+      border-top: 2px solid var(--btn-dk);
+      border-left: 2px solid var(--btn-dk);
+      border-right: 2px solid var(--btn-hi);
+      border-bottom: 2px solid var(--btn-hi);
+    }
+    .weather-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .weather-search-input {
+      min-width: 0;
+      flex: 1;
+      background: #ffffff;
+      border: 2px inset #808080;
+      outline: none;
+      font-family: Verdana, Arial, sans-serif;
+      font-size: 11px;
+      color: #000000;
+      padding: 4px 6px;
+    }
+    .weather-search-input:focus { border-color: #0000ff; }
+
     /* ── Creature level glow ── */
     .creature-aura {
       position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
@@ -773,6 +902,41 @@
     </div>
   </div>
 
+  <div class="weather-strip" id="weather-strip">
+    <div class="weather-strip-header">
+      <span>local weather</span>
+      <span id="weather-updated">not set</span>
+    </div>
+    <div class="weather-row">
+      <div class="weather-main">
+        <span class="weather-glyph" id="weather-glyph">?</span>
+        <div class="weather-reading">
+          <span class="weather-temp" id="weather-temp">--°</span>
+          <span class="weather-summary" id="weather-summary">Pick a nearby spot to see today's sky.</span>
+        </div>
+      </div>
+      <div class="weather-meta">
+        <span id="weather-location">local area</span>
+        <span id="weather-range">H --° / L --°</span>
+        <span id="weather-rain">Rain --%</span>
+      </div>
+    </div>
+    <div class="weather-actions">
+      <button class="weather-btn" id="weather-locate" type="button">Use my location</button>
+      <form class="weather-search" id="weather-search">
+        <input
+          class="weather-search-input"
+          id="weather-query"
+          type="text"
+          placeholder="city or ZIP code"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="weather-search-btn" type="submit">Set place</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Habitat -->
   <div class="habitat">
     <div class="habitat-glow"></div>
@@ -921,6 +1085,21 @@
     todayPomos:0, todayDate:todayStr(),
     dailyGoal:4,
     unlockedAch:[],
+    weather:{
+      label:'local area',
+      source:'none',
+      query:'',
+      lat:null,
+      lon:null,
+      temp:null,
+      high:null,
+      low:null,
+      precip:null,
+      summary:"Pick a nearby spot to see today's sky.",
+      glyph:'?',
+      updatedAt:null,
+      status:'idle',
+    },
   };
 
   try {
@@ -936,6 +1115,9 @@
     if (sv.todayPomos) S.todayPomos = sv.todayPomos;
     if (sv.todayDate) S.todayDate = sv.todayDate;
     if (sv.unlockedAch) S.unlockedAch = sv.unlockedAch;
+    if (sv.weather) {
+      S.weather = { ...S.weather, ...sv.weather };
+    }
   } catch(e){}
   S.timeLeft = focusSecs();
 
@@ -953,6 +1135,13 @@
       streak:S.streak, lastActiveDay:S.lastActiveDay,
       todayPomos:S.todayPomos, todayDate:S.todayDate,
       unlockedAch:S.unlockedAch, bestStreak:S.bestStreak,
+      weather: {
+        label:S.weather.label,
+        source:S.weather.source,
+        query:S.weather.query,
+        lat:S.weather.lat,
+        lon:S.weather.lon,
+      },
     }));
   }
 
@@ -1108,6 +1297,155 @@
     const el = document.getElementById('notif');
     el.textContent = msg; el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'), dur);
+  }
+
+  // ── Weather ───────────────────────────────────────────────────────────
+  function weatherCodeInfo(code, isDay = 1) {
+    if (code === 0) return { glyph:isDay ? '☀' : '☾', label:isDay ? 'Clear skies' : 'Clear night' };
+    if ([1, 2].includes(code)) return { glyph:isDay ? '⛅' : '☁', label:'Partly cloudy' };
+    if (code === 3) return { glyph:'☁', label:'Overcast' };
+    if ([45, 48].includes(code)) return { glyph:'〰', label:'Foggy' };
+    if ([51, 53, 55, 56, 57].includes(code)) return { glyph:'☂', label:'Drizzle' };
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { glyph:'☔', label:'Rainy' };
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return { glyph:'❄', label:'Snowy' };
+    if ([95, 96, 99].includes(code)) return { glyph:'⚡', label:'Stormy' };
+    return { glyph:'☁', label:'Weather check' };
+  }
+
+  function weatherUpdatedLabel() {
+    if (!S.weather.updatedAt) return 'not set';
+    const mins = Math.max(0, Math.round((Date.now() - S.weather.updatedAt) / 60000));
+    if (mins < 1) return 'just now';
+    if (mins === 1) return '1 min ago';
+    if (mins < 60) return `${mins} mins ago`;
+    const hours = Math.round(mins / 60);
+    return hours === 1 ? '1 hr ago' : `${hours} hrs ago`;
+  }
+
+  function renderWeather() {
+    const strip = document.getElementById('weather-strip');
+    const summary = document.getElementById('weather-summary');
+    document.getElementById('weather-glyph').textContent = S.weather.glyph || '?';
+    document.getElementById('weather-temp').textContent = S.weather.temp == null ? '--°' : `${Math.round(S.weather.temp)}°`;
+    summary.textContent = S.weather.summary;
+    document.getElementById('weather-location').textContent = S.weather.label || 'local area';
+    document.getElementById('weather-range').textContent =
+      S.weather.high == null || S.weather.low == null
+        ? 'H --° / L --°'
+        : `H ${Math.round(S.weather.high)}° / L ${Math.round(S.weather.low)}°`;
+    document.getElementById('weather-rain').textContent =
+      S.weather.precip == null ? 'Rain --%' : `Rain ${Math.round(S.weather.precip)}%`;
+    document.getElementById('weather-updated').textContent = weatherUpdatedLabel();
+    document.getElementById('weather-query').value = S.weather.query || '';
+    strip.classList.toggle('loading', S.weather.status === 'loading');
+    strip.classList.toggle('error', S.weather.status === 'error');
+  }
+
+  async function fetchWeatherForCoords(lat, lon, label, source, query = '') {
+    S.weather.status = 'loading';
+    S.weather.summary = 'Checking the sky...';
+    S.weather.label = label;
+    renderWeather();
+
+    try {
+      const params = new URLSearchParams({
+        latitude: String(lat),
+        longitude: String(lon),
+        current: 'temperature_2m,apparent_temperature,weather_code,is_day',
+        daily: 'temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+        temperature_unit: 'fahrenheit',
+        precipitation_unit: 'inch',
+        timezone: 'auto',
+        forecast_days: '1',
+      });
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+      if (!res.ok) throw new Error('Weather service unavailable.');
+      const data = await res.json();
+      const current = data.current || {};
+      const daily = data.daily || {};
+      const info = weatherCodeInfo(current.weather_code, current.is_day);
+
+      S.weather = {
+        ...S.weather,
+        label,
+        source,
+        query,
+        lat,
+        lon,
+        temp: current.temperature_2m ?? null,
+        high: daily.temperature_2m_max?.[0] ?? null,
+        low: daily.temperature_2m_min?.[0] ?? null,
+        precip: daily.precipitation_probability_max?.[0] ?? null,
+        summary: info.label,
+        glyph: info.glyph,
+        updatedAt: Date.now(),
+        status:'ready',
+      };
+      renderWeather();
+      persist();
+    } catch (err) {
+      S.weather = {
+        ...S.weather,
+        status:'error',
+        summary: err.message || 'Weather check failed.',
+      };
+      renderWeather();
+      showNotif('weather check failed', 2200);
+    }
+  }
+
+  async function searchWeatherLocation(query) {
+    const params = new URLSearchParams({ name: query, count: '1', language: 'en', format: 'json' });
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
+    if (!res.ok) throw new Error('Location search failed.');
+    const data = await res.json();
+    const first = data.results && data.results[0];
+    if (!first) throw new Error('No matching place found.');
+    const parts = [first.name, first.admin1, first.country_code].filter(Boolean);
+    return {
+      label: parts.join(', '),
+      lat: first.latitude,
+      lon: first.longitude,
+    };
+  }
+
+  function requestLocalWeather() {
+    if (!navigator.geolocation) {
+      S.weather.status = 'error';
+      S.weather.summary = 'Location sharing is not available here.';
+      renderWeather();
+      return;
+    }
+    S.weather.status = 'loading';
+    S.weather.summary = 'Waiting for location permission...';
+    renderWeather();
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        fetchWeatherForCoords(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          'Near you',
+          'geolocation'
+        );
+      },
+      err => {
+        const denied = err && err.code === err.PERMISSION_DENIED;
+        S.weather.status = 'error';
+        S.weather.summary = denied ? 'Location was denied. Try a city or ZIP code.' : 'Could not grab your spot.';
+        renderWeather();
+      },
+      { enableHighAccuracy:false, timeout:10000, maximumAge:900000 }
+    );
+  }
+
+  let weatherRefreshInt;
+  function startWeatherRefresh() {
+    clearInterval(weatherRefreshInt);
+    weatherRefreshInt = setInterval(() => {
+      if (document.hidden) return;
+      if (S.weather.lat == null || S.weather.lon == null) return;
+      fetchWeatherForCoords(S.weather.lat, S.weather.lon, S.weather.label, S.weather.source, S.weather.query);
+    }, 30 * 60 * 1000);
   }
 
   // ── Settings ──────────────────────────────────────────────────────────
@@ -1292,6 +1630,26 @@
   document.getElementById('btn-start').addEventListener('click', ()=>{ if(S.running) pauseTimer(); else startTimer(); });
   document.getElementById('btn-reset').addEventListener('click', resetTimer);
   document.getElementById('btn-skip').addEventListener('click', skipTimer);
+  document.getElementById('weather-locate').addEventListener('click', requestLocalWeather);
+  document.getElementById('weather-search').addEventListener('submit', async e => {
+    e.preventDefault();
+    const query = document.getElementById('weather-query').value.trim();
+    if (!query) return;
+    S.weather.status = 'loading';
+    S.weather.summary = 'Looking up your place...';
+    S.weather.query = query;
+    renderWeather();
+    try {
+      const result = await searchWeatherLocation(query);
+      await fetchWeatherForCoords(result.lat, result.lon, result.label, 'manual', query);
+      showNotif(`weather set for ${result.label}`, 2200);
+    } catch (err) {
+      S.weather.status = 'error';
+      S.weather.summary = err.message || 'Could not find that place.';
+      renderWeather();
+      showNotif('place not found', 2200);
+    }
+  });
   document.getElementById('thought-input').addEventListener('keydown', e=>{
     if (e.key==='Enter') { const v=e.target.value.trim(); if(v){logThought(v);e.target.value='';} }
   });
@@ -1316,6 +1674,11 @@
   setCS('idle'); startEyeWander(); updateTimerDisplay(); updateModeLabel();
   updateStartBtn(); renderDots(); renderThoughts();
   renderLevel(); renderStreak(); renderDailyGoal(); updateCreatureAura();
+  renderWeather();
+  startWeatherRefresh();
+  if (S.weather.lat != null && S.weather.lon != null) {
+    fetchWeatherForCoords(S.weather.lat, S.weather.lon, S.weather.label, S.weather.source, S.weather.query);
+  }
   updateHitCounter();
 </script>
 </body>
