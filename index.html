@@ -366,6 +366,33 @@
       color: var(--text);
     }
 
+    .pet-growth-progress {
+      display: grid;
+      gap: 6px;
+    }
+
+    .pet-growth-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,117,150,0.24);
+      background: rgba(99,117,150,0.12);
+      overflow: hidden;
+    }
+
+    .pet-growth-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #9caecc, #637596);
+      transition: width 180ms ease-in-out;
+    }
+
+    .pet-growth-text {
+      font-size: 0.76rem;
+      color: var(--text-soft);
+      text-align: right;
+    }
+
     .controls, .timer-controls {
       display: flex;
       gap: 8px;
@@ -768,6 +795,12 @@
               <div class="pet-stat-card">
                 <span class="pet-stat-label">Growth Stage</span>
                 <span class="pet-stat-value" id="growthStageValue">Sprout</span>
+              </div>
+              <div class="pet-growth-progress">
+                <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div class="pet-growth-fill" id="growthProgressFill"></div>
+                </div>
+                <span class="pet-growth-text" id="growthProgressText">0 sessions until Bud</span>
               </div>
             </div>
           </div>
@@ -1249,10 +1282,42 @@
       ), growthStages[0]);
     }
 
+    function getGrowthProgress() {
+      const completed = appState.pet.completedPomodoros;
+      const currentStageIndex = growthStages.findIndex(stage => stage.name === getGrowthStage().name);
+      const nextStage = growthStages[currentStageIndex + 1];
+
+      if (!nextStage) {
+        return {
+          progressPercent: 100,
+          statusText: 'Max stage reached.',
+          ariaValueNow: 100,
+        };
+      }
+
+      const currentStageThreshold = growthStages[currentStageIndex].threshold;
+      const requiredForStage = nextStage.threshold - currentStageThreshold;
+      const progressInStage = completed - currentStageThreshold;
+      const progressPercent = Math.max(0, Math.min(100, (progressInStage / requiredForStage) * 100));
+      const sessionsUntilNextStage = Math.max(0, nextStage.threshold - completed);
+      const sessionLabel = sessionsUntilNextStage === 1 ? 'session' : 'sessions';
+
+      return {
+        progressPercent,
+        statusText: `${sessionsUntilNextStage} ${sessionLabel} until ${nextStage.name}`,
+        ariaValueNow: Math.round(progressPercent),
+      };
+    }
+
     function updatePetStats() {
       const stage = getGrowthStage();
+      const growthProgress = getGrowthProgress();
       $('#pomodoroCountValue').textContent = String(appState.pet.completedPomodoros);
       $('#growthStageValue').textContent = stage.name;
+      $('#growthProgressFill').style.width = `${growthProgress.progressPercent}%`;
+      $('#growthProgressText').textContent = growthProgress.statusText;
+      const progressTrack = document.querySelector('.pet-growth-track');
+      progressTrack.setAttribute('aria-valuenow', String(growthProgress.ariaValueNow));
     }
 
     function drawPet() {
