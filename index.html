@@ -611,6 +611,61 @@
       color: var(--text-soft);
     }
 
+    .calendar-frame {
+      border: 1px solid rgba(97,255,141,0.18);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+    }
+
+    .calendar-month {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+
+    .calendar-cell {
+      min-height: 28px;
+      border: 1px solid rgba(97,255,141,0.12);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--text-soft);
+      background: rgba(97,255,141,0.02);
+    }
+
+    .calendar-cell.is-label {
+      min-height: 22px;
+      border: none;
+      background: transparent;
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+
+    .calendar-cell.is-empty {
+      border-color: rgba(97,255,141,0.05);
+      color: transparent;
+      background: rgba(97,255,141,0.01);
+    }
+
+    .calendar-cell.is-today {
+      border-color: rgba(97,255,141,0.45);
+      background: rgba(97,255,141,0.14);
+      box-shadow: inset 0 0 0 1px rgba(97,255,141,0.18);
+      color: var(--text);
+      text-shadow: 0 0 6px rgba(97,255,141,0.28);
+    }
+
     @media (max-width: 1120px) {
       .weather-strip {
         grid-template-columns: 1fr;
@@ -786,6 +841,20 @@
             <div>• Data persists through localStorage for the timer settings and thought log.</div>
             <div>• Add future modules by cloning a <code>.panel</code> block and attaching JS init logic.</div>
             <div>• The visual language is intentionally CRT-like: scanlines, green phosphor glow, grid overlays.</div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Calendar</h2>
+            <span class="panel-label">Module 04</span>
+          </div>
+          <div class="module-stack">
+            <div class="calendar-frame">
+              <div class="calendar-month" id="calendarMonthLabel">----</div>
+              <div class="calendar-grid" id="calendarGrid" aria-label="Current month calendar"></div>
+            </div>
+            <div class="footnote muted">Today is softly highlighted.</div>
           </div>
         </article>
       </section>
@@ -1250,6 +1319,34 @@
       return `${mins}:${secs}`;
     }
 
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const today = now.getDate();
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      $('#calendarMonthLabel').textContent = now.toLocaleString([], {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const cells = [...dayLabels.map(label => `<div class="calendar-cell is-label">${label}</div>`)];
+
+      for (let i = 0; i < firstDay.getDay(); i++) {
+        cells.push('<div class="calendar-cell is-empty">·</div>');
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const isToday = day === today;
+        cells.push(`<div class="calendar-cell${isToday ? ' is-today' : ''}">${day}</div>`);
+      }
+
+      $('#calendarGrid').innerHTML = cells.join('');
+    }
+
     function updateTimerUI() {
       const t = appState.timer;
       $('#timeDisplay').textContent = formatTime(t.remainingSeconds);
@@ -1478,10 +1575,11 @@
       updatePetStats();
       updateTimerUI();
       drawPet();
+      renderCalendar();
       initClock();
       initWeather();
       logFeed('Retro Command Habitat initialized.');
-      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar.');
       setInterval(animatePet, 1200);
     }
 
