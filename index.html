@@ -1517,6 +1517,12 @@
     function startTimer() {
       const t = appState.timer;
       if (t.running) return;
+      if (t.mode === 'focus' && t.remainingSeconds === t.totalSeconds) {
+        seedFocusVisualizerPatterns();
+        ensureGOLRunning();
+      } else {
+        syncGOLSpeed();
+      }
       t.running = true;
       logFeed(`Timer started: ${t.mode} mode.`);
       t.tickHandle = setInterval(() => {
@@ -1693,24 +1699,85 @@
       cols: 30, rows: 18, cellSize: 10,
       running: false, generation: 0,
       stepInterval: null, grid: [], next: [],
+      wrapEdges: true,
+      repeatHistory: [],
+      repeatHistoryLimit: 40,
+      lastRefreshGeneration: -1,
     };
     const GOL_SPEED_MS = { focus: 90, break: 220 };
-    const PRODUCTIVITY_PATTERN = {
-      name: 'glider',
-      cells: [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]],
-      width: 3,
-      height: 3,
-    };
+    const KNOWN_GOL_PATTERNS = [
+      {
+        name: 'blinker',
+        cells: [[0, 0], [1, 0], [2, 0]],
+        width: 3,
+        height: 1,
+      },
+      {
+        name: 'toad',
+        cells: [[1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1]],
+        width: 4,
+        height: 2,
+      },
+      {
+        name: 'beacon',
+        cells: [[0, 0], [1, 0], [0, 1], [1, 1], [2, 2], [3, 2], [2, 3], [3, 3]],
+        width: 4,
+        height: 4,
+      },
+      {
+        name: 'pentadecathlon',
+        cells: [[1, 0], [3, 0], [0, 1], [1, 1], [3, 1], [4, 1], [1, 2], [3, 2], [1, 3], [3, 3], [1, 4], [3, 4], [0, 5], [1, 5], [3, 5], [4, 5], [1, 6], [3, 6]],
+        width: 5,
+        height: 7,
+      },
+      {
+        name: 'lightweight spaceship',
+        cells: [[1, 0], [2, 0], [3, 0], [4, 0], [0, 1], [4, 1], [4, 2], [0, 3], [3, 3]],
+        width: 5,
+        height: 4,
+      },
+    ];
+    const FOCUS_VISUALIZER_BLUEPRINT = [
+      { pattern: 'beacon', x: 2, y: 2 },
+      { pattern: 'pentadecathlon', x: 10, y: 1 },
+      { pattern: 'toad', x: 5, y: 13 },
+      { pattern: 'blinker', x: 21, y: 14 },
+      { pattern: 'lightweight spaceship', x: 22, y: 6 },
+    ];
 
     function makeGrid(fill = 0) {
       return Array.from({ length: GOL.rows }, () => Array(GOL.cols).fill(fill));
+    }
+
+    function getPatternByName(name) {
+      return KNOWN_GOL_PATTERNS.find(pattern => pattern.name === name);
+    }
+
+    function encodeGridState() {
+      return GOL.grid.map(row => row.join('')).join('|');
+    }
+
+    function trackGridHistory() {
+      const signature = encodeGridState();
+      GOL.repeatHistory.push(signature);
+      if (GOL.repeatHistory.length > GOL.repeatHistoryLimit) GOL.repeatHistory.shift();
+      return GOL.repeatHistory.filter((value) => value === signature).length;
+    }
+
+    function resetGridHistory() {
+      GOL.repeatHistory = [encodeGridState()];
     }
 
     function countNeighbors(x, y) {
       let n = 0;
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
         if (dx === 0 && dy === 0) continue;
-        const nx = x + dx, ny = y + dy;
+        let nx = x + dx;
+        let ny = y + dy;
+        if (GOL.wrapEdges) {
+          nx = (nx + GOL.cols) % GOL.cols;
+          ny = (ny + GOL.rows) % GOL.rows;
+        }
         if (nx < 0 || nx >= GOL.cols || ny < 0 || ny >= GOL.rows) continue;
         n += GOL.grid[ny][nx];
       }
@@ -1785,16 +1852,43 @@
       return merged;
     }
 
-    function addPomodoroPattern() {
-      const maxOriginX = Math.max(0, GOL.cols - PRODUCTIVITY_PATTERN.width);
-      const maxOriginY = Math.max(0, GOL.rows - PRODUCTIVITY_PATTERN.height);
-      const originX = Math.floor(Math.random() * (maxOriginX + 1));
-      const originY = Math.floor(Math.random() * (maxOriginY + 1));
-      const mergedCells = mergePatternAt(PRODUCTIVITY_PATTERN, originX, originY);
+    function seedFocusVisualizerPatterns() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      GOL.lastRefreshGeneration = -1;
+      const merged = [];
+      FOCUS_VISUALIZER_BLUEPRINT.forEach((placement) => {
+        const pattern = getPatternByName(placement.pattern);
+        if (!pattern) return;
+        const mergedCells = mergePatternAt(pattern, placement.x, placement.y);
+        merged.push(`${pattern.name} (+${mergedCells})`);
+      });
+      resetGridHistory();
       drawGOL();
       updateGOLMeta();
       persistGOL();
-      logFeed(`Productivity pattern injected: ${PRODUCTIVITY_PATTERN.name} at (${originX},${originY}) with ${mergedCells} fresh cell${mergedCells === 1 ? '' : 's'}.`);
+      logFeed(`Focus visualizer primed with known patterns: ${merged.join(', ')}.`);
+    }
+
+    function ensureGOLRunning() {
+      if (GOL.running) return;
+      GOL.running = true;
+      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
+      updateGOLMeta();
+    }
+
+    function addPomodoroPattern() {
+      const pattern = KNOWN_GOL_PATTERNS[Math.floor(Math.random() * KNOWN_GOL_PATTERNS.length)];
+      const maxOriginX = Math.max(0, GOL.cols - pattern.width);
+      const maxOriginY = Math.max(0, GOL.rows - pattern.height);
+      const originX = Math.floor(Math.random() * (maxOriginX + 1));
+      const originY = Math.floor(Math.random() * (maxOriginY + 1));
+      const mergedCells = mergePatternAt(pattern, originX, originY);
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed(`Productivity pattern injected: ${pattern.name} at (${originX},${originY}) with ${mergedCells} fresh cell${mergedCells === 1 ? '' : 's'}.`);
     }
 
     function addThoughtChaos() {
@@ -1821,6 +1915,11 @@
       }
       [GOL.grid, GOL.next] = [GOL.next, GOL.grid];
       GOL.generation++;
+      const repeats = trackGridHistory();
+      if (repeats >= 4 && appState.timer.mode === 'focus' && GOL.generation - GOL.lastRefreshGeneration >= 40) {
+        GOL.lastRefreshGeneration = GOL.generation;
+        addPomodoroPattern();
+      }
       drawGOL();
       updateGOLMeta(alive);
       persistGOL();
@@ -1830,6 +1929,7 @@
       GOL.grid = makeGrid(0).map(row => row.map(() => Math.random() > 0.72 ? 1 : 0));
       GOL.next = makeGrid(0);
       GOL.generation = 0;
+      resetGridHistory();
       drawGOL();
       updateGOLMeta();
       persistGOL();
@@ -1839,6 +1939,7 @@
       GOL.grid = makeGrid(0);
       GOL.next = makeGrid(0);
       GOL.generation = 0;
+      resetGridHistory();
       drawGOL();
       updateGOLMeta(0);
       persistGOL();
@@ -1854,6 +1955,7 @@
     function loadGOL() {
       GOL.grid = makeGrid(0);
       GOL.next = makeGrid(0);
+      GOL.lastRefreshGeneration = -1;
       try {
         const saved = JSON.parse(localStorage.getItem('dwell_gol') || '{}');
         if (Array.isArray(saved.grid) && saved.grid.length === GOL.rows) {
@@ -1864,6 +1966,7 @@
         }
         if (Number.isInteger(saved.generation) && saved.generation >= 0) GOL.generation = saved.generation;
       } catch (e) {}
+      resetGridHistory();
       drawGOL();
       updateGOLMeta();
     }
