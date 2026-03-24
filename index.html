@@ -666,6 +666,33 @@
       text-shadow: 0 0 6px rgba(97,255,141,0.28);
     }
 
+    /* ── Game of Life ── */
+    .gol-canvas-wrap {
+      border: 1px solid rgba(97,255,141,0.22);
+      border-radius: 10px;
+      background: #050e07;
+      width: fit-content;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    #gol-canvas {
+      display: block;
+      width: min(100%, 440px);
+      height: auto;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    .gol-meta {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 1120px) {
       .weather-strip {
         grid-template-columns: 1fr;
@@ -880,6 +907,29 @@
         </article>
       </section>
     </main>
+
+    <section class="panel" style="margin-top: var(--gap);" aria-label="Conway's Game of Life">
+      <div class="panel-header">
+        <h2 class="panel-title">Conway's Game of Life</h2>
+        <span class="panel-label" id="gol-status">paused</span>
+      </div>
+      <div class="module-stack">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="gol-toggle">Start</button>
+          <button id="gol-step" class="secondary">Step</button>
+          <button id="gol-random" class="secondary">Randomize</button>
+          <button id="gol-clear" class="secondary">Clear</button>
+        </div>
+        <div class="gol-canvas-wrap">
+          <canvas id="gol-canvas" width="440" height="260" aria-label="Game of Life grid"></canvas>
+        </div>
+        <div class="gol-meta">
+          <span id="gol-generation">generation: 0</span>
+          <span id="gol-population">alive cells: 0</span>
+          <span>click cells to toggle</span>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -1516,6 +1566,132 @@
       renderThoughts();
     }
 
+    // ── Game of Life ──────────────────────────────────────────────────────
+    const GOL = {
+      cols: 44, rows: 26, cellSize: 10,
+      running: false, generation: 0,
+      stepInterval: null, grid: [], next: [],
+    };
+
+    function makeGrid(fill = 0) {
+      return Array.from({ length: GOL.rows }, () => Array(GOL.cols).fill(fill));
+    }
+
+    function countNeighbors(x, y) {
+      let n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || nx >= GOL.cols || ny < 0 || ny >= GOL.rows) continue;
+        n += GOL.grid[ny][nx];
+      }
+      return n;
+    }
+
+    function countAliveCells() {
+      return GOL.grid.reduce((sum, row) => sum + row.reduce((r, v) => r + v, 0), 0);
+    }
+
+    function drawGOL() {
+      const canvas = document.getElementById('gol-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#050e07';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
+        if (!GOL.grid[y][x]) continue;
+        ctx.fillStyle = '#61ff8d';
+        ctx.fillRect(x * GOL.cellSize, y * GOL.cellSize, GOL.cellSize, GOL.cellSize);
+      }
+
+      ctx.strokeStyle = 'rgba(31,107,49,0.4)';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= GOL.cols; gx++) {
+        ctx.beginPath();
+        ctx.moveTo(gx * GOL.cellSize + 0.5, 0);
+        ctx.lineTo(gx * GOL.cellSize + 0.5, GOL.rows * GOL.cellSize);
+        ctx.stroke();
+      }
+      for (let gy = 0; gy <= GOL.rows; gy++) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy * GOL.cellSize + 0.5);
+        ctx.lineTo(GOL.cols * GOL.cellSize, gy * GOL.cellSize + 0.5);
+        ctx.stroke();
+      }
+    }
+
+    function updateGOLMeta(alive = countAliveCells()) {
+      document.getElementById('gol-generation').textContent = `generation: ${GOL.generation}`;
+      document.getElementById('gol-population').textContent = `alive cells: ${alive}`;
+      document.getElementById('gol-status').textContent = GOL.running ? 'running' : 'paused';
+      document.getElementById('gol-toggle').textContent = GOL.running ? 'Pause' : 'Start';
+    }
+
+    function persistGOL() {
+      localStorage.setItem('dwell_gol', JSON.stringify({
+        generation: GOL.generation,
+        grid: GOL.grid,
+      }));
+    }
+
+    function nextGeneration() {
+      let alive = 0;
+      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
+        const neighbors = countNeighbors(x, y);
+        const aliveNow = GOL.grid[y][x] === 1;
+        const nextAlive = aliveNow ? (neighbors === 2 || neighbors === 3) : neighbors === 3;
+        GOL.next[y][x] = nextAlive ? 1 : 0;
+        alive += GOL.next[y][x];
+      }
+      [GOL.grid, GOL.next] = [GOL.next, GOL.grid];
+      GOL.generation++;
+      drawGOL();
+      updateGOLMeta(alive);
+      persistGOL();
+    }
+
+    function randomizeGOL() {
+      GOL.grid = makeGrid(0).map(row => row.map(() => Math.random() > 0.72 ? 1 : 0));
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+    }
+
+    function clearGOL() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      drawGOL();
+      updateGOLMeta(0);
+      persistGOL();
+    }
+
+    function toggleGOLRun() {
+      GOL.running = !GOL.running;
+      if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, 140);
+      else clearInterval(GOL.stepInterval);
+      updateGOLMeta();
+    }
+
+    function loadGOL() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      try {
+        const saved = JSON.parse(localStorage.getItem('dwell_gol') || '{}');
+        if (Array.isArray(saved.grid) && saved.grid.length === GOL.rows) {
+          GOL.grid = saved.grid.map(row => {
+            if (!Array.isArray(row) || row.length !== GOL.cols) return Array(GOL.cols).fill(0);
+            return row.map(v => v ? 1 : 0);
+          });
+        }
+        if (Number.isInteger(saved.generation) && saved.generation >= 0) GOL.generation = saved.generation;
+      } catch (e) {}
+      drawGOL();
+      updateGOLMeta();
+    }
+
     function bindEvents() {
       $('#startTimerBtn').addEventListener('click', startTimer);
       $('#pauseTimerBtn').addEventListener('click', pauseTimer);
@@ -1553,6 +1729,21 @@
         event.preventDefault();
         useManualLocation($('#weatherLocationInput').value);
       });
+
+      $('#gol-toggle').addEventListener('click', toggleGOLRun);
+      $('#gol-step').addEventListener('click', () => { if (!GOL.running) nextGeneration(); });
+      $('#gol-random').addEventListener('click', randomizeGOL);
+      $('#gol-clear').addEventListener('click', clearGOL);
+      $('#gol-canvas').addEventListener('click', e => {
+        const rect = e.target.getBoundingClientRect();
+        const scaleX = e.target.width / rect.width;
+        const scaleY = e.target.height / rect.height;
+        const x = Math.floor(((e.clientX - rect.left) * scaleX) / GOL.cellSize);
+        const y = Math.floor(((e.clientY - rect.top) * scaleY) / GOL.cellSize);
+        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
+        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
+        drawGOL(); updateGOLMeta(); persistGOL();
+      });
     }
 
     function initClock() {
@@ -1578,8 +1769,9 @@
       renderCalendar();
       initClock();
       initWeather();
+      loadGOL();
       logFeed('Retro Command Habitat initialized.');
-      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar, game of life.');
       setInterval(animatePet, 1200);
     }
 
