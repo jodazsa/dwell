@@ -467,6 +467,73 @@
       color: var(--text-mid); line-height: 1.4;
     }
 
+    /* ── Game of Life ── */
+    .gameoflife-section {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px 12px 0;
+      border-top: 1px solid #808080;
+      font-family: 'Trebuchet MS', Verdana, sans-serif;
+    }
+    .gol-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .gol-controls {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .gol-btn {
+      background: var(--btn-face);
+      border-top: 2px solid var(--btn-hi);
+      border-left: 2px solid var(--btn-hi);
+      border-right: 2px solid var(--btn-dk);
+      border-bottom: 2px solid var(--btn-dk);
+      cursor: pointer;
+      color: var(--text);
+      font-size: 11px;
+      padding: 2px 8px;
+      font-family: 'Trebuchet MS', Verdana, sans-serif;
+      text-transform: lowercase;
+    }
+    .gol-btn:active {
+      border-top: 2px solid var(--btn-dk);
+      border-left: 2px solid var(--btn-dk);
+      border-right: 2px solid var(--btn-hi);
+      border-bottom: 2px solid var(--btn-hi);
+    }
+    .gol-canvas-wrap {
+      border: 2px inset #808080;
+      background: #ffffff;
+      width: fit-content;
+      max-width: 100%;
+    }
+    #gol-canvas {
+      display: block;
+      width: min(100%, 440px);
+      height: auto;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      background: #fefefe;
+    }
+    .gol-meta {
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-mid);
+      font-family: Verdana, Arial, sans-serif;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     /* ── Streak ── */
     .streak-display {
       display: flex; align-items: center; gap: 4px;
@@ -876,6 +943,27 @@
     <div class="thought-section-label">&#128221; Guestbook... err, Thought Log:</div>
     <input type="text" id="thought-input" placeholder="Type a thought and press Enter..." autocomplete="off" spellcheck="false"/>
     <div class="thought-list" id="thought-list"></div>
+  </div>
+
+  <div class="gameoflife-section">
+    <div class="gol-header">
+      <span>&#9632; Conway's Game of Life module</span>
+      <span id="gol-status">paused</span>
+    </div>
+    <div class="gol-controls">
+      <button class="gol-btn" id="gol-toggle">start</button>
+      <button class="gol-btn" id="gol-step">step</button>
+      <button class="gol-btn" id="gol-random">randomize</button>
+      <button class="gol-btn" id="gol-clear">clear</button>
+    </div>
+    <div class="gol-canvas-wrap">
+      <canvas id="gol-canvas" width="440" height="260" aria-label="Game of Life grid"></canvas>
+    </div>
+    <div class="gol-meta">
+      <span id="gol-generation">generation: 0</span>
+      <span id="gol-population">alive cells: 0</span>
+      <span>click cells to toggle</span>
+    </div>
   </div>
 
   <div class="bottom-pad"></div>
@@ -1288,6 +1376,132 @@
     renderThoughts(); creatureGlance(); checkAchievements();
   }
 
+  // ── Game of Life ─────────────────────────────────────────────────────
+  const GOL = {
+    cols: 44, rows: 26, cellSize: 10,
+    running: false, generation: 0,
+    stepInterval: null, grid: [], next: [],
+  };
+
+  function makeGrid(fill=0) {
+    return Array.from({ length: GOL.rows }, () => Array(GOL.cols).fill(fill));
+  }
+
+  function countNeighbors(x, y) {
+    let n = 0;
+    for (let dy=-1; dy<=1; dy++) for (let dx=-1; dx<=1; dx++) {
+      if (dx===0 && dy===0) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx<0 || nx>=GOL.cols || ny<0 || ny>=GOL.rows) continue;
+      n += GOL.grid[ny][nx];
+    }
+    return n;
+  }
+
+  function countAliveCells() {
+    return GOL.grid.reduce((sum, row)=>sum + row.reduce((r, v)=>r+v, 0), 0);
+  }
+
+  function drawGOL() {
+    const canvas = document.getElementById('gol-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let y=0; y<GOL.rows; y++) for (let x=0; x<GOL.cols; x++) {
+      if (!GOL.grid[y][x]) continue;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(x*GOL.cellSize, y*GOL.cellSize, GOL.cellSize, GOL.cellSize);
+    }
+
+    ctx.strokeStyle = '#d2d2d2';
+    ctx.lineWidth = 1;
+    for (let gx=0; gx<=GOL.cols; gx++) {
+      ctx.beginPath();
+      ctx.moveTo(gx*GOL.cellSize + 0.5, 0);
+      ctx.lineTo(gx*GOL.cellSize + 0.5, GOL.rows*GOL.cellSize);
+      ctx.stroke();
+    }
+    for (let gy=0; gy<=GOL.rows; gy++) {
+      ctx.beginPath();
+      ctx.moveTo(0, gy*GOL.cellSize + 0.5);
+      ctx.lineTo(GOL.cols*GOL.cellSize, gy*GOL.cellSize + 0.5);
+      ctx.stroke();
+    }
+  }
+
+  function updateGOLMeta(alive=countAliveCells()) {
+    document.getElementById('gol-generation').textContent = `generation: ${GOL.generation}`;
+    document.getElementById('gol-population').textContent = `alive cells: ${alive}`;
+    document.getElementById('gol-status').textContent = GOL.running ? 'running' : 'paused';
+    document.getElementById('gol-toggle').textContent = GOL.running ? 'pause' : 'start';
+  }
+
+  function persistGOL() {
+    localStorage.setItem('dwell_gol', JSON.stringify({
+      generation: GOL.generation,
+      grid: GOL.grid,
+    }));
+  }
+
+  function nextGeneration() {
+    let alive = 0;
+    for (let y=0; y<GOL.rows; y++) for (let x=0; x<GOL.cols; x++) {
+      const neighbors = countNeighbors(x, y);
+      const aliveNow = GOL.grid[y][x] === 1;
+      const nextAlive = aliveNow ? (neighbors===2 || neighbors===3) : neighbors===3;
+      GOL.next[y][x] = nextAlive ? 1 : 0;
+      alive += GOL.next[y][x];
+    }
+    [GOL.grid, GOL.next] = [GOL.next, GOL.grid];
+    GOL.generation++;
+    drawGOL();
+    updateGOLMeta(alive);
+    persistGOL();
+  }
+
+  function randomizeGOL() {
+    GOL.grid = makeGrid(0).map(row => row.map(()=>Math.random()>0.72?1:0));
+    GOL.next = makeGrid(0);
+    GOL.generation = 0;
+    drawGOL();
+    updateGOLMeta();
+    persistGOL();
+  }
+
+  function clearGOL() {
+    GOL.grid = makeGrid(0);
+    GOL.next = makeGrid(0);
+    GOL.generation = 0;
+    drawGOL();
+    updateGOLMeta(0);
+    persistGOL();
+  }
+
+  function toggleGOLRun() {
+    GOL.running = !GOL.running;
+    if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, 140);
+    else clearInterval(GOL.stepInterval);
+    updateGOLMeta();
+  }
+
+  function loadGOL() {
+    GOL.grid = makeGrid(0);
+    GOL.next = makeGrid(0);
+    try {
+      const saved = JSON.parse(localStorage.getItem('dwell_gol') || '{}');
+      if (Array.isArray(saved.grid) && saved.grid.length === GOL.rows) {
+        GOL.grid = saved.grid.map(row => {
+          if (!Array.isArray(row) || row.length !== GOL.cols) return Array(GOL.cols).fill(0);
+          return row.map(v => v ? 1 : 0);
+        });
+      }
+      if (Number.isInteger(saved.generation) && saved.generation >= 0) GOL.generation = saved.generation;
+    } catch (e) {}
+    drawGOL();
+    updateGOLMeta();
+  }
+
   // ── Events ────────────────────────────────────────────────────────────
   document.getElementById('btn-start').addEventListener('click', ()=>{ if(S.running) pauseTimer(); else startTimer(); });
   document.getElementById('btn-reset').addEventListener('click', resetTimer);
@@ -1296,6 +1510,20 @@
     if (e.key==='Enter') { const v=e.target.value.trim(); if(v){logThought(v);e.target.value='';} }
   });
   document.getElementById('creature-name').addEventListener('change', persist);
+  document.getElementById('gol-toggle').addEventListener('click', toggleGOLRun);
+  document.getElementById('gol-step').addEventListener('click', ()=>{ if (!GOL.running) nextGeneration(); });
+  document.getElementById('gol-random').addEventListener('click', randomizeGOL);
+  document.getElementById('gol-clear').addEventListener('click', clearGOL);
+  document.getElementById('gol-canvas').addEventListener('click', e=>{
+    const rect = e.target.getBoundingClientRect();
+    const scaleX = e.target.width / rect.width;
+    const scaleY = e.target.height / rect.height;
+    const x = Math.floor(((e.clientX - rect.left) * scaleX) / GOL.cellSize);
+    const y = Math.floor(((e.clientY - rect.top) * scaleY) / GOL.cellSize);
+    if (x<0 || x>=GOL.cols || y<0 || y>=GOL.rows) return;
+    GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
+    drawGOL(); updateGOLMeta(); persistGOL();
+  });
   document.addEventListener('keydown', e=>{
     if (e.target.tagName==='INPUT') return;
     if (e.code==='Space') { e.preventDefault(); if(S.running) pauseTimer(); else startTimer(); }
@@ -1316,6 +1544,7 @@
   setCS('idle'); startEyeWander(); updateTimerDisplay(); updateModeLabel();
   updateStartBtn(); renderDots(); renderThoughts();
   renderLevel(); renderStreak(); renderDailyGoal(); updateCreatureAura();
+  loadGOL();
   updateHitCounter();
 </script>
 </body>
