@@ -498,6 +498,14 @@
       gap: 10px;
     }
 
+    .notes-note {
+      margin: -2px 2px 2px;
+      color: var(--text-soft);
+      font-size: 0.73rem;
+      opacity: 0.82;
+      line-height: 1.35;
+    }
+
     .notes-form input {
       width: 100%;
       background: rgba(255, 255, 255, 0.9);
@@ -519,6 +527,33 @@
       max-height: 560px;
       overflow: auto;
       padding-right: 4px;
+    }
+
+    .archive-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border: 1px solid rgba(99,117,150,0.18);
+      border-radius: 10px;
+      background: rgba(99,117,150,0.05);
+      color: var(--text-soft);
+      font-size: 0.73rem;
+    }
+
+    .archive-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .archive-header {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-top: 4px;
     }
 
     .thought-card {
@@ -876,11 +911,22 @@
               <input type="text" id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection, then press Enter..." maxlength="200" />
               <div class="controls">
                 <button type="submit">Log Entry</button>
+                <button type="button" id="exportThoughtsBtn" class="secondary">Export</button>
                 <button type="button" id="clearThoughtsBtn" class="secondary">Clear All</button>
               </div>
             </form>
+            <div class="notes-note">Live log keeps the 50 most recent entries. Older entries move to archive automatically. Export includes both.</div>
+
+            <div class="archive-summary" id="archiveSummary">
+              <span id="archiveSummaryText">Archive: 0 entries</span>
+              <button type="button" id="toggleArchiveBtn" class="secondary weather-btn">View Archive</button>
+            </div>
 
             <div class="thought-log" id="thoughtLog"></div>
+            <div class="archive-section" id="archiveSection" hidden>
+              <div class="archive-header">Archived entries</div>
+              <div class="thought-log" id="archiveLog"></div>
+            </div>
           </div>
         </article>
 
@@ -935,6 +981,8 @@
         tickHandle: null,
       },
       thoughts: [],
+      archivedThoughts: [],
+      showArchive: false,
       weather: {
         source: 'geo',
         label: 'Awaiting fix',
@@ -1230,6 +1278,18 @@
       localStorage.setItem('retroThoughtLog', JSON.stringify(appState.thoughts));
     }
 
+    function saveArchivedThoughts() {
+      localStorage.setItem('retroThoughtArchive', JSON.stringify(appState.archivedThoughts));
+    }
+
+    function archiveOverflowThoughts() {
+      if (appState.thoughts.length <= 50) return 0;
+      const overflow = appState.thoughts.slice(50);
+      appState.thoughts = appState.thoughts.slice(0, 50);
+      appState.archivedThoughts = [...overflow, ...appState.archivedThoughts];
+      return overflow.length;
+    }
+
     function normalizeThought(entry) {
       if (!entry) return null;
       const body = String(entry.body ?? entry.text ?? '').trim();
@@ -1249,6 +1309,20 @@
         appState.thoughts = Array.isArray(parsed) ? parsed.map(normalizeThought).filter(Boolean) : [];
       } catch {
         appState.thoughts = [];
+      }
+
+      try {
+        const rawArchive = localStorage.getItem('retroThoughtArchive');
+        const parsedArchive = rawArchive ? JSON.parse(rawArchive) : [];
+        appState.archivedThoughts = Array.isArray(parsedArchive) ? parsedArchive.map(normalizeThought).filter(Boolean) : [];
+      } catch {
+        appState.archivedThoughts = [];
+      }
+
+      const movedCount = archiveOverflowThoughts();
+      if (movedCount > 0) {
+        saveThoughts();
+        saveArchivedThoughts();
       }
     }
 
@@ -1506,18 +1580,17 @@
       return 'active';
     }
 
-    function renderThoughts() {
-      const root = $('#thoughtLog');
+    function renderThoughtList(root, entries, emptyText) {
       root.innerHTML = '';
-      if (!appState.thoughts.length) {
+      if (!entries.length) {
         const empty = document.createElement('div');
         empty.className = 'thought-card';
-        empty.innerHTML = '<div></div><div class="thought-body">No entries logged yet.</div>';
+        empty.innerHTML = `<div></div><div class="thought-body">${escapeHtml(emptyText)}</div>`;
         root.appendChild(empty);
         return;
       }
 
-      appState.thoughts.forEach((entry, index) => {
+      entries.forEach((entry, index) => {
         const card = document.createElement('div');
         card.className = `thought-card${entry.status === 'crossed' ? ' is-crossed' : ''}`;
         const statusClass = entry.status === 'active' ? '' : ` is-${entry.status}`;
@@ -1533,6 +1606,19 @@
         `;
         root.appendChild(card);
       });
+    }
+
+    function updateArchiveSummary() {
+      const archiveCount = appState.archivedThoughts.length;
+      $('#archiveSummaryText').textContent = `Archive: ${archiveCount} ${archiveCount === 1 ? 'entry' : 'entries'}`;
+      $('#toggleArchiveBtn').textContent = appState.showArchive ? 'Hide Archive' : 'View Archive';
+      $('#archiveSection').hidden = !appState.showArchive;
+    }
+
+    function renderThoughts() {
+      renderThoughtList($('#thoughtLog'), appState.thoughts, 'No entries logged yet.');
+      renderThoughtList($('#archiveLog'), appState.archivedThoughts, 'No archived entries yet.');
+      updateArchiveSummary();
     }
 
     function escapeHtml(value) {
@@ -1559,10 +1645,14 @@
         tag: appState.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
         status: 'active',
       });
-      appState.thoughts = appState.thoughts.slice(0, 50);
+      const archivedCount = archiveOverflowThoughts();
       saveThoughts();
+      saveArchivedThoughts();
       renderThoughts();
       logFeed('Thought captured to local log.');
+      if (archivedCount > 0) {
+        logFeed(`${archivedCount} older thought ${archivedCount === 1 ? 'entry moved' : 'entries moved'} to archive.`);
+      }
     }
 
     function cycleThoughtStatus(index) {
@@ -1571,6 +1661,28 @@
       thought.status = getNextThoughtStatus(thought.status || 'active');
       saveThoughts();
       renderThoughts();
+    }
+
+    function exportThoughts() {
+      const exportedAt = new Date().toISOString();
+      const payload = {
+        exportedAt,
+        activeCount: appState.thoughts.length,
+        archivedCount: appState.archivedThoughts.length,
+        thoughts: appState.thoughts,
+        archivedThoughts: appState.archivedThoughts,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const stamp = exportedAt.replaceAll(':', '-').replaceAll('.', '-');
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `dwell-thought-log-${stamp}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      logFeed(`Thought log exported (${payload.activeCount} live, ${payload.archivedCount} archived) at ${new Date(exportedAt).toLocaleString()}.`);
     }
 
     // ── Game of Life ──────────────────────────────────────────────────────
@@ -1731,6 +1843,13 @@
         renderThoughts();
         logFeed('Thought log cleared.');
       });
+
+      $('#toggleArchiveBtn').addEventListener('click', () => {
+        appState.showArchive = !appState.showArchive;
+        renderThoughts();
+      });
+
+      $('#exportThoughtsBtn').addEventListener('click', exportThoughts);
 
       $('#weatherForm').addEventListener('submit', (event) => {
         event.preventDefault();
