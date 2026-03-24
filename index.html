@@ -1497,6 +1497,7 @@
           appState.pet.completedPomodoros += 1;
           updatePetStats();
           drawPet();
+          addPomodoroPattern();
           logFeed(`Focus session complete. Pet grew after pomodoro ${appState.pet.completedPomodoros}. Starting ${t.breakMinutes}-minute break.`);
         } else {
           logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
@@ -1510,6 +1511,7 @@
       }
       saveTimerSettings();
       updateTimerUI();
+      syncGOLSpeed();
     }
 
     function startTimer() {
@@ -1650,6 +1652,7 @@
       saveArchivedThoughts();
       renderThoughts();
       logFeed('Thought captured to local log.');
+      addThoughtChaos();
       if (archivedCount > 0) {
         logFeed(`${archivedCount} older thought ${archivedCount === 1 ? 'entry moved' : 'entries moved'} to archive.`);
       }
@@ -1690,6 +1693,13 @@
       cols: 30, rows: 18, cellSize: 10,
       running: false, generation: 0,
       stepInterval: null, grid: [], next: [],
+    };
+    const GOL_SPEED_MS = { focus: 90, break: 220 };
+    const PRODUCTIVITY_PATTERN = {
+      name: 'glider',
+      cells: [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]],
+      width: 3,
+      height: 3,
     };
 
     function makeGrid(fill = 0) {
@@ -1753,6 +1763,53 @@
       }));
     }
 
+    function getGOLStepDelay() {
+      return appState.timer.mode === 'focus' ? GOL_SPEED_MS.focus : GOL_SPEED_MS.break;
+    }
+
+    function syncGOLSpeed() {
+      if (!GOL.running) return;
+      clearInterval(GOL.stepInterval);
+      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
+    }
+
+    function mergePatternAt(pattern, originX, originY) {
+      let merged = 0;
+      pattern.cells.forEach(([dx, dy]) => {
+        const x = originX + dx;
+        const y = originY + dy;
+        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
+        if (!GOL.grid[y][x]) merged++;
+        GOL.grid[y][x] = 1;
+      });
+      return merged;
+    }
+
+    function addPomodoroPattern() {
+      const maxOriginX = Math.max(0, GOL.cols - PRODUCTIVITY_PATTERN.width);
+      const maxOriginY = Math.max(0, GOL.rows - PRODUCTIVITY_PATTERN.height);
+      const originX = Math.floor(Math.random() * (maxOriginX + 1));
+      const originY = Math.floor(Math.random() * (maxOriginY + 1));
+      const mergedCells = mergePatternAt(PRODUCTIVITY_PATTERN, originX, originY);
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed(`Productivity pattern injected: ${PRODUCTIVITY_PATTERN.name} at (${originX},${originY}) with ${mergedCells} fresh cell${mergedCells === 1 ? '' : 's'}.`);
+    }
+
+    function addThoughtChaos() {
+      const jitterCells = 3;
+      for (let i = 0; i < jitterCells; i++) {
+        const x = Math.floor(Math.random() * GOL.cols);
+        const y = Math.floor(Math.random() * GOL.rows);
+        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
+      }
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed('Thought ripple added a little chaos to the life grid.');
+    }
+
     function nextGeneration() {
       let alive = 0;
       for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
@@ -1789,7 +1846,7 @@
 
     function toggleGOLRun() {
       GOL.running = !GOL.running;
-      if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, 140);
+      if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
       else clearInterval(GOL.stepInterval);
       updateGOLMeta();
     }
