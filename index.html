@@ -678,7 +678,7 @@
 
     #gol-canvas {
       display: block;
-      width: min(100%, 440px);
+      width: min(100%, 300px);
       height: auto;
       image-rendering: pixelated;
       cursor: crosshair;
@@ -905,31 +905,31 @@
             <div class="thought-log" id="thoughtLog"></div>
           </div>
         </article>
+
+        <article class="panel" aria-label="Conway's Game of Life">
+          <div class="panel-header">
+            <h2 class="panel-title">Conway's Game of Life</h2>
+            <span class="panel-label" id="gol-status">paused</span>
+          </div>
+          <div class="module-stack">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="gol-toggle">Start</button>
+              <button id="gol-step" class="secondary">Step</button>
+              <button id="gol-random" class="secondary">Randomize</button>
+              <button id="gol-clear" class="secondary">Clear</button>
+            </div>
+            <div class="gol-canvas-wrap">
+              <canvas id="gol-canvas" width="300" height="180" aria-label="Game of Life grid"></canvas>
+            </div>
+            <div class="gol-meta">
+              <span id="gol-generation">generation: 0</span>
+              <span id="gol-population">alive cells: 0</span>
+              <span>click cells to toggle</span>
+            </div>
+          </div>
+        </article>
       </section>
     </main>
-
-    <section class="panel" style="margin-top: var(--gap);" aria-label="Conway's Game of Life">
-      <div class="panel-header">
-        <h2 class="panel-title">Conway's Game of Life</h2>
-        <span class="panel-label" id="gol-status">paused</span>
-      </div>
-      <div class="module-stack">
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="gol-toggle">Start</button>
-          <button id="gol-step" class="secondary">Step</button>
-          <button id="gol-random" class="secondary">Randomize</button>
-          <button id="gol-clear" class="secondary">Clear</button>
-        </div>
-        <div class="gol-canvas-wrap">
-          <canvas id="gol-canvas" width="440" height="260" aria-label="Game of Life grid"></canvas>
-        </div>
-        <div class="gol-meta">
-          <span id="gol-generation">generation: 0</span>
-          <span id="gol-population">alive cells: 0</span>
-          <span>click cells to toggle</span>
-        </div>
-      </div>
-    </section>
   </div>
 
   <script>
@@ -1568,7 +1568,7 @@
 
     // ── Game of Life ──────────────────────────────────────────────────────
     const GOL = {
-      cols: 44, rows: 26, cellSize: 10,
+      cols: 30, rows: 18, cellSize: 10,
       running: false, generation: 0,
       stepInterval: null, grid: [], next: [],
     };
