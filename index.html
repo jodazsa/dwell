@@ -792,6 +792,7 @@
       gap: 0;
       width: max-content;
       min-width: 0;
+      grid-auto-flow: column;
     }
 
     .tracker-grid-cell {
@@ -1610,7 +1611,9 @@
           checked: tracker.checkedNumbers.includes(value),
         });
       }
-      return { cells, columns: Math.min(10, cells.length) };
+      const rows = Math.min(10, cells.length);
+      const columns = rows ? Math.ceil(cells.length / rows) : 0;
+      return { cells, columns, rows };
     }
 
     function getTrackerInRangeCount(tracker) {
@@ -1627,7 +1630,7 @@
     function getTrackerCardMarkup(tracker) {
       const total = getTrackerInRangeCount(tracker);
       const checkedCount = tracker.checkedNumbers.length;
-      const { cells, columns } = createTrackerGrid(tracker);
+      const { cells, columns, rows } = createTrackerGrid(tracker);
 
       const gridMarkup = cells.map((cell) => {
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
@@ -1644,7 +1647,7 @@
             <div class="tracker-count">${checkedCount}/${total}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content);" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content); grid-template-rows: repeat(${rows}, max-content);" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
               ${gridMarkup}
             </div>
           </div>
@@ -1668,7 +1671,7 @@
     }
 
     function getCompletedTrackerCardMarkup(tracker) {
-      const { cells, columns } = createTrackerGrid(tracker);
+      const { cells, columns, rows } = createTrackerGrid(tracker);
       const gridMarkup = cells.map((cell) => {
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
         return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true"></div>`;
@@ -1681,7 +1684,7 @@
             <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content);" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content); grid-template-rows: repeat(${rows}, max-content);" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
               ${gridMarkup}
             </div>
           </div>
