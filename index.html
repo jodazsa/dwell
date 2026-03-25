@@ -10,6 +10,13 @@
       --panel: #fffefb;
       --panel-2: #f9f8f4;
       --line: #d8dbe0;
+      --paper-margin: rgba(214, 109, 116, 0.28);
+      --paper-rule: #d8e3f3;
+      --paper-row: #f4f3ed;
+      --paper-top: #fcfcf8;
+      --dot: rgba(152, 159, 171, 0.24);
+      --dot-dim: rgba(152, 159, 171, 0.2);
+      --gol-fill: #f2ebdd;
       --glow: #8fa2c6;
       --glow-dim: #a7b5ce;
       --text: #414a5a;
@@ -23,15 +30,34 @@
       --font-ui: "iA Writer Mono", "Courier Prime", "Courier New", monospace;
     }
 
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1a15;
+        --panel: #241f18;
+        --panel-2: #1e1914;
+        --line: #3a3226;
+        --text: #d8ccba;
+        --text-soft: #8a7e6e;
+        --shadow: rgba(0,0,0,0.3);
+        --paper-margin: rgba(138, 126, 110, 0.24);
+        --paper-rule: #2f2a21;
+        --paper-row: #211c16;
+        --paper-top: #262118;
+        --dot: rgba(138, 126, 110, 0.22);
+        --dot-dim: rgba(138, 126, 110, 0.16);
+        --gol-fill: #1e1a14;
+      }
+    }
+
     * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
       min-height: 100%;
       background:
-        linear-gradient(to right, transparent 0 68px, rgba(214, 109, 116, 0.28) 68px 70px, transparent 70px 100%),
-        repeating-linear-gradient(to bottom, #f4f3ed 0 33px, #d8e3f3 33px 34px),
-        linear-gradient(180deg, #fcfcf8 0%, var(--bg) 100%);
+        linear-gradient(to right, transparent 0 68px, var(--paper-margin) 68px 70px, transparent 70px 100%),
+        repeating-linear-gradient(to bottom, var(--paper-row) 0 33px, var(--paper-rule) 33px 34px),
+        linear-gradient(180deg, var(--paper-top) 0%, var(--bg) 100%);
       color: var(--text);
       font-family: var(--font-ui);
     }
@@ -42,8 +68,8 @@
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(circle at 20px 34px, rgba(152, 159, 171, 0.24) 0 4px, transparent 4px),
-        radial-gradient(circle at 20px 102px, rgba(152, 159, 171, 0.2) 0 4px, transparent 4px);
+        radial-gradient(circle at 20px 34px, var(--dot) 0 4px, transparent 4px),
+        radial-gradient(circle at 20px 102px, var(--dot-dim) 0 4px, transparent 4px);
       background-size: 100% 136px;
       opacity: 0.6;
     }
@@ -287,7 +313,7 @@
     }
 
     .gol-canvas-wrap {
-      background: #f0f0ea;
+      background: var(--gol-fill);
     }
 
     .pet-stats {
@@ -1859,7 +1885,14 @@
       progressTrack.setAttribute('aria-valuenow', String(growthProgress.ariaValueNow));
     }
 
-    function drawPet() {
+    function getGOLFillColor() {
+      const rootStyle = getComputedStyle(document.documentElement);
+      const cssValue = rootStyle.getPropertyValue('--gol-fill').trim();
+      if (cssValue) return cssValue;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? '#1e1a14' : '#f2ebdd';
+    }
+
+    function drawGOL() {
       const canvas = $('#petCanvas');
       const ctx = canvas.getContext('2d');
       const { blink } = appState.pet;
@@ -1871,8 +1904,11 @@
       const accentColor = '#637596';
       const eyeColor = '#3a4250';
       const leafColor = '#d9e3f3';
+      const backgroundColor = getGOLFillColor();
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const px = (x, y, w, h, color) => {
         ctx.fillStyle = color;
@@ -1902,6 +1938,10 @@
 
       const mouthWidth = Math.max(2, Math.floor(size / 3));
       px(bodyX + Math.floor((size - mouthWidth) / 2), bodyY + size - 2, mouthWidth, 1, eyeColor);
+    }
+
+    function drawPet() {
+      drawGOL();
     }
 
     function animatePet() {
