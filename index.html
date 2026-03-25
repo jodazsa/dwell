@@ -819,6 +819,11 @@
       font-weight: 500;
     }
 
+    .tracker-cell-out-range {
+      color: rgba(127,138,158,0.72);
+      background: rgba(99,117,150,0.03);
+    }
+
     .tracker-cell-in-range:hover {
       box-shadow: none;
     }
@@ -1604,15 +1609,24 @@
 
     function createTrackerGrid(tracker) {
       const cells = [];
-      for (let value = tracker.start; value <= tracker.end; value += 1) {
-        cells.push({
-          value,
-          inRange: true,
-          checked: tracker.checkedNumbers.includes(value),
-        });
+      const firstColumnBase = Math.floor(tracker.start / 10) * 10;
+      const lastColumnBase = Math.floor(tracker.end / 10) * 10;
+      const columns = Math.floor((lastColumnBase - firstColumnBase) / 10) + 1;
+      const rows = 10;
+
+      for (let digit = 0; digit < rows; digit += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          const value = firstColumnBase + (column * 10) + digit;
+          const inRange = value >= tracker.start && value <= tracker.end;
+          cells.push({
+            value,
+            inRange,
+            checked: inRange && tracker.checkedNumbers.includes(value),
+            label: inRange ? String(value) : '-',
+          });
+        }
       }
-      const rows = Math.min(10, cells.length);
-      const columns = rows ? Math.ceil(cells.length / rows) : 0;
+
       return { cells, columns, rows };
     }
 
@@ -1633,8 +1647,11 @@
       const { cells, columns, rows } = createTrackerGrid(tracker);
 
       const gridMarkup = cells.map((cell) => {
+        if (!cell.inRange) {
+          return '<div class="tracker-grid-cell tracker-cell-out-range" aria-hidden="true">-</div>';
+        }
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
-        return `<button type="button" class="tracker-grid-cell tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}" aria-label="Toggle ${cell.value} for ${escapeHtml(tracker.name)}">${cell.value}</button>`;
+        return `<button type="button" class="tracker-grid-cell tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}" aria-label="Toggle ${cell.value} for ${escapeHtml(tracker.name)}">${cell.label}</button>`;
       }).join('');
 
       return `
@@ -1673,8 +1690,11 @@
     function getCompletedTrackerCardMarkup(tracker) {
       const { cells, columns, rows } = createTrackerGrid(tracker);
       const gridMarkup = cells.map((cell) => {
+        if (!cell.inRange) {
+          return '<div class="tracker-grid-cell tracker-cell-out-range" aria-hidden="true">-</div>';
+        }
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
-        return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true"></div>`;
+        return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true">${cell.label}</div>`;
       }).join('');
 
       return `
