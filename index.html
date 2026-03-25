@@ -783,25 +783,27 @@
     }
 
     .tracker-grid-wrap {
-      overflow-x: auto;
-      padding-bottom: 2px;
+      overflow-x: hidden;
+      padding-bottom: 0;
     }
 
     .tracker-grid {
       display: grid;
-      gap: 2px;
-      width: max-content;
-      min-width: 100%;
+      gap: 0;
+      width: 100%;
+      min-width: 0;
     }
 
     .tracker-grid-cell {
       appearance: none;
       border: 1px solid rgba(99,117,150,0.18);
+      border-radius: 0;
+      box-shadow: none;
       display: grid;
       place-items: center;
-      font-size: 0.72rem;
+      font-size: 0.66rem;
       aspect-ratio: 1 / 1;
-      width: clamp(24px, 2.4vw, 32px);
+      width: clamp(16px, 1.5vw, 20px);
       padding: 0;
       font: inherit;
       position: relative;
@@ -817,7 +819,7 @@
     }
 
     .tracker-cell-in-range:hover {
-      box-shadow: inset 0 0 0 2px rgba(99,117,150,0.2);
+      box-shadow: none;
     }
 
     .tracker-cell-complete {
@@ -1658,7 +1660,7 @@
             <div class="tracker-count">${checkedCount}/${total}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, max-content));" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, 1fr));" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
               ${gridMarkup}
             </div>
           </div>
@@ -1696,7 +1698,7 @@
             <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, max-content));" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, 1fr));" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
               ${gridMarkup}
             </div>
           </div>
