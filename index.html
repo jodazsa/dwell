@@ -802,18 +802,22 @@
     }
 
     .tracker-grid {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      min-width: 210px;
+      display: grid;
+      gap: 2px;
+      width: max-content;
+      min-width: 100%;
     }
 
-    .tracker-grid td {
+    .tracker-grid-cell {
+      appearance: none;
       border: 1px solid rgba(99,117,150,0.18);
-      text-align: center;
+      display: grid;
+      place-items: center;
       font-size: 0.72rem;
-      height: 26px;
-      min-width: 30px;
+      aspect-ratio: 1 / 1;
+      width: clamp(24px, 2.4vw, 32px);
+      padding: 0;
+      font: inherit;
       position: relative;
       background: rgba(255,255,255,0.72);
       color: var(--text-soft);
@@ -832,14 +836,28 @@
 
     .tracker-cell-complete {
       background: rgba(125,211,252,0.18);
-      color: var(--text);
+      color: transparent;
+      font-size: 0;
+    }
+
+    .tracker-cell-complete::before,
+    .tracker-cell-complete::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 2px;
+      background: #4a4a4a;
+      pointer-events: none;
+    }
+
+    .tracker-cell-complete::before {
+      transform: translateY(-50%) rotate(45deg) scale(1.44);
     }
 
     .tracker-cell-complete::after {
-      content: 'X';
-      color: var(--danger);
-      font-weight: 700;
-      margin-left: 4px;
+      transform: translateY(-50%) rotate(-45deg) scale(1.44);
     }
 
     .tracker-empty {
@@ -863,6 +881,34 @@
       border-radius: 10px;
       padding: 8px 10px;
       background: rgba(99,117,150,0.04);
+    }
+
+    .tracker-range-editor {
+      display: grid;
+      gap: 6px;
+      border-top: 1px solid rgba(99,117,150,0.15);
+      padding-top: 8px;
+    }
+
+    .tracker-range-editor .tracker-form-grid {
+      gap: 6px;
+    }
+
+    .tracker-range-editor input {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(99,117,150,0.28);
+      background: rgba(255,255,255,0.9);
+      color: var(--text);
+      outline: none;
+      font-size: 0.72rem;
+    }
+
+    .tracker-range-editor button {
+      justify-self: start;
+      padding: 6px 10px;
+      font-size: 0.7rem;
     }
 
 
@@ -1536,17 +1582,19 @@
 
     function createTrackerGrid(tracker) {
       const columns = getGridColumnBases(tracker.start, tracker.end);
-      return Array.from({ length: 10 }, (_, digit) => (
-        columns.map((columnBase) => {
+      const cells = [];
+      for (let digit = 0; digit < 10; digit += 1) {
+        columns.forEach((columnBase) => {
           const value = columnBase + digit;
           const inRange = value >= tracker.start && value <= tracker.end;
-          return {
+          cells.push({
             value,
             inRange,
             checked: inRange && tracker.checkedNumbers.includes(value),
-          };
-        })
-      ));
+          });
+        });
+      }
+      return { cells, columns: columns.length };
     }
 
     function getTrackerInRangeCount(tracker) {
@@ -1563,13 +1611,13 @@
     function getTrackerCardMarkup(tracker) {
       const total = getTrackerInRangeCount(tracker);
       const checkedCount = tracker.checkedNumbers.length;
-      const gridRows = createTrackerGrid(tracker);
+      const { cells, columns } = createTrackerGrid(tracker);
 
-      const gridMarkup = gridRows.map((row) => `<tr>${row.map((cell) => {
-        if (!cell.inRange) return '<td class="tracker-empty">-</td>';
+      const gridMarkup = cells.map((cell) => {
+        if (!cell.inRange) return '<button type="button" class="tracker-grid-cell tracker-empty" aria-hidden="true" tabindex="-1">-</button>';
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
-        return `<td class="tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}">${cell.value}</td>`;
-      }).join('')}</tr>`).join('');
+        return `<button type="button" class="tracker-grid-cell tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}" aria-label="Toggle ${cell.value} for ${escapeHtml(tracker.name)}">${cell.value}</button>`;
+      }).join('');
 
       return `
         <article class="tracker-card">
@@ -1581,10 +1629,21 @@
             <div class="tracker-count">${checkedCount}/${total}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <table class="tracker-grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
-              <tbody>${gridMarkup}</tbody>
-            </table>
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, max-content));" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
+              ${gridMarkup}
+            </div>
           </div>
+          <form class="tracker-range-editor" data-tracker-range-form="${tracker.id}">
+            <div class="tracker-form-grid">
+              <label>Start
+                <input type="number" name="start" value="${tracker.start}" required />
+              </label>
+              <label>End
+                <input type="number" name="end" value="${tracker.end}" required />
+              </label>
+            </div>
+            <button type="submit" class="secondary">Update Range</button>
+          </form>
           <div class="tracker-meta">
             <span>Created ${formatTrackerTimestamp(tracker.createdAt)}</span>
             ${tracker.completedAt ? `<span>Completed ${formatTrackerTimestamp(tracker.completedAt)}</span>` : '<span>In progress</span>'}
@@ -1632,6 +1691,21 @@
       saveTrackers();
       renderTrackers();
       logFeed(`Tracker created: ${tracker.name} (${tracker.start}-${tracker.end}).`);
+    }
+
+    function updateTrackerRange(trackerId, start, end) {
+      const tracker = appState.productivity.trackers.find((entry) => entry.id === trackerId);
+      if (!tracker) return 'Tracker not found.';
+      const error = validateTrackerInputs(tracker.name, start, end);
+      if (error) return error;
+      tracker.start = start;
+      tracker.end = end;
+      tracker.checkedNumbers = tracker.checkedNumbers.filter((value) => value >= start && value <= end);
+      markTrackerCompletionState(tracker);
+      saveTrackers();
+      renderTrackers();
+      logFeed(`Tracker range updated: ${tracker.name} (${tracker.start}-${tracker.end}).`);
+      return '';
     }
 
     function toggleTrackerCell(trackerId, value) {
@@ -2078,6 +2152,17 @@
 
       $('#activeTrackers').addEventListener('click', onTrackerToggle);
       $('#completedTrackers').addEventListener('click', onTrackerToggle);
+
+      document.addEventListener('submit', (event) => {
+        const rangeForm = event.target.closest('[data-tracker-range-form]');
+        if (!rangeForm) return;
+        event.preventDefault();
+        const trackerId = rangeForm.dataset.trackerRangeForm;
+        const start = Number(rangeForm.elements.start.value);
+        const end = Number(rangeForm.elements.end.value);
+        const error = updateTrackerRange(trackerId, start, end);
+        $('#trackerError').textContent = error;
+      });
 
     }
 
