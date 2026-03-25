@@ -783,14 +783,14 @@
     }
 
     .tracker-grid-wrap {
-      overflow-x: hidden;
+      overflow-x: auto;
       padding-bottom: 0;
     }
 
     .tracker-grid {
       display: grid;
       gap: 0;
-      width: 100%;
+      width: max-content;
       min-width: 0;
     }
 
@@ -1601,31 +1601,16 @@
       return parsed.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    function getGridColumnBases(start, end) {
-      const firstColumn = Math.floor(start / 10) * 10;
-      const lastColumn = Math.floor(end / 10) * 10;
-      const columns = [];
-      for (let base = firstColumn; base <= lastColumn; base += 10) {
-        columns.push(base);
-      }
-      return columns;
-    }
-
     function createTrackerGrid(tracker) {
-      const columns = getGridColumnBases(tracker.start, tracker.end);
       const cells = [];
-      for (let digit = 0; digit < 10; digit += 1) {
-        columns.forEach((columnBase) => {
-          const value = columnBase + digit;
-          const inRange = value >= tracker.start && value <= tracker.end;
-          cells.push({
-            value,
-            inRange,
-            checked: inRange && tracker.checkedNumbers.includes(value),
-          });
+      for (let value = tracker.start; value <= tracker.end; value += 1) {
+        cells.push({
+          value,
+          inRange: true,
+          checked: tracker.checkedNumbers.includes(value),
         });
       }
-      return { cells, columns: columns.length };
+      return { cells, columns: Math.min(10, cells.length) };
     }
 
     function getTrackerInRangeCount(tracker) {
@@ -1645,7 +1630,6 @@
       const { cells, columns } = createTrackerGrid(tracker);
 
       const gridMarkup = cells.map((cell) => {
-        if (!cell.inRange) return '<button type="button" class="tracker-grid-cell tracker-empty" aria-hidden="true" tabindex="-1">-</button>';
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
         return `<button type="button" class="tracker-grid-cell tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}" aria-label="Toggle ${cell.value} for ${escapeHtml(tracker.name)}">${cell.value}</button>`;
       }).join('');
@@ -1660,7 +1644,7 @@
             <div class="tracker-count">${checkedCount}/${total}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, 1fr));" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content);" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
               ${gridMarkup}
             </div>
           </div>
@@ -1686,7 +1670,6 @@
     function getCompletedTrackerCardMarkup(tracker) {
       const { cells, columns } = createTrackerGrid(tracker);
       const gridMarkup = cells.map((cell) => {
-        if (!cell.inRange) return '<div class="tracker-grid-cell tracker-empty" aria-hidden="true"></div>';
         const completeClass = cell.checked ? ' tracker-cell-complete' : '';
         return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true"></div>`;
       }).join('');
@@ -1698,7 +1681,7 @@
             <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
           </div>
           <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, 1fr));" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content);" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
               ${gridMarkup}
             </div>
           </div>
