@@ -20,7 +20,7 @@
       --shadow: rgba(83, 93, 110, 0.08);
       --radius: 14px;
       --gap: 16px;
-      --font-mono: "Avenir Next", "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      --font-ui: "iA Writer Mono", "Courier Prime", "Courier New", monospace;
     }
 
     * { box-sizing: border-box; }
@@ -33,7 +33,7 @@
         repeating-linear-gradient(to bottom, #f1ebdf 0 33px, #d8e3f3 33px 34px),
         linear-gradient(180deg, #fdfaf4 0%, var(--bg) 100%);
       color: var(--text);
-      font-family: var(--font-mono);
+      font-family: var(--font-ui);
     }
 
     body::before {
@@ -267,15 +267,6 @@
       overflow: hidden;
     }
 
-    .panel::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.32), transparent 30%);
-      opacity: 0.18;
-    }
-
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -336,6 +327,10 @@
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       filter: drop-shadow(0 0 6px rgba(99,117,150,0.4));
+    }
+
+    .gol-canvas-wrap {
+      background: #f2ebdd;
     }
 
     .pet-stats {
@@ -1049,6 +1044,18 @@
 </head>
 <body>
   <div class="shell">
+
+    <header class="header" aria-label="Workspace header">
+      <div class="title-wrap">
+        <h1>Dwell • Hobonichi Workspace</h1>
+        <div class="subtitle">Typewriter-ready dashboard for focus, logs, and gentle routines.</div>
+      </div>
+      <div class="statusbar" aria-label="Workspace status">
+        <span class="badge">Paper Mode</span>
+        <span class="badge">Local-first</span>
+        <span class="badge">Quiet UI</span>
+      </div>
+    </header>
 
     <section class="weather-strip" aria-label="Local weather strip">
       <div class="weather-main">
