@@ -54,49 +54,6 @@
       padding: 20px;
     }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, #fffefc, #f2f1ec);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 18px var(--shadow);
-      margin-bottom: 12px;
-    }
-
-    .title-wrap h1 {
-      margin: 0;
-      font-size: clamp(1.2rem, 2vw, 2rem);
-      letter-spacing: 0.06em;
-      text-transform: none;
-    }
-
-    .subtitle {
-      margin-top: 4px;
-      color: var(--text-soft);
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-
-    .statusbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .badge {
-      border: 1px solid #c8cdd6;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      background: rgba(255, 255, 255, 0.62);
-    }
-
     .weather-strip {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -1044,19 +1001,6 @@
 </head>
 <body>
   <div class="shell">
-
-    <header class="header" aria-label="Workspace header">
-      <div class="title-wrap">
-        <h1>Dwell • Hobonichi Workspace</h1>
-        <div class="subtitle">Typewriter-ready dashboard for focus, logs, and gentle routines.</div>
-      </div>
-      <div class="statusbar" aria-label="Workspace status">
-        <span class="badge">Paper Mode</span>
-        <span class="badge">Local-first</span>
-        <span class="badge">Quiet UI</span>
-      </div>
-    </header>
-
     <section class="weather-strip" aria-label="Local weather strip">
       <div class="weather-main">
         <div class="weather-copy">
