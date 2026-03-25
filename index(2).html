@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dwell • Hobonichi Workspace</title>
+  <style>
+    :root {
+      --bg: #faf7f0;
+      --panel: #ffffff;
+      --panel-2: #fcf8ef;
+      --line: #ddd2c4;
+      --glow: #8fa2c6;
+      --glow-dim: #a7b5ce;
+      --text: #414a5a;
+      --text-soft: #7f8a9e;
+      --warn: #ffd166;
+      --danger: #ff6b6b;
+      --info: #7dd3fc;
+      --shadow: rgba(83, 93, 110, 0.08);
+      --radius: 14px;
+      --gap: 16px;
+      --font-mono: "Avenir Next", "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(to right, transparent 0 68px, rgba(217, 106, 112, 0.32) 68px 70px, transparent 70px 100%),
+        repeating-linear-gradient(to bottom, #f1ebdf 0 33px, #d8e3f3 33px 34px),
+        linear-gradient(180deg, #fdfaf4 0%, var(--bg) 100%);
+      color: var(--text);
+      font-family: var(--font-mono);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20px 34px, rgba(170, 160, 147, 0.3) 0 4px, transparent 4px),
+        radial-gradient(circle at 20px 102px, rgba(170, 160, 147, 0.26) 0 4px, transparent 4px);
+      background-size: 100% 136px;
+      opacity: 0.6;
+    }
+
+    .shell {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffdf8, #f8f1e5);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 18px var(--shadow);
+      margin-bottom: 12px;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 2rem);
+      letter-spacing: 0.06em;
+      text-transform: none;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .statusbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border: 1px solid #cbb9a3;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .weather-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 8px 12px 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fffdf8, #f5efe3);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 4px 14px var(--shadow);
+    }
+
+    .weather-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+
+    .weather-copy {
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+    }
+
+    .weather-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+
+    .weather-summary {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .weather-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.74rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .weather-pill {
+      padding: 2px 8px;
+      border: 1px solid rgba(99,117,150,0.24);
+      border-radius: 999px;
+      background: rgba(99,117,150,0.08);
+    }
+
+    .weather-pill.warn {
+      border-color: rgba(255,209,102,0.34);
+      color: var(--warn);
+    }
+
+    .weather-pill.info {
+      border-color: rgba(125,211,252,0.34);
+      color: var(--info);
+    }
+
+    .weather-controls {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .weather-input {
+      width: min(220px, 40vw);
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,117,150,0.28);
+      background: rgba(245, 242, 235, 0.88);
+      color: var(--text);
+      outline: none;
+    }
+
+    .weather-input:focus {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 3px rgba(99,117,150,0.12);
+    }
+
+    .weather-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+    }
+
+    .weather-forecast {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding-top: 8px;
+      border-top: 1px solid rgba(99,117,150,0.14);
+      margin-top: 6px;
+    }
+
+    .weather-forecast:empty {
+      display: none;
+    }
+
+    .forecast-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px 8px;
+      border: 1px solid rgba(99,117,150,0.2);
+      border-radius: 8px;
+      background: rgba(99,117,150,0.05);
+      min-width: 44px;
+      gap: 1px;
+    }
+
+    .forecast-label {
+      font-size: 0.62rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .forecast-sigil {
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .forecast-temps {
+      font-size: 0.67rem;
+      display: flex;
+      gap: 3px;
+    }
+
+    .forecast-lo {
+      color: var(--text-soft);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      gap: var(--gap);
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      min-width: 0;
+    }
+
+    .panel {
+      position: relative;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffefb, #f7efe2);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.75), 0 6px 18px var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.32), transparent 30%);
+      opacity: 0.18;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(99,117,150,0.2);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.1em;
+      text-transform: none;
+    }
+
+    .panel-label {
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .module-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pet-stage {
+      border: 1px solid rgba(99,117,150,0.24);
+      background:
+        linear-gradient(180deg, rgba(255, 253, 247, 0.95), rgba(248, 240, 227, 0.9)),
+        repeating-linear-gradient(
+          to right,
+          rgba(99,117,150,0.08) 0,
+          rgba(99,117,150,0.08) 1px,
+          transparent 1px,
+          transparent 16px
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(99,117,150,0.08) 0,
+          rgba(99,117,150,0.08) 1px,
+          transparent 1px,
+          transparent 16px
+        );
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 96px;
+    }
+
+    canvas#petCanvas {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 0 6px rgba(99,117,150,0.4));
+    }
+
+    .pet-stats {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pet-stat-card {
+      border: 1px solid rgba(99,117,150,0.24);
+      border-radius: 10px;
+      background: rgba(245, 242, 235, 0.88);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .pet-stat-label {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pet-stat-value {
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .pet-growth-progress {
+      display: grid;
+      gap: 6px;
+    }
+
+    .pet-growth-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,117,150,0.24);
+      background: rgba(99,117,150,0.12);
+      overflow: hidden;
+    }
+
+    .pet-growth-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #9caecc, #637596);
+      transition: width 180ms ease-in-out;
+    }
+
+    .pet-growth-text {
+      font-size: 0.76rem;
+      color: var(--text-soft);
+      text-align: right;
+    }
+
+    .controls, .timer-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      color: var(--text);
+      background: linear-gradient(180deg, #fffefb, #f2e9d9);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+      box-shadow: 0 2px 10px rgba(47, 52, 64, 0.1);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 14px rgba(99,117,150,0.16);
+      border-color: var(--glow-dim);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      color: var(--text-soft);
+      background: #f8f1e4;
+    }
+
+    .timer-display {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .big-time {
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      line-height: 1;
+      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .phase {
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+
+    .ring-wrap {
+      width: 110px;
+      height: 110px;
+      position: relative;
+    }
+
+    .ring {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(var(--glow) 0deg, rgba(99,117,150,0.12) 0deg);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 16px rgba(99,117,150,0.2);
+    }
+
+    .ring::before {
+      content: "";
+      width: 72%;
+      height: 72%;
+      border-radius: 50%;
+      background: var(--panel);
+      border: 1px solid rgba(99,117,150,0.18);
+    }
+
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .timer-presets {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .notes-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notes-note {
+      margin: -2px 2px 2px;
+      color: var(--text-soft);
+      font-size: 0.73rem;
+      opacity: 0.82;
+      line-height: 1.35;
+    }
+
+    .notes-form input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      border: 1px solid rgba(99,117,150,0.28);
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .notes-form input:focus {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 3px rgba(99,117,150,0.12);
+    }
+
+    .thought-log {
+      display: grid;
+      gap: 10px;
+      max-height: 560px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .archive-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border: 1px solid rgba(99,117,150,0.18);
+      border-radius: 10px;
+      background: rgba(99,117,150,0.05);
+      color: var(--text-soft);
+      font-size: 0.73rem;
+    }
+
+    .archive-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .archive-header {
+      font-size: 0.72rem;
+      color: var(--text-soft);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    .thought-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      border: 1px solid rgba(99,117,150,0.2);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(99,117,150,0.08);
+    }
+
+    .thought-toggle {
+      width: 24px;
+      height: 24px;
+      margin-top: 2px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,117,150,0.34);
+      background: rgba(245, 242, 235, 0.88);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .thought-toggle:hover {
+      border-color: var(--glow);
+      box-shadow: 0 0 0 2px rgba(99,117,150,0.12);
+    }
+
+    .thought-toggle.is-marked {
+      color: var(--danger);
+      border-color: rgba(255,107,107,0.4);
+    }
+
+    .thought-toggle.is-crossed {
+      color: var(--warn);
+      border-color: rgba(255,209,102,0.42);
+    }
+
+    .thought-content {
+      min-width: 0;
+    }
+
+    .thought-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .thought-body {
+      color: var(--text-soft);
+      white-space: pre-wrap;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .thought-card.is-crossed .thought-body {
+      text-decoration: line-through;
+      opacity: 0.72;
+    }
+
+    .terminal-feed {
+      min-height: 160px;
+      max-height: 240px;
+      overflow: auto;
+      display: grid;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+    }
+
+    .feed-line::before {
+      content: "> ";
+      color: var(--glow-dim);
+    }
+
+    .footnote {
+      margin-top: 12px;
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .muted {
+      color: var(--text-soft);
+    }
+
+    .calendar-frame {
+      border: 1px solid rgba(99,117,150,0.24);
+      border-radius: 10px;
+      background: rgba(245, 242, 235, 0.88);
+      padding: 10px;
+    }
+
+    .calendar-month {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+
+    .calendar-cell {
+      min-height: 28px;
+      border: 1px solid rgba(99,117,150,0.16);
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--text-soft);
+      background: rgba(99,117,150,0.08);
+    }
+
+    .calendar-cell.is-label {
+      min-height: 22px;
+      border: none;
+      background: transparent;
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      opacity: 0.85;
+    }
+
+    .calendar-cell.is-empty {
+      border-color: rgba(99,117,150,0.08);
+      color: transparent;
+      background: rgba(99,117,150,0.06);
+    }
+
+    .calendar-cell.is-today {
+      border-color: rgba(99,117,150,0.44);
+      background: rgba(99,117,150,0.18);
+      box-shadow: inset 0 0 0 1px rgba(99,117,150,0.24);
+      color: var(--text);
+      text-shadow: 0 0 6px rgba(99,117,150,0.34);
+    }
+
+    /* ── Game of Life ── */
+    .gol-canvas-wrap {
+      border: 1px solid rgba(99,117,150,0.28);
+      border-radius: 10px;
+      background: #050e07;
+      width: fit-content;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    #gol-canvas {
+      display: block;
+      width: min(100%, 300px);
+      height: auto;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+
+    .gol-meta {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1120px) {
+      .weather-strip {
+        grid-template-columns: 1fr;
+        border-radius: 16px;
+      }
+
+      .weather-controls {
+        justify-content: flex-start;
+      }
+
+      .weather-input {
+        width: min(100%, 320px);
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .weather-main {
+        align-items: flex-start;
+      }
+
+      .weather-row,
+      .weather-meta {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+      }
+
+      .weather-summary {
+        white-space: normal;
+      }
+
+      .weather-controls {
+        width: 100%;
+      }
+
+      .weather-input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <section class="weather-strip" aria-label="Local weather strip">
+      <div class="weather-main">
+        <div class="weather-copy">
+          <div class="weather-row">
+            <span class="weather-summary" id="weatherSummary">Acquiring local conditions…</span>
+          </div>
+          <div class="weather-meta">
+            <span class="weather-pill" id="weatherTemp">--°F</span>
+            <span class="weather-pill" id="weatherWind">WIND -- MPH</span>
+            <span class="weather-pill info" id="weatherSource">BOOT: GEO</span>
+            <span class="weather-pill" id="weatherUpdated">SYNC --</span>
+          </div>
+        </div>
+      </div>
+      <form class="weather-controls" id="weatherForm">
+        <input
+          class="weather-input"
+          id="weatherLocationInput"
+          type="text"
+          name="location"
+          placeholder="Manual location fallback (city or ZIP)"
+          autocomplete="off"
+          aria-label="Enter a city or ZIP code for weather fallback"
+        />
+        <button type="submit" class="weather-btn secondary">Tune Location</button>
+      </form>
+      <div class="weather-forecast" id="weatherForecast" aria-label="7-day forecast"></div>
+    </section>
+
+    <main class="grid">
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Pixel Pet</h2>
+            <span class="panel-label">Module 01</span>
+          </div>
+
+          <div class="module-stack">
+            <div class="pet-stage">
+              <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
+            </div>
+
+            <div class="pet-stats">
+              <div class="pet-stat-card">
+                <span class="pet-stat-label">Completed Pomodoros</span>
+                <span class="pet-stat-value" id="pomodoroCountValue">0</span>
+              </div>
+              <div class="pet-stat-card">
+                <span class="pet-stat-label">Growth Stage</span>
+                <span class="pet-stat-value" id="growthStageValue">Sprout</span>
+              </div>
+              <div class="pet-growth-progress">
+                <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                  <div class="pet-growth-fill" id="growthProgressFill"></div>
+                </div>
+                <span class="pet-growth-text" id="growthProgressText">0 sessions until Bud</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">System Feed</h2>
+            <span class="panel-label">Events</span>
+          </div>
+          <div class="terminal-feed" id="terminalFeed"></div>
+        </article>
+      </section>
+
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Pomodoro Core</h2>
+            <span class="panel-label">Module 02</span>
+          </div>
+
+          <div class="module-stack">
+            <div class="timer-display">
+              <div>
+                <div class="big-time" id="timeDisplay">25:00</div>
+                <div class="phase" id="phaseDisplay">Focus Session</div>
+              </div>
+              <div class="ring-wrap">
+                <div class="ring" id="timerRing"></div>
+                <div class="ring-label" id="sessionCount">S1</div>
+              </div>
+            </div>
+
+            <div class="timer-controls">
+              <button id="startTimerBtn">Start</button>
+              <button id="pauseTimerBtn" class="secondary">Pause</button>
+              <button id="resetTimerBtn" class="secondary">Reset</button>
+              <button id="skipTimerBtn">Skip</button>
+            </div>
+
+            <div class="timer-presets">
+              <button class="presetBtn secondary" data-focus="25" data-break="5">25 / 5</button>
+              <button class="presetBtn secondary" data-focus="50" data-break="10">50 / 10</button>
+              <button class="presetBtn secondary" data-focus="15" data-break="3">15 / 3</button>
+            </div>
+          </div>
+        </article>
+
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Calendar</h2>
+            <span class="panel-label">Module 04</span>
+          </div>
+          <div class="module-stack">
+            <div class="calendar-frame">
+              <div class="calendar-month" id="calendarMonthLabel">----</div>
+              <div class="calendar-grid" id="calendarGrid" aria-label="Current month calendar"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="column">
+        <article class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Thought Log</h2>
+            <span class="panel-label">Module 03</span>
+          </div>
+
+          <div class="module-stack">
+            <form class="notes-form" id="thoughtForm">
+              <input type="text" id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection, then press Enter..." maxlength="200" />
+              <div class="controls">
+                <button type="submit">Log Entry</button>
+                <button type="button" id="exportThoughtsBtn" class="secondary">Export</button>
+                <button type="button" id="clearThoughtsBtn" class="secondary">Clear All</button>
+              </div>
+            </form>
+            <div class="notes-note">Live log keeps the 50 most recent entries. Older entries move to archive automatically. Export includes both.</div>
+
+            <div class="archive-summary" id="archiveSummary">
+              <span id="archiveSummaryText">Archive: 0 entries</span>
+              <button type="button" id="toggleArchiveBtn" class="secondary weather-btn">View Archive</button>
+            </div>
+
+            <div class="thought-log" id="thoughtLog"></div>
+            <div class="archive-section" id="archiveSection" hidden>
+              <div class="archive-header">Archived entries</div>
+              <div class="thought-log" id="archiveLog"></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel" aria-label="Conway's Game of Life">
+          <div class="panel-header">
+            <h2 class="panel-title">Conway's Game of Life</h2>
+            <span class="panel-label" id="gol-status">paused</span>
+          </div>
+          <div class="module-stack">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button id="gol-toggle">Start</button>
+              <button id="gol-step" class="secondary">Step</button>
+              <button id="gol-random" class="secondary">Randomize</button>
+              <button id="gol-clear" class="secondary">Clear</button>
+            </div>
+            <div class="gol-canvas-wrap">
+              <canvas id="gol-canvas" width="300" height="180" aria-label="Game of Life grid"></canvas>
+            </div>
+            <div class="gol-meta">
+              <span id="gol-generation">generation: 0</span>
+              <span id="gol-population">alive cells: 0</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+
+    const growthStages = [
+      { name: 'Sprout', threshold: 0, size: 4 },
+      { name: 'Bud', threshold: 2, size: 6 },
+      { name: 'Bloom', threshold: 5, size: 8 },
+      { name: 'Mega Bloom', threshold: 9, size: 10 },
+    ];
+
+    const appState = {
+      pet: {
+        completedPomodoros: 0,
+        blink: false,
+      },
+      timer: {
+        focusMinutes: 25,
+        breakMinutes: 5,
+        totalSeconds: 25 * 60,
+        remainingSeconds: 25 * 60,
+        running: false,
+        mode: 'focus',
+        session: 1,
+        tickHandle: null,
+      },
+      thoughts: [],
+      archivedThoughts: [],
+      showArchive: false,
+      weather: {
+        source: 'geo',
+        label: 'Awaiting fix',
+        status: 'Acquiring local conditions…',
+        temperatureF: null,
+        windMph: null,
+        updatedAt: null,
+        sigil: '⌛',
+        forecast: [],
+      },
+    };
+
+
+    const WEATHER_CODES = {
+      0: { label: 'Clear sky', sigil: '☼' },
+      1: { label: 'Mostly clear', sigil: '◔' },
+      2: { label: 'Partly cloudy', sigil: '◑' },
+      3: { label: 'Overcast', sigil: '☁' },
+      45: { label: 'Fog', sigil: '≋' },
+      48: { label: 'Rime fog', sigil: '≋' },
+      51: { label: 'Light drizzle', sigil: '☂' },
+      53: { label: 'Drizzle', sigil: '☂' },
+      55: { label: 'Dense drizzle', sigil: '☂' },
+      56: { label: 'Freezing drizzle', sigil: '❄' },
+      57: { label: 'Dense freezing drizzle', sigil: '❄' },
+      61: { label: 'Light rain', sigil: '☂' },
+      63: { label: 'Rain', sigil: '☂' },
+      65: { label: 'Heavy rain', sigil: '☂' },
+      66: { label: 'Freezing rain', sigil: '❄' },
+      67: { label: 'Heavy freezing rain', sigil: '❄' },
+      71: { label: 'Light snow', sigil: '❄' },
+      73: { label: 'Snow', sigil: '❄' },
+      75: { label: 'Heavy snow', sigil: '❄' },
+      77: { label: 'Snow grains', sigil: '❄' },
+      80: { label: 'Rain showers', sigil: '☔' },
+      81: { label: 'Strong showers', sigil: '☔' },
+      82: { label: 'Violent showers', sigil: '☔' },
+      85: { label: 'Snow showers', sigil: '❅' },
+      86: { label: 'Heavy snow showers', sigil: '❅' },
+      95: { label: 'Thunderstorm', sigil: '⚡' },
+      96: { label: 'Storm + hail', sigil: '⚡' },
+      99: { label: 'Severe storm', sigil: '⚡' },
+    };
+
+    function setWeatherState(nextState) {
+      appState.weather = { ...appState.weather, ...nextState };
+      renderWeather();
+    }
+
+    function renderWeather() {
+      const weather = appState.weather;
+      $('#weatherSummary').textContent = weather.status;
+      $('#weatherTemp').textContent = weather.temperatureF == null ? '--°F' : `${weather.temperatureF}°F`;
+      $('#weatherWind').textContent = weather.windMph == null ? 'WIND -- MPH' : `WIND ${weather.windMph} MPH`;
+      $('#weatherSource').textContent = `BOOT: ${String(weather.source || 'geo').toUpperCase()}`;
+      $('#weatherUpdated').textContent = weather.updatedAt || 'SYNC --';
+
+      const forecastEl = $('#weatherForecast');
+      const forecast = weather.forecast || [];
+      if (forecast.length) {
+        forecastEl.innerHTML = forecast.map(day => `<div class="forecast-day"><span class="forecast-label">${day.label}</span><span class="forecast-sigil">${day.sigil}</span><span class="forecast-temps"><span class="forecast-hi">${day.hi}°</span><span class="forecast-lo">${day.lo}°</span></span></div>`).join('');
+      } else {
+        forecastEl.innerHTML = '';
+      }
+    }
+
+    function getWeatherDescriptor(code) {
+      return WEATHER_CODES[code] || { label: 'Uncoded sky', sigil: '⌘' };
+    }
+
+    function roundNumber(value) {
+      return Number.isFinite(value) ? Math.round(value) : null;
+    }
+
+    function formatUpdatedTime(value) {
+      const date = value ? new Date(value) : new Date();
+      return `SYNC ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    function formatForecastStatus(locationLabel, descriptor, isDay) {
+      return `${locationLabel} · ${descriptor.label} · ${isDay ? 'day cycle' : 'night cycle'}`;
+    }
+
+    async function fetchWeatherForCoordinates(latitude, longitude, locationLabel, sourceLabel) {
+      setWeatherState({
+        source: sourceLabel,
+        label: locationLabel,
+        status: `Fetching Open-Meteo conditions for ${locationLabel}…`,
+        temperatureF: null,
+        windMph: null,
+        updatedAt: 'SYNC --',
+        sigil: '⌛',
+        forecast: [],
+      });
+
+      const url = new URL('https://api.open-meteo.com/v1/forecast');
+      url.search = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        current: 'temperature_2m,weather_code,wind_speed_10m,is_day',
+        daily: 'temperature_2m_max,temperature_2m_min,weather_code',
+        temperature_unit: 'fahrenheit',
+        wind_speed_unit: 'mph',
+        forecast_days: '7',
+        timezone: 'auto',
+      }).toString();
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`forecast ${response.status}`);
+      const payload = await response.json();
+      const current = payload.current;
+      if (!current) throw new Error('forecast missing current weather');
+
+      const descriptor = getWeatherDescriptor(current.weather_code);
+
+      const forecast = [];
+      const daily = payload.daily;
+      if (daily && Array.isArray(daily.time)) {
+        for (let i = 0; i < daily.time.length; i++) {
+          const date = new Date(daily.time[i] + 'T12:00:00');
+          const dayDesc = getWeatherDescriptor(daily.weather_code[i]);
+          forecast.push({
+            label: date.toLocaleDateString([], { weekday: 'short' }).toUpperCase().slice(0, 3),
+            sigil: dayDesc.sigil,
+            hi: roundNumber(daily.temperature_2m_max[i]),
+            lo: roundNumber(daily.temperature_2m_min[i]),
+          });
+        }
+      }
+
+      setWeatherState({
+        source: sourceLabel,
+        label: locationLabel,
+        status: formatForecastStatus(locationLabel, descriptor, Boolean(current.is_day)),
+        temperatureF: roundNumber(current.temperature_2m),
+        windMph: roundNumber(current.wind_speed_10m),
+        updatedAt: formatUpdatedTime(current.time),
+        sigil: descriptor.sigil,
+        forecast,
+      });
+      logFeed(`Weather strip synced via Open-Meteo for ${locationLabel}.`);
+    }
+
+    async function geocodeLocation(query) {
+      const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
+      url.search = new URLSearchParams({
+        name: query,
+        count: '1',
+        language: 'en',
+        format: 'json',
+      }).toString();
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`geocode ${response.status}`);
+      const payload = await response.json();
+      const match = payload.results?.[0];
+      if (!match) throw new Error('no geocode result');
+
+      const parts = [match.name, match.admin1, match.country_code].filter(Boolean);
+      return {
+        latitude: match.latitude,
+        longitude: match.longitude,
+        label: parts.join(', '),
+      };
+    }
+
+    function loadSavedWeatherLocation() {
+      return localStorage.getItem('retroWeatherManualLocation') || '';
+    }
+
+    function saveWeatherLocation(query) {
+      localStorage.setItem('retroWeatherManualLocation', query);
+    }
+
+    function clearWeatherLocation() {
+      localStorage.removeItem('retroWeatherManualLocation');
+    }
+
+    async function useManualLocation(query) {
+      const cleanQuery = query.trim();
+      if (!cleanQuery) {
+        setWeatherState({
+          source: 'manual',
+          status: 'Enter a city or ZIP to override geolocation.',
+          sigil: '⌕',
+        });
+        return;
+      }
+
+      setWeatherState({
+        source: 'manual',
+        label: cleanQuery,
+        status: `Resolving ${cleanQuery}…`,
+        temperatureF: null,
+        windMph: null,
+        updatedAt: 'SYNC --',
+        sigil: '⌕',
+        forecast: [],
+      });
+
+      try {
+        const match = await geocodeLocation(cleanQuery);
+        saveWeatherLocation(cleanQuery);
+        await fetchWeatherForCoordinates(match.latitude, match.longitude, match.label, 'manual');
+      } catch (error) {
+        setWeatherState({
+          source: 'manual',
+          label: cleanQuery,
+          status: `Manual fallback failed for ${cleanQuery}. Try a broader city or ZIP.`,
+          sigil: '!',
+        });
+        logFeed(`Weather fallback failed for ${cleanQuery}: ${error.message}.`);
+      }
+    }
+
+    function triggerSavedWeatherFallback() {
+      const saved = loadSavedWeatherLocation().trim();
+      if (!saved) return false;
+      useManualLocation(saved);
+      return true;
+    }
+
+    function requestGeolocationWeather() {
+      if (!('geolocation' in navigator)) {
+        const restored = triggerSavedWeatherFallback();
+        if (!restored) {
+          setWeatherState({
+            source: 'manual',
+            status: 'Geolocation unavailable. Use the manual fallback field.',
+            sigil: '!',
+          });
+        }
+        logFeed('Weather strip: geolocation unavailable, manual fallback armed.');
+        return;
+      }
+
+      setWeatherState({
+        source: 'geo',
+        label: 'Current position',
+        status: 'Requesting one-time geolocation fix…',
+        sigil: '⌛',
+      });
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        clearWeatherLocation();
+        try {
+          await fetchWeatherForCoordinates(latitude, longitude, 'Current position', 'geo');
+        } catch (error) {
+          setWeatherState({
+            source: 'manual',
+            label: 'Fallback ready',
+            status: 'Weather lookup failed after geolocation. Try the manual location fallback.',
+            sigil: '!',
+          });
+          logFeed(`Weather fetch failed after geolocation: ${error.message}.`);
+        }
+      }, (error) => {
+        const restored = triggerSavedWeatherFallback();
+        if (!restored) {
+          setWeatherState({
+            source: 'manual',
+            label: 'Fallback ready',
+            status: 'Geolocation denied or timed out. Use the manual location fallback.',
+            sigil: '!',
+          });
+        }
+        logFeed(`Weather strip geolocation skipped (${error.code}). Manual fallback enabled.`);
+      }, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000,
+      });
+    }
+
+    function initWeather() {
+      $('#weatherLocationInput').value = loadSavedWeatherLocation();
+      renderWeather();
+      requestGeolocationWeather();
+    }
+
+    function logFeed(message) {
+      const feed = $('#terminalFeed');
+      const line = document.createElement('div');
+      line.className = 'feed-line';
+      const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      line.textContent = `[${ts}] ${message}`;
+      feed.prepend(line);
+      while (feed.children.length > 18) feed.removeChild(feed.lastChild);
+    }
+
+    function saveThoughts() {
+      localStorage.setItem('retroThoughtLog', JSON.stringify(appState.thoughts));
+    }
+
+    function saveArchivedThoughts() {
+      localStorage.setItem('retroThoughtArchive', JSON.stringify(appState.archivedThoughts));
+    }
+
+    function archiveOverflowThoughts() {
+      if (appState.thoughts.length <= 50) return 0;
+      const overflow = appState.thoughts.slice(50);
+      appState.thoughts = appState.thoughts.slice(0, 50);
+      appState.archivedThoughts = [...overflow, ...appState.archivedThoughts];
+      return overflow.length;
+    }
+
+    function normalizeThought(entry) {
+      if (!entry) return null;
+      const body = String(entry.body ?? entry.text ?? '').trim();
+      if (!body) return null;
+      return {
+        body,
+        time: entry.time || new Date().toLocaleString(),
+        tag: entry.tag || 'FOCUS',
+        status: ['active', 'marked', 'crossed'].includes(entry.status) ? entry.status : 'active',
+      };
+    }
+
+    function loadThoughts() {
+      try {
+        const raw = localStorage.getItem('retroThoughtLog');
+        const parsed = raw ? JSON.parse(raw) : [];
+        appState.thoughts = Array.isArray(parsed) ? parsed.map(normalizeThought).filter(Boolean) : [];
+      } catch {
+        appState.thoughts = [];
+      }
+
+      try {
+        const rawArchive = localStorage.getItem('retroThoughtArchive');
+        const parsedArchive = rawArchive ? JSON.parse(rawArchive) : [];
+        appState.archivedThoughts = Array.isArray(parsedArchive) ? parsedArchive.map(normalizeThought).filter(Boolean) : [];
+      } catch {
+        appState.archivedThoughts = [];
+      }
+
+      const movedCount = archiveOverflowThoughts();
+      if (movedCount > 0) {
+        saveThoughts();
+        saveArchivedThoughts();
+      }
+    }
+
+    function saveTimerSettings() {
+      const payload = {
+        focusMinutes: appState.timer.focusMinutes,
+        breakMinutes: appState.timer.breakMinutes,
+        session: appState.timer.session,
+        completedPomodoros: appState.pet.completedPomodoros,
+      };
+      localStorage.setItem('retroPomodoroSettings', JSON.stringify(payload));
+    }
+
+    function loadTimerSettings() {
+      try {
+        const raw = localStorage.getItem('retroPomodoroSettings');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        appState.timer.focusMinutes = Number(saved.focusMinutes) || 25;
+        appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
+        appState.timer.session = Number(saved.session) || 1;
+        appState.pet.completedPomodoros = Number(saved.completedPomodoros) || 0;
+        appState.timer.totalSeconds = appState.timer.focusMinutes * 60;
+        appState.timer.remainingSeconds = appState.timer.totalSeconds;
+      } catch {}
+    }
+
+    function getGrowthStage() {
+      return growthStages.reduce((current, stage) => (
+        appState.pet.completedPomodoros >= stage.threshold ? stage : current
+      ), growthStages[0]);
+    }
+
+    function getGrowthProgress() {
+      const completed = appState.pet.completedPomodoros;
+      const currentStageIndex = growthStages.findIndex(stage => stage.name === getGrowthStage().name);
+      const nextStage = growthStages[currentStageIndex + 1];
+
+      if (!nextStage) {
+        return {
+          progressPercent: 100,
+          statusText: 'Max stage reached.',
+          ariaValueNow: 100,
+        };
+      }
+
+      const currentStageThreshold = growthStages[currentStageIndex].threshold;
+      const requiredForStage = nextStage.threshold - currentStageThreshold;
+      const progressInStage = completed - currentStageThreshold;
+      const progressPercent = Math.max(0, Math.min(100, (progressInStage / requiredForStage) * 100));
+      const sessionsUntilNextStage = Math.max(0, nextStage.threshold - completed);
+      const sessionLabel = sessionsUntilNextStage === 1 ? 'session' : 'sessions';
+
+      return {
+        progressPercent,
+        statusText: `${sessionsUntilNextStage} ${sessionLabel} until ${nextStage.name}`,
+        ariaValueNow: Math.round(progressPercent),
+      };
+    }
+
+    function updatePetStats() {
+      const stage = getGrowthStage();
+      const growthProgress = getGrowthProgress();
+      $('#pomodoroCountValue').textContent = String(appState.pet.completedPomodoros);
+      $('#growthStageValue').textContent = stage.name;
+      $('#growthProgressFill').style.width = `${growthProgress.progressPercent}%`;
+      $('#growthProgressText').textContent = growthProgress.statusText;
+      const progressTrack = document.querySelector('.pet-growth-track');
+      progressTrack.setAttribute('aria-valuenow', String(growthProgress.ariaValueNow));
+    }
+
+    function drawPet() {
+      const canvas = $('#petCanvas');
+      const ctx = canvas.getContext('2d');
+      const { blink } = appState.pet;
+      const stage = getGrowthStage();
+      const size = stage.size;
+      const bodyX = Math.floor((canvas.width - size) / 2);
+      const bodyY = canvas.height - size - 2;
+      const bodyColor = '#9caecc';
+      const accentColor = '#637596';
+      const eyeColor = '#3a4250';
+      const leafColor = '#d9e3f3';
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const px = (x, y, w, h, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, h);
+      };
+
+      px(bodyX + 1, bodyY, Math.max(2, size - 2), 1, bodyColor);
+      px(bodyX, bodyY + 1, size, Math.max(2, size - 2), bodyColor);
+      px(bodyX + 1, bodyY + Math.max(2, size - 1), Math.max(2, size - 2), 1, bodyColor);
+
+      const stemX = bodyX + Math.floor(size / 2);
+      px(stemX, bodyY - 2, 1, 2, accentColor);
+      px(stemX - 1, bodyY - 3, 2, 1, leafColor);
+      px(stemX, bodyY - 4, 2, 1, leafColor);
+
+      const eyeY = bodyY + Math.max(1, Math.floor(size / 3));
+      const leftEyeX = bodyX + Math.max(1, Math.floor(size / 3));
+      const rightEyeX = bodyX + size - Math.max(2, Math.floor(size / 3)) - 1;
+
+      if (blink) {
+        px(leftEyeX, eyeY, 1, 1, eyeColor);
+        px(rightEyeX, eyeY, 1, 1, eyeColor);
+      } else {
+        px(leftEyeX, eyeY, 1, 2, eyeColor);
+        px(rightEyeX, eyeY, 1, 2, eyeColor);
+      }
+
+      const mouthWidth = Math.max(2, Math.floor(size / 3));
+      px(bodyX + Math.floor((size - mouthWidth) / 2), bodyY + size - 2, mouthWidth, 1, eyeColor);
+    }
+
+    function animatePet() {
+      appState.pet.blink = Math.random() < 0.15;
+      drawPet();
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const today = now.getDate();
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      $('#calendarMonthLabel').textContent = now.toLocaleString([], {
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const cells = [...dayLabels.map(label => `<div class="calendar-cell is-label">${label}</div>`)];
+
+      for (let i = 0; i < firstDay.getDay(); i++) {
+        cells.push('<div class="calendar-cell is-empty">·</div>');
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const isToday = day === today;
+        cells.push(`<div class="calendar-cell${isToday ? ' is-today' : ''}">${day}</div>`);
+      }
+
+      $('#calendarGrid').innerHTML = cells.join('');
+    }
+
+    function updateTimerUI() {
+      const t = appState.timer;
+      $('#timeDisplay').textContent = formatTime(t.remainingSeconds);
+      $('#phaseDisplay').textContent = t.mode === 'focus' ? 'Focus Session' : 'Break Session';
+      $('#sessionCount').textContent = `S${t.session}`;
+      const pct = 1 - (t.remainingSeconds / t.totalSeconds || 0);
+      $('#timerRing').style.background = `conic-gradient(var(--glow) ${Math.max(0, pct) * 360}deg, rgba(99,117,150,0.12) 0deg)`;
+    }
+
+    function switchTimerMode(countCompletedPomodoro = true) {
+      const t = appState.timer;
+      if (t.mode === 'focus') {
+        t.mode = 'break';
+        t.totalSeconds = t.breakMinutes * 60;
+        t.remainingSeconds = t.totalSeconds;
+        if (countCompletedPomodoro) {
+          appState.pet.completedPomodoros += 1;
+          updatePetStats();
+          drawPet();
+          addPomodoroPattern();
+          logFeed(`Focus session complete. Pet grew after pomodoro ${appState.pet.completedPomodoros}. Starting ${t.breakMinutes}-minute break.`);
+        } else {
+          logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
+        }
+      } else {
+        t.mode = 'focus';
+        t.session += 1;
+        t.totalSeconds = t.focusMinutes * 60;
+        t.remainingSeconds = t.totalSeconds;
+        logFeed(`Break complete. Starting focus session ${t.session}.`);
+      }
+      saveTimerSettings();
+      updateTimerUI();
+      syncGOLSpeed();
+    }
+
+    function startTimer() {
+      const t = appState.timer;
+      if (t.running) return;
+      if (t.mode === 'focus' && t.remainingSeconds === t.totalSeconds) {
+        seedFocusVisualizerPatterns();
+        ensureGOLRunning();
+      } else {
+        syncGOLSpeed();
+      }
+      t.running = true;
+      logFeed(`Timer started: ${t.mode} mode.`);
+      t.tickHandle = setInterval(() => {
+        if (t.remainingSeconds > 0) {
+          t.remainingSeconds -= 1;
+          updateTimerUI();
+        } else {
+          clearInterval(t.tickHandle);
+          t.running = false;
+          switchTimerMode();
+          startTimer();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      const t = appState.timer;
+      if (!t.running) return;
+      t.running = false;
+      clearInterval(t.tickHandle);
+      logFeed('Timer paused.');
+    }
+
+    function resetTimer() {
+      const t = appState.timer;
+      pauseTimer();
+      t.totalSeconds = (t.mode === 'focus' ? t.focusMinutes : t.breakMinutes) * 60;
+      t.remainingSeconds = t.totalSeconds;
+      updateTimerUI();
+      logFeed('Timer reset.');
+    }
+
+    function skipTimer() {
+      pauseTimer();
+      switchTimerMode(false);
+    }
+
+    function applyPreset(focus, breakMin) {
+      const t = appState.timer;
+      pauseTimer();
+      t.focusMinutes = focus;
+      t.breakMinutes = breakMin;
+      if (t.mode === 'focus') {
+        t.totalSeconds = focus * 60;
+        t.remainingSeconds = t.totalSeconds;
+      } else {
+        t.totalSeconds = breakMin * 60;
+        t.remainingSeconds = t.totalSeconds;
+      }
+      saveTimerSettings();
+      updateTimerUI();
+      logFeed(`Pomodoro preset loaded: ${focus}/${breakMin}.`);
+    }
+
+    function getThoughtToggleSymbol(status) {
+      if (status === 'marked') return 'X';
+      return '•';
+    }
+
+    function getNextThoughtStatus(status) {
+      if (status === 'active') return 'marked';
+      if (status === 'marked') return 'crossed';
+      return 'active';
+    }
+
+    function renderThoughtList(root, entries, emptyText) {
+      root.innerHTML = '';
+      if (!entries.length) {
+        const empty = document.createElement('div');
+        empty.className = 'thought-card';
+        empty.innerHTML = `<div></div><div class="thought-body">${escapeHtml(emptyText)}</div>`;
+        root.appendChild(empty);
+        return;
+      }
+
+      entries.forEach((entry, index) => {
+        const card = document.createElement('div');
+        card.className = `thought-card${entry.status === 'crossed' ? ' is-crossed' : ''}`;
+        const statusClass = entry.status === 'active' ? '' : ` is-${entry.status}`;
+        card.innerHTML = `
+          <button type="button" class="thought-toggle${statusClass}" data-thought-index="${index}" aria-label="Toggle thought status">${getThoughtToggleSymbol(entry.status)}</button>
+          <div class="thought-content">
+            <div class="thought-meta">
+              <span>${escapeHtml(entry.tag)}</span>
+              <span>${escapeHtml(entry.time)}</span>
+            </div>
+            <div class="thought-body">${escapeHtml(entry.body)}</div>
+          </div>
+        `;
+        root.appendChild(card);
+      });
+    }
+
+    function updateArchiveSummary() {
+      const archiveCount = appState.archivedThoughts.length;
+      $('#archiveSummaryText').textContent = `Archive: ${archiveCount} ${archiveCount === 1 ? 'entry' : 'entries'}`;
+      $('#toggleArchiveBtn').textContent = appState.showArchive ? 'Hide Archive' : 'View Archive';
+      $('#archiveSection').hidden = !appState.showArchive;
+    }
+
+    function renderThoughts() {
+      renderThoughtList($('#thoughtLog'), appState.thoughts, 'No entries logged yet.');
+      renderThoughtList($('#archiveLog'), appState.archivedThoughts, 'No archived entries yet.');
+      updateArchiveSummary();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function addThought(body) {
+      const trimmedBody = body.trim();
+      if (!trimmedBody) return;
+      const now = new Date();
+      appState.thoughts.unshift({
+        body: trimmedBody,
+        time: now.toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        tag: appState.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
+        status: 'active',
+      });
+      const archivedCount = archiveOverflowThoughts();
+      saveThoughts();
+      saveArchivedThoughts();
+      renderThoughts();
+      logFeed('Thought captured to local log.');
+      addThoughtChaos();
+      if (archivedCount > 0) {
+        logFeed(`${archivedCount} older thought ${archivedCount === 1 ? 'entry moved' : 'entries moved'} to archive.`);
+      }
+    }
+
+    function cycleThoughtStatus(index) {
+      const thought = appState.thoughts[index];
+      if (!thought) return;
+      thought.status = getNextThoughtStatus(thought.status || 'active');
+      saveThoughts();
+      renderThoughts();
+    }
+
+    function exportThoughts() {
+      const exportedAt = new Date().toISOString();
+      const payload = {
+        exportedAt,
+        activeCount: appState.thoughts.length,
+        archivedCount: appState.archivedThoughts.length,
+        thoughts: appState.thoughts,
+        archivedThoughts: appState.archivedThoughts,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const stamp = exportedAt.replaceAll(':', '-').replaceAll('.', '-');
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `dwell-thought-log-${stamp}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      logFeed(`Thought log exported (${payload.activeCount} live, ${payload.archivedCount} archived) at ${new Date(exportedAt).toLocaleString()}.`);
+    }
+
+    // ── Game of Life ──────────────────────────────────────────────────────
+    const GOL = {
+      cols: 30, rows: 18, cellSize: 10,
+      running: false, generation: 0,
+      stepInterval: null, grid: [], next: [],
+      wrapEdges: true,
+      repeatHistory: [],
+      repeatHistoryLimit: 40,
+      lastRefreshGeneration: -1,
+    };
+    const GOL_SPEED_MS = { focus: 90, break: 220 };
+    const KNOWN_GOL_PATTERNS = [
+      {
+        name: 'blinker',
+        cells: [[0, 0], [1, 0], [2, 0]],
+        width: 3,
+        height: 1,
+      },
+      {
+        name: 'toad',
+        cells: [[1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1]],
+        width: 4,
+        height: 2,
+      },
+      {
+        name: 'beacon',
+        cells: [[0, 0], [1, 0], [0, 1], [1, 1], [2, 2], [3, 2], [2, 3], [3, 3]],
+        width: 4,
+        height: 4,
+      },
+      {
+        name: 'pentadecathlon',
+        cells: [[1, 0], [3, 0], [0, 1], [1, 1], [3, 1], [4, 1], [1, 2], [3, 2], [1, 3], [3, 3], [1, 4], [3, 4], [0, 5], [1, 5], [3, 5], [4, 5], [1, 6], [3, 6]],
+        width: 5,
+        height: 7,
+      },
+      {
+        name: 'lightweight spaceship',
+        cells: [[1, 0], [2, 0], [3, 0], [4, 0], [0, 1], [4, 1], [4, 2], [0, 3], [3, 3]],
+        width: 5,
+        height: 4,
+      },
+    ];
+    const FOCUS_VISUALIZER_BLUEPRINT = [
+      { pattern: 'beacon', x: 2, y: 2 },
+      { pattern: 'pentadecathlon', x: 10, y: 1 },
+      { pattern: 'toad', x: 5, y: 13 },
+      { pattern: 'blinker', x: 21, y: 14 },
+      { pattern: 'lightweight spaceship', x: 22, y: 6 },
+    ];
+
+    function makeGrid(fill = 0) {
+      return Array.from({ length: GOL.rows }, () => Array(GOL.cols).fill(fill));
+    }
+
+    function getPatternByName(name) {
+      return KNOWN_GOL_PATTERNS.find(pattern => pattern.name === name);
+    }
+
+    function encodeGridState() {
+      return GOL.grid.map(row => row.join('')).join('|');
+    }
+
+    function trackGridHistory() {
+      const signature = encodeGridState();
+      GOL.repeatHistory.push(signature);
+      if (GOL.repeatHistory.length > GOL.repeatHistoryLimit) GOL.repeatHistory.shift();
+      return GOL.repeatHistory.filter((value) => value === signature).length;
+    }
+
+    function resetGridHistory() {
+      GOL.repeatHistory = [encodeGridState()];
+    }
+
+    function countNeighbors(x, y) {
+      let n = 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        let nx = x + dx;
+        let ny = y + dy;
+        if (GOL.wrapEdges) {
+          nx = (nx + GOL.cols) % GOL.cols;
+          ny = (ny + GOL.rows) % GOL.rows;
+        }
+        if (nx < 0 || nx >= GOL.cols || ny < 0 || ny >= GOL.rows) continue;
+        n += GOL.grid[ny][nx];
+      }
+      return n;
+    }
+
+    function countAliveCells() {
+      return GOL.grid.reduce((sum, row) => sum + row.reduce((r, v) => r + v, 0), 0);
+    }
+
+    function drawGOL() {
+      const canvas = document.getElementById('gol-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#f2ebdd';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
+        if (!GOL.grid[y][x]) continue;
+        ctx.fillStyle = '#637596';
+        ctx.fillRect(x * GOL.cellSize, y * GOL.cellSize, GOL.cellSize, GOL.cellSize);
+      }
+
+      ctx.strokeStyle = 'rgba(99,117,150,0.34)';
+      ctx.lineWidth = 1;
+      for (let gx = 0; gx <= GOL.cols; gx++) {
+        ctx.beginPath();
+        ctx.moveTo(gx * GOL.cellSize + 0.5, 0);
+        ctx.lineTo(gx * GOL.cellSize + 0.5, GOL.rows * GOL.cellSize);
+        ctx.stroke();
+      }
+      for (let gy = 0; gy <= GOL.rows; gy++) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy * GOL.cellSize + 0.5);
+        ctx.lineTo(GOL.cols * GOL.cellSize, gy * GOL.cellSize + 0.5);
+        ctx.stroke();
+      }
+    }
+
+    function updateGOLMeta(alive = countAliveCells()) {
+      document.getElementById('gol-generation').textContent = `generation: ${GOL.generation}`;
+      document.getElementById('gol-population').textContent = `alive cells: ${alive}`;
+      document.getElementById('gol-status').textContent = GOL.running ? 'running' : 'paused';
+      document.getElementById('gol-toggle').textContent = GOL.running ? 'Pause' : 'Start';
+    }
+
+    function persistGOL() {
+      localStorage.setItem('dwell_gol', JSON.stringify({
+        generation: GOL.generation,
+        grid: GOL.grid,
+      }));
+    }
+
+    function getGOLStepDelay() {
+      return appState.timer.mode === 'focus' ? GOL_SPEED_MS.focus : GOL_SPEED_MS.break;
+    }
+
+    function syncGOLSpeed() {
+      if (!GOL.running) return;
+      clearInterval(GOL.stepInterval);
+      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
+    }
+
+    function mergePatternAt(pattern, originX, originY) {
+      let merged = 0;
+      pattern.cells.forEach(([dx, dy]) => {
+        const x = originX + dx;
+        const y = originY + dy;
+        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
+        if (!GOL.grid[y][x]) merged++;
+        GOL.grid[y][x] = 1;
+      });
+      return merged;
+    }
+
+    function seedFocusVisualizerPatterns() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      GOL.lastRefreshGeneration = -1;
+      const merged = [];
+      FOCUS_VISUALIZER_BLUEPRINT.forEach((placement) => {
+        const pattern = getPatternByName(placement.pattern);
+        if (!pattern) return;
+        const mergedCells = mergePatternAt(pattern, placement.x, placement.y);
+        merged.push(`${pattern.name} (+${mergedCells})`);
+      });
+      resetGridHistory();
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed(`Focus visualizer primed with known patterns: ${merged.join(', ')}.`);
+    }
+
+    function ensureGOLRunning() {
+      if (GOL.running) return;
+      GOL.running = true;
+      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
+      updateGOLMeta();
+    }
+
+    function addPomodoroPattern() {
+      const pattern = KNOWN_GOL_PATTERNS[Math.floor(Math.random() * KNOWN_GOL_PATTERNS.length)];
+      const maxOriginX = Math.max(0, GOL.cols - pattern.width);
+      const maxOriginY = Math.max(0, GOL.rows - pattern.height);
+      const originX = Math.floor(Math.random() * (maxOriginX + 1));
+      const originY = Math.floor(Math.random() * (maxOriginY + 1));
+      const mergedCells = mergePatternAt(pattern, originX, originY);
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed(`Productivity pattern injected: ${pattern.name} at (${originX},${originY}) with ${mergedCells} fresh cell${mergedCells === 1 ? '' : 's'}.`);
+    }
+
+    function addThoughtChaos() {
+      const jitterCells = 3;
+      for (let i = 0; i < jitterCells; i++) {
+        const x = Math.floor(Math.random() * GOL.cols);
+        const y = Math.floor(Math.random() * GOL.rows);
+        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
+      }
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+      logFeed('Thought ripple added a little chaos to the life grid.');
+    }
+
+    function nextGeneration() {
+      let alive = 0;
+      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
+        const neighbors = countNeighbors(x, y);
+        const aliveNow = GOL.grid[y][x] === 1;
+        const nextAlive = aliveNow ? (neighbors === 2 || neighbors === 3) : neighbors === 3;
+        GOL.next[y][x] = nextAlive ? 1 : 0;
+        alive += GOL.next[y][x];
+      }
+      [GOL.grid, GOL.next] = [GOL.next, GOL.grid];
+      GOL.generation++;
+      const repeats = trackGridHistory();
+      if (repeats >= 4 && appState.timer.mode === 'focus' && GOL.generation - GOL.lastRefreshGeneration >= 40) {
+        GOL.lastRefreshGeneration = GOL.generation;
+        addPomodoroPattern();
+      }
+      drawGOL();
+      updateGOLMeta(alive);
+      persistGOL();
+    }
+
+    function randomizeGOL() {
+      GOL.grid = makeGrid(0).map(row => row.map(() => Math.random() > 0.72 ? 1 : 0));
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      resetGridHistory();
+      drawGOL();
+      updateGOLMeta();
+      persistGOL();
+    }
+
+    function clearGOL() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      GOL.generation = 0;
+      resetGridHistory();
+      drawGOL();
+      updateGOLMeta(0);
+      persistGOL();
+    }
+
+    function toggleGOLRun() {
+      GOL.running = !GOL.running;
+      if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
+      else clearInterval(GOL.stepInterval);
+      updateGOLMeta();
+    }
+
+    function loadGOL() {
+      GOL.grid = makeGrid(0);
+      GOL.next = makeGrid(0);
+      GOL.lastRefreshGeneration = -1;
+      try {
+        const saved = JSON.parse(localStorage.getItem('dwell_gol') || '{}');
+        if (Array.isArray(saved.grid) && saved.grid.length === GOL.rows) {
+          GOL.grid = saved.grid.map(row => {
+            if (!Array.isArray(row) || row.length !== GOL.cols) return Array(GOL.cols).fill(0);
+            return row.map(v => v ? 1 : 0);
+          });
+        }
+        if (Number.isInteger(saved.generation) && saved.generation >= 0) GOL.generation = saved.generation;
+      } catch (e) {}
+      resetGridHistory();
+      drawGOL();
+      updateGOLMeta();
+    }
+
+    function bindEvents() {
+      $('#startTimerBtn').addEventListener('click', startTimer);
+      $('#pauseTimerBtn').addEventListener('click', pauseTimer);
+      $('#resetTimerBtn').addEventListener('click', resetTimer);
+      $('#skipTimerBtn').addEventListener('click', skipTimer);
+
+      document.querySelectorAll('.presetBtn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyPreset(Number(btn.dataset.focus), Number(btn.dataset.break));
+        });
+      });
+
+      $('#thoughtForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const body = $('#thoughtBody').value;
+        if (!body.trim()) return;
+        addThought(body);
+        $('#thoughtBody').value = '';
+      });
+
+      $('#thoughtLog').addEventListener('click', (event) => {
+        const toggle = event.target.closest('[data-thought-index]');
+        if (!toggle) return;
+        cycleThoughtStatus(Number(toggle.dataset.thoughtIndex));
+      });
+
+      $('#clearThoughtsBtn').addEventListener('click', () => {
+        appState.thoughts = [];
+        saveThoughts();
+        renderThoughts();
+        logFeed('Thought log cleared.');
+      });
+
+      $('#toggleArchiveBtn').addEventListener('click', () => {
+        appState.showArchive = !appState.showArchive;
+        renderThoughts();
+      });
+
+      $('#exportThoughtsBtn').addEventListener('click', exportThoughts);
+
+      $('#weatherForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        useManualLocation($('#weatherLocationInput').value);
+      });
+
+      $('#gol-toggle').addEventListener('click', toggleGOLRun);
+      $('#gol-step').addEventListener('click', () => { if (!GOL.running) nextGeneration(); });
+      $('#gol-random').addEventListener('click', randomizeGOL);
+      $('#gol-clear').addEventListener('click', clearGOL);
+      $('#gol-canvas').addEventListener('click', e => {
+        const rect = e.target.getBoundingClientRect();
+        const scaleX = e.target.width / rect.width;
+        const scaleY = e.target.height / rect.height;
+        const x = Math.floor(((e.clientX - rect.left) * scaleX) / GOL.cellSize);
+        const y = Math.floor(((e.clientY - rect.top) * scaleY) / GOL.cellSize);
+        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
+        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
+        drawGOL(); updateGOLMeta(); persistGOL();
+      });
+    }
+
+    function init() {
+      loadThoughts();
+      loadTimerSettings();
+      bindEvents();
+      renderThoughts();
+      updatePetStats();
+      updateTimerUI();
+      drawPet();
+      renderCalendar();
+      initWeather();
+      loadGOL();
+      logFeed('Dwell Notebook Workspace initialized.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar, game of life.');
+      setInterval(animatePet, 1200);
+    }
+
+    init();
+  </script>
+</body>
+</html>
