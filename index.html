@@ -493,6 +493,29 @@
       gap: 8px;
     }
 
+    .pomodoro-pet-shell {
+      border-top: 1px solid rgba(99,117,150,0.15);
+      padding-top: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .pomodoro-pet-grid {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+
+    .pomodoro-pet-grid .pet-stage {
+      min-height: 110px;
+      margin: 0;
+    }
+
+    .pomodoro-pet-grid .pet-stats {
+      gap: 8px;
+    }
+
     .notes-form {
       display: grid;
       gap: 10px;
@@ -981,6 +1004,10 @@
     }
 
     @media (max-width: 640px) {
+      .pomodoro-pet-grid {
+        grid-template-columns: 1fr;
+      }
+
       .tracker-form-grid {
         grid-template-columns: 1fr;
       }
@@ -1046,37 +1073,6 @@
       <section class="column">
         <article class="panel">
           <div class="panel-header">
-            <h2 class="panel-title">Pixel Pet</h2>
-            <span class="panel-label">Module 01</span>
-          </div>
-
-          <div class="module-stack">
-            <div class="pet-stage">
-              <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
-            </div>
-
-            <div class="pet-stats">
-              <div class="pet-stat-card">
-                <span class="pet-stat-label">Completed Pomodoros</span>
-                <span class="pet-stat-value" id="pomodoroCountValue">0</span>
-              </div>
-              <div class="pet-stat-card">
-                <span class="pet-stat-label">Growth Stage</span>
-                <span class="pet-stat-value" id="growthStageValue">Sprout</span>
-              </div>
-              <div class="pet-growth-progress">
-                <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div class="pet-growth-fill" id="growthProgressFill"></div>
-                </div>
-                <span class="pet-growth-text" id="growthProgressText">0 sessions until Bud</span>
-              </div>
-            </div>
-          </div>
-        </article>
-
-
-        <article class="panel">
-          <div class="panel-header">
             <h2 class="panel-title">Productivity Tracker</h2>
             <span class="panel-label">Module 01B</span>
           </div>
@@ -1120,7 +1116,7 @@
       <section class="column">
         <article class="panel">
           <div class="panel-header">
-            <h2 class="panel-title">Pomodoro Core</h2>
+            <h2 class="panel-title">Pomodoro Core + Pixel Pet</h2>
             <span class="panel-label">Module 02</span>
           </div>
 
@@ -1147,6 +1143,32 @@
               <button class="presetBtn secondary" data-focus="25" data-break="5">25 / 5</button>
               <button class="presetBtn secondary" data-focus="50" data-break="10">50 / 10</button>
               <button class="presetBtn secondary" data-focus="15" data-break="3">15 / 3</button>
+            </div>
+
+            <div class="pomodoro-pet-shell">
+              <div class="panel-label">Pet Companion</div>
+              <div class="pomodoro-pet-grid">
+                <div class="pet-stage">
+                  <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
+                </div>
+
+                <div class="pet-stats">
+                  <div class="pet-stat-card">
+                    <span class="pet-stat-label">Completed Pomodoros</span>
+                    <span class="pet-stat-value" id="pomodoroCountValue">0</span>
+                  </div>
+                  <div class="pet-stat-card">
+                    <span class="pet-stat-label">Growth Stage</span>
+                    <span class="pet-stat-value" id="growthStageValue">Sprout</span>
+                  </div>
+                  <div class="pet-growth-progress">
+                    <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div class="pet-growth-fill" id="growthProgressFill"></div>
+                    </div>
+                    <span class="pet-growth-text" id="growthProgressText">0 sessions until Bud</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -2253,7 +2275,7 @@
       renderCalendar();
       initWeather();
       logFeed('Dwell Notebook Workspace initialized.');
-      logFeed('Modules loaded: pixel pet, productivity tracker, pomodoro, thought log, weather strip, calendar.');
+      logFeed('Modules loaded: productivity tracker, pomodoro (+ pet companion), thought log, weather strip, calendar.');
       setInterval(animatePet, 1200);
     }
 
