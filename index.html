@@ -705,33 +705,6 @@
       text-shadow: 0 0 6px rgba(99,117,150,0.34);
     }
 
-    /* ── Game of Life ── */
-    .gol-canvas-wrap {
-      border: 1px solid rgba(99,117,150,0.28);
-      border-radius: 10px;
-      background: #050e07;
-      width: fit-content;
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    #gol-canvas {
-      display: block;
-      width: min(100%, 300px);
-      height: auto;
-      image-rendering: pixelated;
-      cursor: crosshair;
-    }
-
-    .gol-meta {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     @media (max-width: 1120px) {
       .weather-strip {
         grid-template-columns: 1fr;
@@ -930,27 +903,6 @@
           </div>
         </article>
 
-        <article class="panel" aria-label="Conway's Game of Life">
-          <div class="panel-header">
-            <h2 class="panel-title">Conway's Game of Life</h2>
-            <span class="panel-label" id="gol-status">paused</span>
-          </div>
-          <div class="module-stack">
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button id="gol-toggle">Start</button>
-              <button id="gol-step" class="secondary">Step</button>
-              <button id="gol-random" class="secondary">Randomize</button>
-              <button id="gol-clear" class="secondary">Clear</button>
-            </div>
-            <div class="gol-canvas-wrap">
-              <canvas id="gol-canvas" width="300" height="180" aria-label="Game of Life grid"></canvas>
-            </div>
-            <div class="gol-meta">
-              <span id="gol-generation">generation: 0</span>
-              <span id="gol-population">alive cells: 0</span>
-            </div>
-          </div>
-        </article>
       </section>
     </main>
   </div>
@@ -1497,7 +1449,6 @@
           appState.pet.completedPomodoros += 1;
           updatePetStats();
           drawPet();
-          addPomodoroPattern();
           logFeed(`Focus session complete. Pet grew after pomodoro ${appState.pet.completedPomodoros}. Starting ${t.breakMinutes}-minute break.`);
         } else {
           logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
@@ -1511,18 +1462,11 @@
       }
       saveTimerSettings();
       updateTimerUI();
-      syncGOLSpeed();
     }
 
     function startTimer() {
       const t = appState.timer;
       if (t.running) return;
-      if (t.mode === 'focus' && t.remainingSeconds === t.totalSeconds) {
-        seedFocusVisualizerPatterns();
-        ensureGOLRunning();
-      } else {
-        syncGOLSpeed();
-      }
       t.running = true;
       logFeed(`Timer started: ${t.mode} mode.`);
       t.tickHandle = setInterval(() => {
@@ -1658,7 +1602,6 @@
       saveArchivedThoughts();
       renderThoughts();
       logFeed('Thought captured to local log.');
-      addThoughtChaos();
       if (archivedCount > 0) {
         logFeed(`${archivedCount} older thought ${archivedCount === 1 ? 'entry moved' : 'entries moved'} to archive.`);
       }
@@ -1692,283 +1635,6 @@
       anchor.remove();
       URL.revokeObjectURL(url);
       logFeed(`Thought log exported (${payload.activeCount} live, ${payload.archivedCount} archived) at ${new Date(exportedAt).toLocaleString()}.`);
-    }
-
-    // ── Game of Life ──────────────────────────────────────────────────────
-    const GOL = {
-      cols: 30, rows: 18, cellSize: 10,
-      running: false, generation: 0,
-      stepInterval: null, grid: [], next: [],
-      wrapEdges: true,
-      repeatHistory: [],
-      repeatHistoryLimit: 40,
-      lastRefreshGeneration: -1,
-    };
-    const GOL_SPEED_MS = { focus: 90, break: 220 };
-    const KNOWN_GOL_PATTERNS = [
-      {
-        name: 'blinker',
-        cells: [[0, 0], [1, 0], [2, 0]],
-        width: 3,
-        height: 1,
-      },
-      {
-        name: 'toad',
-        cells: [[1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [2, 1]],
-        width: 4,
-        height: 2,
-      },
-      {
-        name: 'beacon',
-        cells: [[0, 0], [1, 0], [0, 1], [1, 1], [2, 2], [3, 2], [2, 3], [3, 3]],
-        width: 4,
-        height: 4,
-      },
-      {
-        name: 'pentadecathlon',
-        cells: [[1, 0], [3, 0], [0, 1], [1, 1], [3, 1], [4, 1], [1, 2], [3, 2], [1, 3], [3, 3], [1, 4], [3, 4], [0, 5], [1, 5], [3, 5], [4, 5], [1, 6], [3, 6]],
-        width: 5,
-        height: 7,
-      },
-      {
-        name: 'lightweight spaceship',
-        cells: [[1, 0], [2, 0], [3, 0], [4, 0], [0, 1], [4, 1], [4, 2], [0, 3], [3, 3]],
-        width: 5,
-        height: 4,
-      },
-    ];
-    const FOCUS_VISUALIZER_BLUEPRINT = [
-      { pattern: 'beacon', x: 2, y: 2 },
-      { pattern: 'pentadecathlon', x: 10, y: 1 },
-      { pattern: 'toad', x: 5, y: 13 },
-      { pattern: 'blinker', x: 21, y: 14 },
-      { pattern: 'lightweight spaceship', x: 22, y: 6 },
-    ];
-
-    function makeGrid(fill = 0) {
-      return Array.from({ length: GOL.rows }, () => Array(GOL.cols).fill(fill));
-    }
-
-    function getPatternByName(name) {
-      return KNOWN_GOL_PATTERNS.find(pattern => pattern.name === name);
-    }
-
-    function encodeGridState() {
-      return GOL.grid.map(row => row.join('')).join('|');
-    }
-
-    function trackGridHistory() {
-      const signature = encodeGridState();
-      GOL.repeatHistory.push(signature);
-      if (GOL.repeatHistory.length > GOL.repeatHistoryLimit) GOL.repeatHistory.shift();
-      return GOL.repeatHistory.filter((value) => value === signature).length;
-    }
-
-    function resetGridHistory() {
-      GOL.repeatHistory = [encodeGridState()];
-    }
-
-    function countNeighbors(x, y) {
-      let n = 0;
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        if (dx === 0 && dy === 0) continue;
-        let nx = x + dx;
-        let ny = y + dy;
-        if (GOL.wrapEdges) {
-          nx = (nx + GOL.cols) % GOL.cols;
-          ny = (ny + GOL.rows) % GOL.rows;
-        }
-        if (nx < 0 || nx >= GOL.cols || ny < 0 || ny >= GOL.rows) continue;
-        n += GOL.grid[ny][nx];
-      }
-      return n;
-    }
-
-    function countAliveCells() {
-      return GOL.grid.reduce((sum, row) => sum + row.reduce((r, v) => r + v, 0), 0);
-    }
-
-    function drawGOL() {
-      const canvas = document.getElementById('gol-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#f2ebdd';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
-        if (!GOL.grid[y][x]) continue;
-        ctx.fillStyle = '#637596';
-        ctx.fillRect(x * GOL.cellSize, y * GOL.cellSize, GOL.cellSize, GOL.cellSize);
-      }
-
-      ctx.strokeStyle = 'rgba(99,117,150,0.34)';
-      ctx.lineWidth = 1;
-      for (let gx = 0; gx <= GOL.cols; gx++) {
-        ctx.beginPath();
-        ctx.moveTo(gx * GOL.cellSize + 0.5, 0);
-        ctx.lineTo(gx * GOL.cellSize + 0.5, GOL.rows * GOL.cellSize);
-        ctx.stroke();
-      }
-      for (let gy = 0; gy <= GOL.rows; gy++) {
-        ctx.beginPath();
-        ctx.moveTo(0, gy * GOL.cellSize + 0.5);
-        ctx.lineTo(GOL.cols * GOL.cellSize, gy * GOL.cellSize + 0.5);
-        ctx.stroke();
-      }
-    }
-
-    function updateGOLMeta(alive = countAliveCells()) {
-      document.getElementById('gol-generation').textContent = `generation: ${GOL.generation}`;
-      document.getElementById('gol-population').textContent = `alive cells: ${alive}`;
-      document.getElementById('gol-status').textContent = GOL.running ? 'running' : 'paused';
-      document.getElementById('gol-toggle').textContent = GOL.running ? 'Pause' : 'Start';
-    }
-
-    function persistGOL() {
-      localStorage.setItem('dwell_gol', JSON.stringify({
-        generation: GOL.generation,
-        grid: GOL.grid,
-      }));
-    }
-
-    function getGOLStepDelay() {
-      return appState.timer.mode === 'focus' ? GOL_SPEED_MS.focus : GOL_SPEED_MS.break;
-    }
-
-    function syncGOLSpeed() {
-      if (!GOL.running) return;
-      clearInterval(GOL.stepInterval);
-      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
-    }
-
-    function mergePatternAt(pattern, originX, originY) {
-      let merged = 0;
-      pattern.cells.forEach(([dx, dy]) => {
-        const x = originX + dx;
-        const y = originY + dy;
-        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
-        if (!GOL.grid[y][x]) merged++;
-        GOL.grid[y][x] = 1;
-      });
-      return merged;
-    }
-
-    function seedFocusVisualizerPatterns() {
-      GOL.grid = makeGrid(0);
-      GOL.next = makeGrid(0);
-      GOL.generation = 0;
-      GOL.lastRefreshGeneration = -1;
-      const merged = [];
-      FOCUS_VISUALIZER_BLUEPRINT.forEach((placement) => {
-        const pattern = getPatternByName(placement.pattern);
-        if (!pattern) return;
-        const mergedCells = mergePatternAt(pattern, placement.x, placement.y);
-        merged.push(`${pattern.name} (+${mergedCells})`);
-      });
-      resetGridHistory();
-      drawGOL();
-      updateGOLMeta();
-      persistGOL();
-      logFeed(`Focus visualizer primed with known patterns: ${merged.join(', ')}.`);
-    }
-
-    function ensureGOLRunning() {
-      if (GOL.running) return;
-      GOL.running = true;
-      GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
-      updateGOLMeta();
-    }
-
-    function addPomodoroPattern() {
-      const pattern = KNOWN_GOL_PATTERNS[Math.floor(Math.random() * KNOWN_GOL_PATTERNS.length)];
-      const maxOriginX = Math.max(0, GOL.cols - pattern.width);
-      const maxOriginY = Math.max(0, GOL.rows - pattern.height);
-      const originX = Math.floor(Math.random() * (maxOriginX + 1));
-      const originY = Math.floor(Math.random() * (maxOriginY + 1));
-      const mergedCells = mergePatternAt(pattern, originX, originY);
-      drawGOL();
-      updateGOLMeta();
-      persistGOL();
-      logFeed(`Productivity pattern injected: ${pattern.name} at (${originX},${originY}) with ${mergedCells} fresh cell${mergedCells === 1 ? '' : 's'}.`);
-    }
-
-    function addThoughtChaos() {
-      const jitterCells = 3;
-      for (let i = 0; i < jitterCells; i++) {
-        const x = Math.floor(Math.random() * GOL.cols);
-        const y = Math.floor(Math.random() * GOL.rows);
-        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
-      }
-      drawGOL();
-      updateGOLMeta();
-      persistGOL();
-      logFeed('Thought ripple added a little chaos to the life grid.');
-    }
-
-    function nextGeneration() {
-      let alive = 0;
-      for (let y = 0; y < GOL.rows; y++) for (let x = 0; x < GOL.cols; x++) {
-        const neighbors = countNeighbors(x, y);
-        const aliveNow = GOL.grid[y][x] === 1;
-        const nextAlive = aliveNow ? (neighbors === 2 || neighbors === 3) : neighbors === 3;
-        GOL.next[y][x] = nextAlive ? 1 : 0;
-        alive += GOL.next[y][x];
-      }
-      [GOL.grid, GOL.next] = [GOL.next, GOL.grid];
-      GOL.generation++;
-      const repeats = trackGridHistory();
-      if (repeats >= 4 && appState.timer.mode === 'focus' && GOL.generation - GOL.lastRefreshGeneration >= 40) {
-        GOL.lastRefreshGeneration = GOL.generation;
-        addPomodoroPattern();
-      }
-      drawGOL();
-      updateGOLMeta(alive);
-      persistGOL();
-    }
-
-    function randomizeGOL() {
-      GOL.grid = makeGrid(0).map(row => row.map(() => Math.random() > 0.72 ? 1 : 0));
-      GOL.next = makeGrid(0);
-      GOL.generation = 0;
-      resetGridHistory();
-      drawGOL();
-      updateGOLMeta();
-      persistGOL();
-    }
-
-    function clearGOL() {
-      GOL.grid = makeGrid(0);
-      GOL.next = makeGrid(0);
-      GOL.generation = 0;
-      resetGridHistory();
-      drawGOL();
-      updateGOLMeta(0);
-      persistGOL();
-    }
-
-    function toggleGOLRun() {
-      GOL.running = !GOL.running;
-      if (GOL.running) GOL.stepInterval = setInterval(nextGeneration, getGOLStepDelay());
-      else clearInterval(GOL.stepInterval);
-      updateGOLMeta();
-    }
-
-    function loadGOL() {
-      GOL.grid = makeGrid(0);
-      GOL.next = makeGrid(0);
-      GOL.lastRefreshGeneration = -1;
-      try {
-        const saved = JSON.parse(localStorage.getItem('dwell_gol') || '{}');
-        if (Array.isArray(saved.grid) && saved.grid.length === GOL.rows) {
-          GOL.grid = saved.grid.map(row => {
-            if (!Array.isArray(row) || row.length !== GOL.cols) return Array(GOL.cols).fill(0);
-            return row.map(v => v ? 1 : 0);
-          });
-        }
-        if (Number.isInteger(saved.generation) && saved.generation >= 0) GOL.generation = saved.generation;
-      } catch (e) {}
-      resetGridHistory();
-      drawGOL();
-      updateGOLMeta();
     }
 
     function bindEvents() {
@@ -2016,20 +1682,6 @@
         useManualLocation($('#weatherLocationInput').value);
       });
 
-      $('#gol-toggle').addEventListener('click', toggleGOLRun);
-      $('#gol-step').addEventListener('click', () => { if (!GOL.running) nextGeneration(); });
-      $('#gol-random').addEventListener('click', randomizeGOL);
-      $('#gol-clear').addEventListener('click', clearGOL);
-      $('#gol-canvas').addEventListener('click', e => {
-        const rect = e.target.getBoundingClientRect();
-        const scaleX = e.target.width / rect.width;
-        const scaleY = e.target.height / rect.height;
-        const x = Math.floor(((e.clientX - rect.left) * scaleX) / GOL.cellSize);
-        const y = Math.floor(((e.clientY - rect.top) * scaleY) / GOL.cellSize);
-        if (x < 0 || x >= GOL.cols || y < 0 || y >= GOL.rows) return;
-        GOL.grid[y][x] = GOL.grid[y][x] ? 0 : 1;
-        drawGOL(); updateGOLMeta(); persistGOL();
-      });
     }
 
     function init() {
@@ -2042,9 +1694,8 @@
       drawPet();
       renderCalendar();
       initWeather();
-      loadGOL();
       logFeed('Dwell Notebook Workspace initialized.');
-      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar, game of life.');
+      logFeed('Modules loaded: pixel pet, pomodoro, thought log, weather strip, calendar.');
       setInterval(animatePet, 1200);
     }
 
