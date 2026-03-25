@@ -758,6 +758,11 @@
       gap: 10px;
     }
 
+    .tracker-list-completed {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      align-items: start;
+    }
+
     .tracker-card {
       border: 1px solid rgba(99,117,150,0.2);
       border-radius: 10px;
@@ -911,6 +916,50 @@
       font-size: 0.7rem;
     }
 
+    .tracker-card-compact {
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .tracker-card-compact .tracker-title {
+      font-size: 0.8rem;
+      margin-bottom: 0;
+    }
+
+    .tracker-card-compact .tracker-range {
+      font-size: 0.67rem;
+    }
+
+    .tracker-card-compact .tracker-grid-wrap {
+      overflow: hidden;
+      padding-bottom: 0;
+    }
+
+    .tracker-card-compact .tracker-grid {
+      min-width: 0;
+      width: 100%;
+      justify-content: start;
+    }
+
+    .tracker-card-compact .tracker-grid-cell {
+      width: clamp(6px, 0.6vw, 8px);
+      border-width: 0.75px;
+      font-size: 0;
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .tracker-card-compact .tracker-cell-complete::before,
+    .tracker-card-compact .tracker-cell-complete::after {
+      height: 1px;
+      background: rgba(74, 74, 74, 0.9);
+    }
+
+    .tracker-card-compact .tracker-meta {
+      font-size: 0.66rem;
+      justify-content: flex-start;
+    }
+
 
     @media (max-width: 1120px) {
       .weather-strip {
@@ -1055,7 +1104,7 @@
             <div class="tracker-list" id="activeTrackers"></div>
 
             <div class="tracker-section-title">Completed Grids</div>
-            <div class="tracker-list" id="completedTrackers"></div>
+            <div class="tracker-list tracker-list-completed" id="completedTrackers"></div>
           </div>
         </article>
 
@@ -1652,6 +1701,32 @@
       `;
     }
 
+    function getCompletedTrackerCardMarkup(tracker) {
+      const { cells, columns } = createTrackerGrid(tracker);
+      const gridMarkup = cells.map((cell) => {
+        if (!cell.inRange) return '<div class="tracker-grid-cell tracker-empty" aria-hidden="true"></div>';
+        const completeClass = cell.checked ? ' tracker-cell-complete' : '';
+        return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true"></div>`;
+      }).join('');
+
+      return `
+        <article class="tracker-card tracker-card-compact">
+          <div>
+            <div class="tracker-title">${escapeHtml(tracker.name)}</div>
+            <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
+          </div>
+          <div class="tracker-grid-wrap">
+            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, minmax(0, max-content));" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
+              ${gridMarkup}
+            </div>
+          </div>
+          <div class="tracker-meta">
+            <span>Completed ${formatTrackerTimestamp(tracker.completedAt)}</span>
+          </div>
+        </article>
+      `;
+    }
+
     function renderTrackers() {
       const activeRoot = $('#activeTrackers');
       const completeRoot = $('#completedTrackers');
@@ -1663,7 +1738,7 @@
         : '<div class="tracker-empty-card">No active trackers yet.</div>';
 
       completeRoot.innerHTML = completedTrackers.length
-        ? completedTrackers.map(getTrackerCardMarkup).join('')
+        ? completedTrackers.map(getCompletedTrackerCardMarkup).join('')
         : '<div class="tracker-empty-card">No completed grids yet.</div>';
     }
 
@@ -2151,7 +2226,6 @@
       };
 
       $('#activeTrackers').addEventListener('click', onTrackerToggle);
-      $('#completedTrackers').addEventListener('click', onTrackerToggle);
 
       document.addEventListener('submit', (event) => {
         const rangeForm = event.target.closest('[data-tracker-range-form]');
