@@ -2521,6 +2521,10 @@
             next[idx] = (eSum / live) * 0.78;
             const dom = voiceTally.indexOf(Math.max(...voiceTally));
             nextVoice[idx] = dom;
+          } else if (_vizEnergy[idx] > 0.02) {
+            // Sub-threshold residual energy: keep decaying so ghosts don't freeze.
+            next[idx] = _vizEnergy[idx] * 0.80;
+            if (next[idx] < 0.02) { next[idx] = 0; nextVoice[idx] = -1; }
           }
         }
       }
