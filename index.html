@@ -1250,7 +1250,7 @@
           <div class="panel-header">
             <h2 class="panel-title">Pomodoro Timer</h2>
             <div class="panel-status-bar">
-              <button id="ambientToggleBtn" class="audio-toggle secondary" type="button" aria-pressed="false">♪ Ambient</button>
+              <button id="ambientToggleBtn" class="audio-toggle secondary" type="button" aria-pressed="false">◈ Generative</button>
               <label class="audio-volume" for="audioVolumeInput">Vol
                 <input id="audioVolumeInput" type="range" min="0" max="100" value="35" aria-label="Master audio volume" />
               </label>
@@ -1667,16 +1667,28 @@
       },
     };
 
+    // ─── Systems Music Engine ────────────────────────────────────────────────
+    // Generative ambient inspired by Brian Eno's "Music for Airports" and Steve
+    // Reich's phasing. Six melodic voices each loop at a co-prime interval
+    // (7 · 11 · 13 · 17 · 19 · 23 s). Their LCM is ~37 days — the evolving
+    // texture never quite repeats.
+    const VOICE_LOOP_MS = [7000, 11000, 13000, 17000, 19000, 23000];
+
+    // A minor pentatonic (A, C, D, E, G) — slightly tense, good for focus
+    const FOCUS_SCALE_HZ = [110, 130.81, 146.83, 164.81, 196, 220, 261.63, 329.63, 392, 440];
+
+    // A major pentatonic (A, B, C#, E, F#) — brighter, restful for breaks
+    const BREAK_SCALE_HZ = [110, 123.47, 138.59, 164.81, 185, 220, 246.94, 329.63, 369.99, 440];
+
     const audioEngine = {
       initialized: false,
       ctx: null,
       masterGain: null,
       ambientGain: null,
-      ambientLfo: null,
-      ambientLfoDepth: null,
-      ambientOscillators: [],
-      noiseSource: null,
-      noiseFilter: null,
+      reverbNode: null,
+      reverbGainNode: null,
+      voices: [],          // setTimeout handles for each loop voice
+      timerMode: 'focus',
       warnedLocked: false,
       warningTickMarks: new Set(),
     };
@@ -2353,21 +2365,96 @@
       saveTimerSettings();
     }
 
-    function playTone(frequency, {
+    // Build a synthetic convolution reverb from decaying white noise.
+    // Generates a lush, 3-second tail without needing an impulse-response file.
+    function createSyntheticReverb(ctx) {
+      const convolver = ctx.createConvolver();
+      const length = Math.floor(ctx.sampleRate * 3.2);
+      const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = impulse.getChannelData(ch);
+        for (let i = 0; i < length; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-2.4 * i / ctx.sampleRate);
+        }
+      }
+      convolver.buffer = impulse;
+      return convolver;
+    }
+
+    // A single loop voice: picks a note from the current scale and schedules
+    // itself to fire again after its co-prime loop duration.
+    function scheduleVoice(index) {
+      if (!audioEngine.initialized || !audioEngine.ctx || !audioEngine.ambientGain) return;
+      const ctx = audioEngine.ctx;
+
+      if (ctx.state === 'running' && appState.audio.ambientEnabled) {
+        const scale = audioEngine.timerMode === 'focus' ? FOCUS_SCALE_HZ : BREAK_SCALE_HZ;
+        const density = audioEngine.timerMode === 'focus' ? 0.50 : 0.35;
+
+        if (Math.random() < density) {
+          // Weight note selection toward lower registers for gravity
+          const noteIdx = Math.floor(Math.pow(Math.random(), 1.5) * scale.length);
+          const freq = scale[noteIdx];
+
+          const now = ctx.currentTime;
+          const attack  = 0.35 + Math.random() * 0.40;
+          const sustain = 0.30 + Math.random() * 1.20;
+          const release = 2.80 + Math.random() * 2.50;
+          const peak    = 0.028 + Math.random() * 0.018;
+
+          const osc = ctx.createOscillator();
+          const env = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          env.gain.setValueAtTime(0.0001, now);
+          env.gain.linearRampToValueAtTime(peak, now + attack);
+          env.gain.setValueAtTime(peak, now + attack + sustain);
+          env.gain.exponentialRampToValueAtTime(0.0001, now + attack + sustain + release);
+          osc.connect(env);
+          env.connect(audioEngine.ambientGain);         // dry
+          if (audioEngine.reverbGainNode) {
+            env.connect(audioEngine.reverbGainNode);    // wet send
+          }
+          osc.start(now);
+          osc.stop(now + attack + sustain + release + 0.1);
+        }
+      }
+
+      audioEngine.voices[index] = setTimeout(() => scheduleVoice(index), VOICE_LOOP_MS[index]);
+    }
+
+    function stopVoices() {
+      audioEngine.voices.forEach(h => clearTimeout(h));
+      audioEngine.voices = [];
+    }
+
+    // Stagger the initial voice firings so they don't all pile up at start.
+    function startVoices() {
+      stopVoices();
+      VOICE_LOOP_MS.forEach((loopMs, i) => {
+        const offset = Math.random() * loopMs;
+        audioEngine.voices[i] = setTimeout(() => scheduleVoice(i), offset);
+      });
+    }
+
+    // Cue tones with optional reverb send — softer and bell-like compared to
+    // the old playTone(), so they blend with the generative texture.
+    function playChime(frequency, {
       startAt = 0,
-      duration = 0.08,
-      gain = 0.12,
-      type = 'sine',
-      attack = 0.008,
-      release = 0.08,
+      duration = 0.10,
+      gain = 0.08,
+      attack = 0.012,
+      release = 0.40,
       endFrequency = null,
+      wet = 0.45,
     } = {}) {
       if (!audioEngine.initialized || !audioEngine.ctx || !audioEngine.masterGain) return;
       if (audioEngine.ctx.state !== 'running') return;
-      const now = audioEngine.ctx.currentTime + startAt;
-      const osc = audioEngine.ctx.createOscillator();
-      const env = audioEngine.ctx.createGain();
-      osc.type = type;
+      const ctx = audioEngine.ctx;
+      const now = ctx.currentTime + startAt;
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(frequency, now);
       if (Number.isFinite(endFrequency) && endFrequency > 0) {
         osc.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
@@ -2377,89 +2464,92 @@
       env.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
       osc.connect(env);
       env.connect(audioEngine.masterGain);
+      if (audioEngine.reverbNode && wet > 0) {
+        const send = ctx.createGain();
+        send.gain.value = wet;
+        env.connect(send);
+        send.connect(audioEngine.reverbNode);
+        // reverbNode output already wired to masterGain in setupAmbientNodes
+      }
       osc.start(now);
-      osc.stop(now + duration + release + 0.02);
+      osc.stop(now + duration + release + 0.1);
     }
 
+    // Focus start: two ascending notes from the root — expectant, upward.
     function playFocusStartCue() {
-      playTone(329.63, { duration: 0.08, gain: 0.08, attack: 0.006, release: 0.06 });
-      playTone(440.00, { startAt: 0.09, duration: 0.08, gain: 0.09, attack: 0.006, release: 0.08 });
+      playChime(220.00, { duration: 0.12, gain: 0.07, attack: 0.010, release: 0.55, wet: 0.5 });
+      playChime(329.63, { startAt: 0.20, duration: 0.10, gain: 0.08, attack: 0.010, release: 0.65, wet: 0.5 });
     }
 
+    // Break start: gentle sweep from fifth down to root — a slow exhale.
     function playBreakStartCue() {
-      playTone(440.00, { duration: 0.14, gain: 0.06, attack: 0.008, release: 0.1, endFrequency: 329.63 });
+      playChime(329.63, { duration: 0.18, gain: 0.06, attack: 0.015, release: 0.90, endFrequency: 220.00, wet: 0.55 });
     }
 
+    // Session complete: four-note ascending phrase with growing reverb.
     function playSessionCompleteCue() {
-      playTone(329.63, { startAt: 0.0, duration: 0.11, gain: 0.07, attack: 0.008, release: 0.1 });
-      playTone(415.30, { startAt: 0.11, duration: 0.11, gain: 0.07, attack: 0.008, release: 0.11 });
-      playTone(523.25, { startAt: 0.22, duration: 0.13, gain: 0.08, attack: 0.008, release: 0.14 });
+      playChime(220.00, { startAt: 0.00, duration: 0.12, gain: 0.065, attack: 0.010, release: 0.60, wet: 0.40 });
+      playChime(293.66, { startAt: 0.16, duration: 0.12, gain: 0.070, attack: 0.010, release: 0.70, wet: 0.45 });
+      playChime(369.99, { startAt: 0.34, duration: 0.14, gain: 0.075, attack: 0.010, release: 0.80, wet: 0.50 });
+      playChime(440.00, { startAt: 0.54, duration: 0.16, gain: 0.080, attack: 0.012, release: 1.00, wet: 0.60 });
     }
 
+    // Warning: a soft overtone bell — present but not jarring.
     function playWarningTick() {
-      playTone(1200, { duration: 0.03, gain: 0.02, attack: 0.003, release: 0.03 });
+      playChime(880, { duration: 0.04, gain: 0.022, attack: 0.004, release: 0.18, wet: 0.30 });
     }
 
     function setupAmbientNodes() {
       const { ctx } = audioEngine;
 
-      // ambientGain is the on/off control — not modulated by the LFO
+      // Top-level ambient on/off gate (fades in/out cleanly)
       const ambientGain = ctx.createGain();
       ambientGain.gain.value = 0;
 
-      // sourceGain carries the sound level and receives LFO tremolo modulation
-      const sourceGain = ctx.createGain();
-      sourceGain.gain.value = 0.03;
+      // Reverb: one shared ConvolverNode used by both ambient voices and cue tones.
+      // Its output goes straight to masterGain (not through ambientGain) so the
+      // reverb tail keeps sounding naturally when the ambient gate fades out.
+      // The dry ambient signals are gated through ambientGain; wet signals are not.
+      const reverb = createSyntheticReverb(ctx);
+      const reverbGainNode = ctx.createGain();
+      reverbGainNode.gain.value = 0.22;   // pre-reverb send level from ambient voices
+      reverbGainNode.connect(reverb);
+      reverb.connect(audioEngine.masterGain);
 
-      const lfoDepth = ctx.createGain();
-      lfoDepth.gain.value = 0.022;
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.05;
-      lfo.connect(lfoDepth);
-      lfoDepth.connect(sourceGain.gain);
-      lfo.start();
-
-      const ambientFrequencies = [110, 110.3, 220.1];
-      const ambientOscillators = ambientFrequencies.map((frequency) => {
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = frequency;
-        oscGain.gain.value = 0.018;
-        osc.connect(oscGain);
-        oscGain.connect(sourceGain);
-        osc.start();
-        return osc;
-      });
-
-      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      // Noise floor: very quiet bandpass-filtered noise whose centre frequency
+      // drifts slowly — adds barely-perceptible room breathiness.
+      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
       const noiseData = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < noiseData.length; i += 1) {
-        noiseData[i] = (Math.random() * 2 - 1) * 0.45;
+      for (let i = 0; i < noiseData.length; i++) {
+        noiseData[i] = (Math.random() * 2 - 1) * 0.4;
       }
-      const noiseSource = ctx.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-      noiseSource.loop = true;
-      const noiseFilter = ctx.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.value = 400;
-      noiseFilter.Q.value = 0.0001;
+      const noiseSrc = ctx.createBufferSource();
+      noiseSrc.buffer = noiseBuffer;
+      noiseSrc.loop = true;
+      const noiseBpf = ctx.createBiquadFilter();
+      noiseBpf.type = 'bandpass';
+      noiseBpf.frequency.value = 210;
+      noiseBpf.Q.value = 2.5;
+      // Slow LFO sweeps bandpass centre ±90 Hz over ~40 s
+      const noiseLfo = ctx.createOscillator();
+      noiseLfo.type = 'sine';
+      noiseLfo.frequency.value = 0.025;
+      const noiseLfoBias = ctx.createGain();
+      noiseLfoBias.gain.value = 90;
+      noiseLfo.connect(noiseLfoBias);
+      noiseLfoBias.connect(noiseBpf.frequency);
+      noiseLfo.start();
       const noiseGain = ctx.createGain();
-      noiseGain.gain.value = 0.012;
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(sourceGain);
-      noiseSource.start();
+      noiseGain.gain.value = 0.005;
+      noiseSrc.connect(noiseBpf);
+      noiseBpf.connect(noiseGain);
+      noiseGain.connect(ambientGain);
+      noiseSrc.start();
 
-      sourceGain.connect(ambientGain);
       ambientGain.connect(audioEngine.masterGain);
       audioEngine.ambientGain = ambientGain;
-      audioEngine.ambientLfo = lfo;
-      audioEngine.ambientLfoDepth = lfoDepth;
-      audioEngine.ambientOscillators = ambientOscillators;
-      audioEngine.noiseSource = noiseSource;
-      audioEngine.noiseFilter = noiseFilter;
+      audioEngine.reverbNode = reverb;
+      audioEngine.reverbGainNode = reverbGainNode;
     }
 
     function updateAmbientUi() {
@@ -2472,7 +2562,12 @@
     function syncAmbientGain() {
       if (!audioEngine.ambientGain || !audioEngine.ctx) return;
       const target = appState.audio.ambientEnabled ? 1 : 0;
-      audioEngine.ambientGain.gain.setTargetAtTime(target, audioEngine.ctx.currentTime, 0.6);
+      audioEngine.ambientGain.gain.setTargetAtTime(target, audioEngine.ctx.currentTime, 0.8);
+      if (appState.audio.ambientEnabled) {
+        startVoices();
+      } else {
+        stopVoices();
+      }
     }
 
     function initAudioContext() {
@@ -2788,6 +2883,7 @@
       audioEngine.warningTickMarks.clear();
       if (t.mode === 'focus') {
         t.mode = 'break';
+        audioEngine.timerMode = 'break';
         t.totalSeconds = t.breakMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
         playBreakStartCue();
@@ -2798,6 +2894,7 @@
         }
       } else {
         t.mode = 'focus';
+        audioEngine.timerMode = 'focus';
         t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
