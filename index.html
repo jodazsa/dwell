@@ -2402,8 +2402,14 @@
 
     function setupAmbientNodes() {
       const { ctx } = audioEngine;
+
+      // ambientGain is the on/off control — not modulated by the LFO
       const ambientGain = ctx.createGain();
-      ambientGain.gain.value = 0.0001;
+      ambientGain.gain.value = 0;
+
+      // sourceGain carries the sound level and receives LFO tremolo modulation
+      const sourceGain = ctx.createGain();
+      sourceGain.gain.value = 0.03;
 
       const lfoDepth = ctx.createGain();
       lfoDepth.gain.value = 0.022;
@@ -2411,7 +2417,7 @@
       lfo.type = 'sine';
       lfo.frequency.value = 0.05;
       lfo.connect(lfoDepth);
-      lfoDepth.connect(ambientGain.gain);
+      lfoDepth.connect(sourceGain.gain);
       lfo.start();
 
       const ambientFrequencies = [110, 110.3, 220.1];
@@ -2422,7 +2428,7 @@
         osc.frequency.value = frequency;
         oscGain.gain.value = 0.018;
         osc.connect(oscGain);
-        oscGain.connect(ambientGain);
+        oscGain.connect(sourceGain);
         osc.start();
         return osc;
       });
@@ -2443,9 +2449,10 @@
       noiseGain.gain.value = 0.012;
       noiseSource.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
-      noiseGain.connect(ambientGain);
+      noiseGain.connect(sourceGain);
       noiseSource.start();
 
+      sourceGain.connect(ambientGain);
       ambientGain.connect(audioEngine.masterGain);
       audioEngine.ambientGain = ambientGain;
       audioEngine.ambientLfo = lfo;
@@ -2464,7 +2471,7 @@
 
     function syncAmbientGain() {
       if (!audioEngine.ambientGain || !audioEngine.ctx) return;
-      const target = appState.audio.ambientEnabled ? 0.03 : 0.0001;
+      const target = appState.audio.ambientEnabled ? 1 : 0;
       audioEngine.ambientGain.gain.setTargetAtTime(target, audioEngine.ctx.currentTime, 0.6);
     }
 
