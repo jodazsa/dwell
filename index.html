@@ -500,6 +500,38 @@
       padding: 10px;
     }
 
+
+    .session-insight {
+      display: grid;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(99,117,150,0.2);
+      border-radius: 12px;
+      background: rgba(99,117,150,0.05);
+    }
+
+    .insight-card {
+      display: grid;
+      gap: 5px;
+      padding: 8px 10px;
+      border: 1px solid rgba(99,117,150,0.2);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(246,246,241,0.92));
+    }
+
+    .insight-label {
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .insight-value {
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
     .notes-form {
       display: grid;
       gap: 10px;
@@ -1162,6 +1194,18 @@
               <button class="presetBtn secondary" data-focus="15" data-break="3">15 / 3</button>
             </div>
 
+            <section class="session-insight" aria-live="polite" aria-label="Session insights">
+              <div class="panel-label">Session Insight</div>
+              <article class="insight-card">
+                <div class="insight-label">Oblique Strategy</div>
+                <div class="insight-value" id="strategyInsight">Awaiting next focus session…</div>
+              </article>
+              <article class="insight-card">
+                <div class="insight-label">Wisdom Quote</div>
+                <div class="insight-value" id="quoteInsight">Awaiting next focus session…</div>
+              </article>
+            </section>
+
           </div>
         </article>
 
@@ -1225,6 +1269,226 @@
       { name: 'Mega Bloom', threshold: 9, size: 10 },
     ];
 
+    const OBLIQUE_STRATEGIES = [
+      'Abandon normal instruments',
+      'Accept advice',
+      'Accretion',
+      'A line has two sides',
+      'Allow an easement (an easement is the abandonment of a stricture)',
+      'Are there sections? Consider transitions',
+      'Ask people to work against their better judgment',
+      'Ask your body',
+      'Assemble some of the elements in a group and treat the group',
+      'Balance the consistency principle with the inconsistency principle',
+      'Be dirty',
+      'Breathe more deeply',
+      'Bridges -build -burn',
+      'Cascades',
+      'Change instrument roles',
+      'Change nothing and continue with immaculate consistency',
+      "Children's voices -speaking -singing",
+      'Cluster analysis',
+      'Consider different fading systems',
+      'Consult other sources -promising -unpromising',
+      'Convert a melodic element into a rhythmic element',
+      'Courage!',
+      'Cut a vital connection',
+      'Decorate, decorate',
+      'Define an area as "safe" and use it as an anchor',
+      'Destroy -nothing -the most important thing',
+      'Discard an axiom',
+      'Disconnect from desire',
+      'Discover your formulas and abandon them',
+      'Distorting time',
+      'Do nothing for as long as possible',
+      "Don't be afraid of things because they're easy to do",
+      "Don't be frightened of cliches",
+      "Don't be frightened to display your talents",
+      "Don't break the silence",
+      "Don't stress one thing more than another",
+      'Do something boring',
+      'Do the washing up',
+      'Do the words need changing?',
+      'Emphasize differences',
+      'Emphasize repetitions',
+      'Emphasize the flaws',
+      'Faced with a choice, do both',
+      'Feedback recordings into an acoustic situation',
+      'Fill every beat with something',
+      'Get your neck massaged',
+      'Ghost echoes',
+      'Give the game away',
+      'Give way to your worst impulse',
+      'Go slowly all the way round the outside',
+      'Honor thy error as a hidden intention',
+      'How would someone else do it?',
+      'How would you have done it?',
+      'Humanize something free of error',
+      'Imagine the music as a moving chain or caterpillar',
+      'Imagine the music as a set of disconnected events',
+      'Infinitesimal gradations',
+      'Intentions -nobility of -humility of -credibility of',
+      'Into the impossible',
+      'Is it finished?',
+      'Is there something missing?',
+      'Is the tuning appropriate?',
+      'Just carry on',
+      'Left channel, right channel, center channel',
+      'Listen in total darkness, or in a very large room, very quietly',
+      'Listen to the quiet voice',
+      'Look at a very small object, look at its center',
+      'Look at the order in which you do things',
+      'Look closely at the most embarrassing details and amplify them',
+      'Lowest common denominator check -single beat -single note -single riff',
+      'Make a blank valuable by putting it in an exquisite frame',
+      'Make an exhaustive list of everything you might do and do the last thing on the list',
+      'Make a sudden, destructive, unpredictable action; incorporate',
+      'Mechanicalize something idiosyncratic',
+      'Mute and continue',
+      'Only one element of each kind',
+      '(Organic) machinery',
+      'Overtly resist change',
+      'Put in earplugs',
+      'Question the heroic approach',
+      'Remember those quiet evenings',
+      'Remove ambiguities and convert to specifics',
+      'Remove specifics and convert to ambiguities',
+      'Repetition is a form of change',
+      'Retrace your steps',
+      'Reverse',
+      'Short circuit (example: a man eating peas with the idea that they will improve his virility shovels them straight into his lap)',
+      'Shut the door and listen from outside',
+      'Simple subtraction',
+      'Spectrum analysis',
+      'Take a break',
+      'Take away the elements in order of apparent non-importance',
+      'Tape your mouth (given by Ritva Saarikko)',
+      'The inconsistency principle',
+      'The most easily forgotten thing is the most important',
+      'The tape is now the music',
+      'Think -inside the work -outside the work',
+      'Tidy up',
+      'Trust in the you of now',
+      'Turn it upside down',
+      'Twist the spine',
+      'Use an old idea',
+      'Use an unacceptable color',
+      'Use fewer notes',
+      'Use filters',
+      'Use "unqualified" people',
+      'Water',
+      'What are you really thinking about just now?',
+      'What is the reality of the situation?',
+      'What mistakes did you make last time?',
+      'What would your closest friend do?',
+      "What wouldn't you do?",
+      'Work at a different speed',
+      'You are an engineer',
+      'You can only make one dot at a time',
+      "You don't have to be ashamed of using your own ideas"
+    ];
+
+    const WISDOM_QUOTES = [
+      '"You have power over your mind—not outside events." — Marcus Aurelius',
+      '"The happiness of your life depends upon the quality of your thoughts." — Marcus Aurelius',
+      '"Waste no more time arguing what a good man should be. Be one." — Marcus Aurelius',
+      '"If it is not right, do not do it; if it is not true, do not say it." — Marcus Aurelius',
+      '"Dwell on the beauty of life. Watch the stars, and see yourself running with them." — Marcus Aurelius',
+      '"Very little is needed to make a happy life." — Marcus Aurelius',
+      '"The soul becomes dyed with the color of its thoughts." — Marcus Aurelius',
+      '"When you arise in the morning, think of what a privilege it is to be alive." — Marcus Aurelius',
+      '"No man is free who is not master of himself." — Epictetus',
+      "\"It's not what happens to you, but how you react to it that matters.\" — Epictetus",
+      '"First say to yourself what you would be; and then do what you have to do." — Epictetus',
+      '"We have two ears and one mouth so that we can listen twice as much as we speak." — Epictetus',
+      '"Make the best use of what is in your power, and take the rest as it happens." — Epictetus',
+      '"No great thing is created suddenly." — Epictetus',
+      '"Freedom is the only worthy goal in life. It is won by disregarding things that lie beyond our control." — Epictetus',
+      '"How long are you going to wait before you demand the best for yourself?" — Epictetus',
+      '"We suffer more often in imagination than in reality." — Seneca',
+      '"Luck is what happens when preparation meets opportunity." — Seneca',
+      '"Difficulties strengthen the mind, as labor does the body." — Seneca',
+      '"Begin at once to live, and count each separate day as a separate life." — Seneca',
+      '"As long as you live, keep learning how to live." — Seneca',
+      '"He who is brave is free." — Seneca',
+      '"No man was ever wise by chance." — Seneca',
+      '"True happiness is to enjoy the present, without anxious dependence upon the future." — Seneca',
+      '"He who has a why to live can bear almost any how." — Friedrich Nietzsche',
+      '"Man is disturbed not by things, but by the views he takes of them." — Epictetus',
+      '"The obstacle in the path becomes the path." — Marcus Aurelius',
+      '"If you want to improve, be content to be thought foolish and stupid." — Epictetus',
+      '"It is not that we have a short time to live, but that we waste much of it." — Seneca',
+      '"How does it help… to make troubles heavier by bemoaning them?" — Seneca',
+      '"To bear trials with a calm mind robs misfortune of its strength." — Seneca',
+      "\"Practice yourself, for heaven's sake, in little things.\" — Epictetus",
+      "\"External things are not the problem. It's your assessment of them.\" — Marcus Aurelius",
+      '"Confine yourself to the present." — Marcus Aurelius',
+      '"No one can rob us of our own will." — Epictetus',
+      '"A gem cannot be polished without friction." — Seneca',
+      "\"In the beginner's mind there are many possibilities, but in the expert's there are few.\" — Shunryu Suzuki",
+      '"Treat every moment as your last. It is not preparation for something else." — Shunryu Suzuki',
+      '"When you do something, you should burn yourself up completely, like a good bonfire." — Shunryu Suzuki',
+      '"Life is like stepping onto a boat which is about to sail out to sea and sink." — Shunryu Suzuki',
+      '"To live is enough." — Shunryu Suzuki',
+      '"The true purpose of Zen is to see things as they are." — Shunryu Suzuki',
+      '"You are perfect as you are, and you could use a little improvement." — Shunryu Suzuki',
+      '"The most important point is to accept yourself and stand on your two feet." — Shunryu Suzuki',
+      '"Smile, breathe, and go slowly." — Thich Nhat Hanh',
+      '"Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor." — Thich Nhat Hanh',
+      '"The present moment is filled with joy and happiness." — Thich Nhat Hanh',
+      '"Walk as if you are kissing the Earth with your feet." — Thich Nhat Hanh',
+      '"Peace is every step." — Thich Nhat Hanh',
+      '"There is no way to happiness — happiness is the way." — Thich Nhat Hanh',
+      '"The best way to take care of the future is to take care of the present moment." — Thich Nhat Hanh',
+      '"Because you are alive, everything is possible." — Thich Nhat Hanh',
+      '"Breathing in, I calm body and mind. Breathing out, I smile." — Thich Nhat Hanh',
+      '"Drink your tea slowly and reverently, as if it is the axis on which the world turns." — Thich Nhat Hanh',
+      '"To study the Way is to study the self." — Dogen',
+      '"To study the self is to forget the self." — Dogen',
+      '"To forget the self is to be enlightened by all things." — Dogen',
+      '"No trace of realization remains, and this no-trace continues endlessly." — Dogen',
+      '"A flower falls, even though we love it; and a weed grows, even though we do not love it." — Dogen',
+      '"Enlightenment is intimacy with all things." — Dogen',
+      '"Those who greatly realize delusion are buddhas." — Dogen',
+      '"When one side is illuminated, the other side is dark." — Dogen',
+      '"Time itself is being, and all being is time." — Dogen',
+      '"Be faithful to the thought of the moment." — Dogen',
+      '"When walking, walk. When eating, eat." — Zen proverb',
+      '"Before enlightenment: chop wood, carry water. After enlightenment: chop wood, carry water." — Zen saying',
+      '"Sit quietly, doing nothing; spring comes, and the grass grows by itself." — Zen saying',
+      '"Let go or be dragged." — Zen proverb',
+      '"No snowflake ever falls in the wrong place." — Zen saying',
+      '"If you understand, things are just as they are; if you do not understand, things are just as they are." — Zen saying',
+      '"When you realize nothing is lacking, the whole world belongs to you." — Lao Tzu',
+      '"Nature does not hurry, yet everything is accomplished." — Lao Tzu',
+      '"A journey of a thousand miles begins with a single step." — Lao Tzu',
+      '"Knowing others is intelligence; knowing yourself is true wisdom." — Lao Tzu',
+      '"The wise man is one who knows what he does not know." — Lao Tzu',
+      '"If you are depressed you are living in the past; if anxious, in the future; if at peace, in the present." — Lao Tzu',
+      '"Do not seek to follow in the footsteps of the wise; seek what they sought." — Basho',
+      '"Every day is a journey, and the journey itself is home." — Basho',
+      '"Sitting quietly, doing nothing, spring comes and the grass grows by itself." — Basho (attributed)',
+      '"Only when you can be extremely pliable and soft can you be extremely hard and strong." — Zen teaching',
+      "\"When you get there, there isn't any there there.\" — Zen teaching",
+      '"The whole moon and the entire sky are reflected in one dewdrop." — Dogen'
+    ];
+
+    function pickRandom(list) {
+      if (!Array.isArray(list) || list.length === 0) return '';
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function refreshSessionInsight() {
+      appState.timer.strategyInsight = pickRandom(OBLIQUE_STRATEGIES);
+      appState.timer.quoteInsight = pickRandom(WISDOM_QUOTES);
+      renderSessionInsight();
+    }
+
+    function renderSessionInsight() {
+      $('#strategyInsight').textContent = appState.timer.strategyInsight;
+      $('#quoteInsight').textContent = appState.timer.quoteInsight;
+    }
+
     const appState = {
       pet: {
         completedPomodoros: 0,
@@ -1239,6 +1503,8 @@
         mode: 'focus',
         session: 1,
         tickHandle: null,
+        strategyInsight: '',
+        quoteInsight: '',
       },
       thoughts: [],
       archivedThoughts: [],
@@ -2017,6 +2283,7 @@
         t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
+        refreshSessionInsight();
         logFeed(`Break complete. Starting focus session ${t.session}.`);
       }
       saveTimerSettings();
@@ -2282,6 +2549,7 @@
       renderThoughts();
       renderTrackers();
       updatePetStats();
+      refreshSessionInsight();
       updateTimerUI();
       drawPet();
       renderCalendar();
