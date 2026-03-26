@@ -556,6 +556,50 @@
       background: rgba(99,117,150,0.05);
     }
 
+    /* ── Audio Field Visualization ──────────────────────────────────────── */
+    .audio-field-wrap {
+      padding: 10px;
+      border: 1px solid rgba(99,117,150,0.2);
+      border-radius: 12px;
+      background: rgba(99,117,150,0.05);
+    }
+
+    .audio-field-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .audio-field-label {
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .audio-field-legend {
+      display: flex;
+      gap: 6px;
+    }
+
+    .audio-field-pip {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    #audioVizCanvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 8 / 3;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
     .insight-card {
       display: grid;
       gap: 5px;
@@ -1320,6 +1364,14 @@
                 <div class="insight-value" id="quoteInsight">Awaiting next focus session…</div>
               </article>
             </section>
+
+            <div class="audio-field-wrap">
+              <div class="audio-field-header">
+                <span class="audio-field-label">Audio Field · Six-Voice Cellular Pattern</span>
+                <div class="audio-field-legend" id="audioFieldLegend" aria-hidden="true"></div>
+              </div>
+              <canvas id="audioVizCanvas" width="240" height="90" aria-label="Generative audio visualization — cellular automaton seeded by the ambient music engine"></canvas>
+            </div>
 
           </div>
         </article>
@@ -2381,6 +2433,172 @@
       return convolver;
     }
 
+    // ─── Audio Field Visualization ────────────────────────────────────────────
+    // A Game-of-Life-inspired cellular automaton seeded by the ambient engine.
+    // Each of the six voices maps to a row-band; fired notes seed living cells
+    // at a column derived from the note's pitch index. Cells age and die via
+    // Conway's rules, with slow energy decay so the pattern breathes naturally.
+
+    const VIZ_COLS = 48;
+    const VIZ_ROWS = 18;         // 3 rows per voice
+    const VIZ_ROWS_PER_VOICE = 3;
+    const VIZ_GOL_MS = 130;      // ms between automaton generations
+    const VIZ_NOISE_RATE = 0.004; // passive shimmer: prob per cell per tick
+
+    // RGB triples for each voice — warm palette for light mode
+    const VIZ_COLORS_LIGHT = [
+      [100, 130, 200],   // voice 0 · 7 s  · indigo
+      [90,  175, 130],   // voice 1 · 11 s · sage
+      [200, 148,  60],   // voice 2 · 13 s · amber
+      [195, 100, 110],   // voice 3 · 17 s · rose
+      [155, 118, 205],   // voice 4 · 19 s · violet
+      [65,  180, 185],   // voice 5 · 23 s · teal
+    ];
+    const VIZ_COLORS_DARK = [
+      [110, 155, 235],
+      [95,  210, 145],
+      [230, 170,  65],
+      [235, 110, 120],
+      [175, 138, 240],
+      [70,  215, 210],
+    ];
+
+    let _vizEnergy  = new Float32Array(VIZ_COLS * VIZ_ROWS);
+    let _vizVoice   = new Int8Array(VIZ_COLS * VIZ_ROWS).fill(-1);
+    let _vizLastTick = 0;
+
+    // Seed living cells when a voice fires a note.
+    function vizSeed(voiceIndex, noteIdx) {
+      const rowBase = voiceIndex * VIZ_ROWS_PER_VOICE;
+      // Map note index (0-9) across the full column width.
+      const col = Math.round((noteIdx / 9) * (VIZ_COLS - 4)) + 1;
+      const cluster = 1 + Math.floor(Math.random() * 3);
+      for (let s = 0; s < cluster; s++) {
+        const r = rowBase + Math.floor(Math.random() * VIZ_ROWS_PER_VOICE);
+        const c = Math.max(0, Math.min(VIZ_COLS - 1, col + Math.floor(Math.random() * 3) - 1));
+        const idx = r * VIZ_COLS + c;
+        _vizEnergy[idx] = 0.65 + Math.random() * 0.35;
+        _vizVoice[idx]  = voiceIndex;
+      }
+    }
+
+    // Advance one automaton generation.
+    function vizGolStep() {
+      const next      = new Float32Array(_vizEnergy);
+      const nextVoice = new Int8Array(_vizVoice);
+
+      for (let r = 0; r < VIZ_ROWS; r++) {
+        for (let c = 0; c < VIZ_COLS; c++) {
+          const idx = r * VIZ_COLS + c;
+          let live = 0;
+          const voiceTally = [0, 0, 0, 0, 0, 0];
+          let eSum = 0;
+
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              if (dr === 0 && dc === 0) continue;
+              const nr = r + dr, nc = c + dc;
+              if (nr >= 0 && nr < VIZ_ROWS && nc >= 0 && nc < VIZ_COLS) {
+                const nidx = nr * VIZ_COLS + nc;
+                if (_vizEnergy[nidx] > 0.18) {
+                  live++;
+                  eSum += _vizEnergy[nidx];
+                  if (_vizVoice[nidx] >= 0) voiceTally[_vizVoice[nidx]]++;
+                }
+              }
+            }
+          }
+
+          const alive = _vizEnergy[idx] > 0.18;
+          if (alive) {
+            // Stable neighbourhood: slow fade.  Crowded/lonely: faster decay.
+            next[idx] = (live === 2 || live === 3)
+              ? _vizEnergy[idx] * 0.95
+              : _vizEnergy[idx] * 0.72;
+            if (next[idx] < 0.02) { next[idx] = 0; nextVoice[idx] = -1; }
+          } else if (live === 3) {
+            // Birth — inherit dominant neighbour voice and a fraction of their energy.
+            next[idx] = (eSum / live) * 0.78;
+            const dom = voiceTally.indexOf(Math.max(...voiceTally));
+            nextVoice[idx] = dom;
+          } else if (_vizEnergy[idx] > 0.02) {
+            // Sub-threshold residual energy: keep decaying so ghosts don't freeze.
+            next[idx] = _vizEnergy[idx] * 0.80;
+            if (next[idx] < 0.02) { next[idx] = 0; nextVoice[idx] = -1; }
+          }
+        }
+      }
+
+      // Passive noise-floor shimmer: random faint seeds scattered everywhere.
+      for (let i = 0; i < VIZ_COLS * VIZ_ROWS; i++) {
+        if (next[i] < 0.02 && Math.random() < VIZ_NOISE_RATE) {
+          next[i] = 0.08 + Math.random() * 0.10;
+          nextVoice[i] = Math.floor(Math.random() * 6);
+        }
+      }
+
+      _vizEnergy = next;
+      _vizVoice  = nextVoice;
+    }
+
+    // Render the automaton grid onto the canvas each animation frame.
+    function vizRender(timestamp) {
+      const canvas = document.getElementById('audioVizCanvas');
+      if (!canvas) return;
+      const ctx2d = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+
+      if (timestamp - _vizLastTick > VIZ_GOL_MS) {
+        vizGolStep();
+        _vizLastTick = timestamp;
+      }
+
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const COLORS = dark ? VIZ_COLORS_DARK : VIZ_COLORS_LIGHT;
+      const [bgR, bgG, bgB] = dark ? [28, 23, 16] : [242, 235, 221];
+
+      ctx2d.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
+      ctx2d.fillRect(0, 0, W, H);
+
+      const cw = W / VIZ_COLS;
+      const ch = H / VIZ_ROWS;
+
+      for (let r = 0; r < VIZ_ROWS; r++) {
+        for (let c = 0; c < VIZ_COLS; c++) {
+          const e = _vizEnergy[r * VIZ_COLS + c];
+          if (e < 0.02) continue;
+          const v = _vizVoice[r * VIZ_COLS + c];
+          const [cr, cg, cb] = COLORS[v >= 0 ? v : 0];
+          const alpha = Math.min(1, Math.pow(e, 0.55));
+          ctx2d.fillStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(3)})`;
+          ctx2d.fillRect(
+            Math.round(c * cw),
+            Math.round(r * ch),
+            Math.max(1, Math.round(cw) - 1),
+            Math.max(1, Math.round(ch) - 1)
+          );
+        }
+      }
+
+      requestAnimationFrame(vizRender);
+    }
+
+    // Build legend pips (one per voice) — called once during init.
+    function initVizLegend() {
+      const legend = document.getElementById('audioFieldLegend');
+      if (!legend) return;
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const COLORS = dark ? VIZ_COLORS_DARK : VIZ_COLORS_LIGHT;
+      COLORS.forEach(([r, g, b], i) => {
+        const pip = document.createElement('span');
+        pip.className = 'audio-field-pip';
+        pip.style.background = `rgb(${r},${g},${b})`;
+        pip.title = `Voice ${i + 1} · ${VOICE_LOOP_MS[i] / 1000}s loop`;
+        legend.appendChild(pip);
+      });
+    }
+
     // A single loop voice: picks a note from the current scale and schedules
     // itself to fire again after its co-prime loop duration.
     function scheduleVoice(index) {
@@ -2395,6 +2613,7 @@
           // Weight note selection toward lower registers for gravity
           const noteIdx = Math.floor(Math.pow(Math.random(), 1.5) * scale.length);
           const freq = scale[noteIdx];
+          vizSeed(index, noteIdx);
 
           const now = ctx.currentTime;
           const attack  = 0.35 + Math.random() * 0.40;
@@ -3219,6 +3438,8 @@
       drawPet();
       renderCalendar();
       initWeather();
+      initVizLegend();
+      requestAnimationFrame(vizRender);
       logFeed('Dwell Notebook Workspace initialized.');
       logFeed('Modules loaded: productivity tracker, pomodoro (+ companion specimen), thought log, field record archive, weather strip, calendar.');
       setInterval(animatePet, 1200);
