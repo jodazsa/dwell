@@ -2429,10 +2429,11 @@
     }
 
     // Stagger the initial voice firings so they don't all pile up at start.
+    // Cap initial offset at 2 s so the texture begins promptly after enabling.
     function startVoices() {
       stopVoices();
       VOICE_LOOP_MS.forEach((loopMs, i) => {
-        const offset = Math.random() * loopMs;
+        const offset = Math.random() * Math.min(loopMs, 2000);
         audioEngine.voices[i] = setTimeout(() => scheduleVoice(i), offset);
       });
     }
@@ -2585,11 +2586,17 @@
         audioEngine.masterGain = masterGain;
         audioEngine.initialized = true;
         setupAmbientNodes();
-        syncAmbientGain();
       }
 
-      if (audioEngine.ctx.state === 'suspended') {
-        audioEngine.ctx.resume();
+      const ctx = audioEngine.ctx;
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          syncAmbientGain();
+        }).catch(() => {
+          logFeed('Browser blocked audio. Click Start again to unlock.');
+        });
+      } else {
+        syncAmbientGain();
       }
       return true;
     }
@@ -3204,6 +3211,11 @@
       updateTimerUI();
       updateAmbientUi();
       setMasterVolume(appState.audio.masterVolume);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
+          audioEngine.ctx.resume().catch(() => {});
+        }
+      });
       drawPet();
       renderCalendar();
       initWeather();
