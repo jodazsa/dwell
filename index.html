@@ -273,6 +273,43 @@
       opacity: 0.85;
     }
 
+    .panel-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .audio-toggle {
+      padding: 5px 9px;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      color: var(--text-soft);
+    }
+
+    .audio-toggle.is-on {
+      border-color: rgba(99,117,150,0.4);
+      color: var(--text);
+      background: rgba(99,117,150,0.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+    }
+
+    .audio-volume {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      color: var(--text-soft);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .audio-volume input[type="range"] {
+      width: 76px;
+      accent-color: #637596;
+    }
+
     .module-stack {
       display: grid;
       gap: 12px;
@@ -1144,7 +1181,13 @@
         <article class="panel">
           <div class="panel-header">
             <h2 class="panel-title">Pomodoro Timer</h2>
-            <span class="panel-label">Module 02</span>
+            <div class="panel-status-bar">
+              <button id="ambientToggleBtn" class="audio-toggle secondary" type="button" aria-pressed="false">♪ Ambient</button>
+              <label class="audio-volume" for="audioVolumeInput">Vol
+                <input id="audioVolumeInput" type="range" min="0" max="100" value="35" aria-label="Master audio volume" />
+              </label>
+              <span class="panel-label">Module 02</span>
+            </div>
           </div>
 
           <div class="module-stack">
@@ -1522,6 +1565,24 @@
       productivity: {
         trackers: [],
       },
+      audio: {
+        ambientEnabled: false,
+        masterVolume: 35,
+      },
+    };
+
+    const audioEngine = {
+      initialized: false,
+      ctx: null,
+      masterGain: null,
+      ambientGain: null,
+      ambientLfo: null,
+      ambientLfoDepth: null,
+      ambientOscillators: [],
+      noiseSource: null,
+      noiseFilter: null,
+      warnedLocked: false,
+      warningTickMarks: new Set(),
     };
 
 
@@ -2089,6 +2150,8 @@
         breakMinutes: appState.timer.breakMinutes,
         session: appState.timer.session,
         completedPomodoros: appState.pet.completedPomodoros,
+        ambientEnabled: appState.audio.ambientEnabled,
+        masterVolume: appState.audio.masterVolume,
       };
       localStorage.setItem('retroPomodoroSettings', JSON.stringify(payload));
     }
@@ -2102,9 +2165,165 @@
         appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
         appState.timer.session = Number(saved.session) || 1;
         appState.pet.completedPomodoros = Number(saved.completedPomodoros) || 0;
+        appState.audio.ambientEnabled = Boolean(saved.ambientEnabled);
+        const savedVolume = Number(saved.masterVolume);
+        if (Number.isFinite(savedVolume)) {
+          appState.audio.masterVolume = Math.max(0, Math.min(100, Math.round(savedVolume)));
+        }
         appState.timer.totalSeconds = appState.timer.focusMinutes * 60;
         appState.timer.remainingSeconds = appState.timer.totalSeconds;
       } catch {}
+    }
+
+    function setMasterVolume(value) {
+      const parsed = Number(value);
+      const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 35;
+      appState.audio.masterVolume = Math.round(clamped);
+      if (audioEngine.masterGain && audioEngine.ctx) {
+        audioEngine.masterGain.gain.setTargetAtTime(clamped / 100, audioEngine.ctx.currentTime, 0.02);
+      }
+      const volumeInput = $('#audioVolumeInput');
+      if (volumeInput) volumeInput.value = String(Math.round(clamped));
+      saveTimerSettings();
+    }
+
+    function playTone(frequency, {
+      startAt = 0,
+      duration = 0.08,
+      gain = 0.12,
+      type = 'sine',
+      attack = 0.008,
+      release = 0.08,
+      endFrequency = null,
+    } = {}) {
+      if (!audioEngine.initialized || !audioEngine.ctx || !audioEngine.masterGain) return;
+      if (audioEngine.ctx.state !== 'running') return;
+      const now = audioEngine.ctx.currentTime + startAt;
+      const osc = audioEngine.ctx.createOscillator();
+      const env = audioEngine.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, now);
+      if (Number.isFinite(endFrequency) && endFrequency > 0) {
+        osc.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
+      }
+      env.gain.setValueAtTime(0.0001, now);
+      env.gain.linearRampToValueAtTime(gain, now + attack);
+      env.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+      osc.connect(env);
+      env.connect(audioEngine.masterGain);
+      osc.start(now);
+      osc.stop(now + duration + release + 0.02);
+    }
+
+    function playFocusStartCue() {
+      playTone(329.63, { duration: 0.08, gain: 0.08, attack: 0.006, release: 0.06 });
+      playTone(440.00, { startAt: 0.09, duration: 0.08, gain: 0.09, attack: 0.006, release: 0.08 });
+    }
+
+    function playBreakStartCue() {
+      playTone(440.00, { duration: 0.14, gain: 0.06, attack: 0.008, release: 0.1, endFrequency: 329.63 });
+    }
+
+    function playSessionCompleteCue() {
+      playTone(329.63, { startAt: 0.0, duration: 0.11, gain: 0.07, attack: 0.008, release: 0.1 });
+      playTone(415.30, { startAt: 0.11, duration: 0.11, gain: 0.07, attack: 0.008, release: 0.11 });
+      playTone(523.25, { startAt: 0.22, duration: 0.13, gain: 0.08, attack: 0.008, release: 0.14 });
+    }
+
+    function playWarningTick() {
+      playTone(1200, { duration: 0.03, gain: 0.02, attack: 0.003, release: 0.03 });
+    }
+
+    function setupAmbientNodes() {
+      const { ctx } = audioEngine;
+      const ambientGain = ctx.createGain();
+      ambientGain.gain.value = 0.0001;
+
+      const lfoDepth = ctx.createGain();
+      lfoDepth.gain.value = 0.022;
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.05;
+      lfo.connect(lfoDepth);
+      lfoDepth.connect(ambientGain.gain);
+      lfo.start();
+
+      const ambientFrequencies = [110, 110.3, 220.1];
+      const ambientOscillators = ambientFrequencies.map((frequency) => {
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = frequency;
+        oscGain.gain.value = 0.018;
+        osc.connect(oscGain);
+        oscGain.connect(ambientGain);
+        osc.start();
+        return osc;
+      });
+
+      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseData.length; i += 1) {
+        noiseData[i] = (Math.random() * 2 - 1) * 0.45;
+      }
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      noiseSource.loop = true;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.value = 400;
+      noiseFilter.Q.value = 0.0001;
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.value = 0.012;
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ambientGain);
+      noiseSource.start();
+
+      ambientGain.connect(audioEngine.masterGain);
+      audioEngine.ambientGain = ambientGain;
+      audioEngine.ambientLfo = lfo;
+      audioEngine.ambientLfoDepth = lfoDepth;
+      audioEngine.ambientOscillators = ambientOscillators;
+      audioEngine.noiseSource = noiseSource;
+      audioEngine.noiseFilter = noiseFilter;
+    }
+
+    function updateAmbientUi() {
+      const btn = $('#ambientToggleBtn');
+      if (!btn) return;
+      btn.classList.toggle('is-on', appState.audio.ambientEnabled);
+      btn.setAttribute('aria-pressed', String(appState.audio.ambientEnabled));
+    }
+
+    function syncAmbientGain() {
+      if (!audioEngine.ambientGain || !audioEngine.ctx) return;
+      const target = appState.audio.ambientEnabled ? 0.03 : 0.0001;
+      audioEngine.ambientGain.gain.setTargetAtTime(target, audioEngine.ctx.currentTime, 0.6);
+    }
+
+    function initAudioContext() {
+      if (!audioEngine.initialized) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) {
+          logFeed('Audio context unavailable in this browser.');
+          return false;
+        }
+        const ctx = new AudioCtx();
+        const masterGain = ctx.createGain();
+        masterGain.gain.value = appState.audio.masterVolume / 100;
+        masterGain.connect(ctx.destination);
+        audioEngine.ctx = ctx;
+        audioEngine.masterGain = masterGain;
+        audioEngine.initialized = true;
+        setupAmbientNodes();
+        syncAmbientGain();
+      }
+
+      if (audioEngine.ctx.state === 'suspended') {
+        audioEngine.ctx.resume();
+      }
+      return true;
     }
 
     function getGrowthStage() {
@@ -2266,10 +2485,13 @@
 
     function switchTimerMode(countCompletedPomodoro = true) {
       const t = appState.timer;
+      playSessionCompleteCue();
+      audioEngine.warningTickMarks.clear();
       if (t.mode === 'focus') {
         t.mode = 'break';
         t.totalSeconds = t.breakMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
+        playBreakStartCue();
         if (countCompletedPomodoro) {
           appState.pet.completedPomodoros += 1;
           updatePetStats();
@@ -2283,6 +2505,7 @@
         t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
         t.remainingSeconds = t.totalSeconds;
+        playFocusStartCue();
         refreshSessionInsight();
         logFeed(`Break complete. Starting focus session ${t.session}.`);
       }
@@ -2293,11 +2516,23 @@
     function startTimer() {
       const t = appState.timer;
       if (t.running) return;
+      const audioReady = initAudioContext();
+      if (audioReady && !audioEngine.warnedLocked) {
+        logFeed('Audio engine unlocked on first user gesture.');
+        audioEngine.warnedLocked = true;
+      }
       t.running = true;
+      if (t.mode === 'focus') playFocusStartCue();
+      else playBreakStartCue();
+      audioEngine.warningTickMarks.clear();
       logFeed(`Timer started: ${t.mode} mode.`);
       t.tickHandle = setInterval(() => {
         if (t.remainingSeconds > 0) {
           t.remainingSeconds -= 1;
+          if (t.remainingSeconds > 0 && t.remainingSeconds <= 60 && (t.remainingSeconds % 10 === 0) && !audioEngine.warningTickMarks.has(t.remainingSeconds)) {
+            playWarningTick();
+            audioEngine.warningTickMarks.add(t.remainingSeconds);
+          }
           updateTimerUI();
         } else {
           clearInterval(t.tickHandle);
@@ -2319,6 +2554,7 @@
     function resetTimer() {
       const t = appState.timer;
       pauseTimer();
+      audioEngine.warningTickMarks.clear();
       t.totalSeconds = (t.mode === 'focus' ? t.focusMinutes : t.breakMinutes) * 60;
       t.remainingSeconds = t.totalSeconds;
       updateTimerUI();
@@ -2327,6 +2563,7 @@
 
     function skipTimer() {
       pauseTimer();
+      audioEngine.warningTickMarks.clear();
       switchTimerMode(false);
     }
 
@@ -2468,6 +2705,19 @@
       $('#pauseTimerBtn').addEventListener('click', pauseTimer);
       $('#resetTimerBtn').addEventListener('click', resetTimer);
       $('#skipTimerBtn').addEventListener('click', skipTimer);
+      $('#ambientToggleBtn').addEventListener('click', () => {
+        appState.audio.ambientEnabled = !appState.audio.ambientEnabled;
+        updateAmbientUi();
+        saveTimerSettings();
+        if (!audioEngine.initialized) {
+          logFeed('Ambient state queued. Press Start once to unlock browser audio.');
+          return;
+        }
+        syncAmbientGain();
+      });
+      $('#audioVolumeInput').addEventListener('input', (event) => {
+        setMasterVolume(event.target.value);
+      });
 
       document.querySelectorAll('.presetBtn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -2551,6 +2801,8 @@
       updatePetStats();
       refreshSessionInsight();
       updateTimerUI();
+      updateAmbientUi();
+      setMasterVolume(appState.audio.masterVolume);
       drawPet();
       renderCalendar();
       initWeather();
