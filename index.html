@@ -349,6 +349,15 @@
       filter: drop-shadow(0 0 6px rgba(99,117,150,0.4));
     }
 
+    canvas#petCanvas.is-transcribed {
+      animation: wet-ink-glow 2200ms ease-in-out infinite;
+    }
+
+    @keyframes wet-ink-glow {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(99,117,150,0.35)); }
+      50% { filter: drop-shadow(0 0 9px rgba(143,162,198,0.72)); }
+    }
+
     .gol-canvas-wrap {
       background: var(--gol-fill);
     }
@@ -630,6 +639,54 @@
       text-transform: uppercase;
       opacity: 0.85;
       margin-top: 4px;
+    }
+
+    .specimen-archive-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .archive-toggle {
+      padding: 4px 8px;
+      font-size: 0.72rem;
+    }
+
+    .specimen-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-top: 1px dashed rgba(99,117,150,0.24);
+      padding-top: 10px;
+    }
+
+    .specimen-card {
+      width: 82px;
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .specimen-canvas {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid rgba(99,117,150,0.22);
+      border-radius: 4px;
+      background: rgba(99,117,150,0.06);
+    }
+
+    .specimen-name {
+      font-size: 0.67rem;
+      font-variant: small-caps;
+      letter-spacing: 0.08em;
+      color: var(--text);
+    }
+
+    .specimen-date {
+      font-size: 0.62rem;
+      color: var(--text-soft);
     }
 
     .thought-card {
@@ -1170,6 +1227,17 @@
 
         <article class="panel">
           <div class="panel-header">
+            <h2 class="panel-title">Specimen Archive</h2>
+            <span class="panel-label">Field Record</span>
+          </div>
+          <div class="specimen-archive-panel">
+            <button type="button" id="toggleSpecimenArchiveBtn" class="secondary archive-toggle">▸ Open Archive</button>
+            <div class="specimen-grid" id="specimenArchiveGrid" hidden></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
             <h2 class="panel-title">System Feed</h2>
             <span class="panel-label">Events</span>
           </div>
@@ -1198,7 +1266,7 @@
               </div>
 
               <div class="pomodoro-pet-shell timer-pet-shell">
-                <div class="panel-label">Pet Companion</div>
+                <div class="panel-label">Companion Specimen</div>
                 <div class="pomodoro-pet-grid">
                   <div class="pet-stage">
                     <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
@@ -1207,18 +1275,22 @@
 
                 <div class="pet-stats">
                   <div class="pet-stat-card">
+                    <span class="pet-stat-label">Specimen</span>
+                    <span class="pet-stat-value" id="petNameValue">Kumo</span>
+                  </div>
+                  <div class="pet-stat-card">
                     <span class="pet-stat-label">Pomodoros</span>
                     <span class="pet-stat-value" id="pomodoroCountValue">0</span>
                   </div>
                   <div class="pet-stat-card">
                     <span class="pet-stat-label">Stage</span>
-                    <span class="pet-stat-value" id="growthStageValue">Sprout</span>
+                    <span class="pet-stat-value" id="growthStageValue">Seedling</span>
                   </div>
                   <div class="pet-growth-progress">
                     <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                       <div class="pet-growth-fill" id="growthProgressFill"></div>
                     </div>
-                    <span class="pet-growth-text" id="growthProgressText">0 sessions until Bud</span>
+                    <span class="pet-growth-text" id="growthProgressText">3 sessions until Sprout</span>
                   </div>
                 </div>
               </div>
@@ -1306,10 +1378,28 @@
     const $ = (selector) => document.querySelector(selector);
 
     const growthStages = [
-      { name: 'Sprout', threshold: 0, size: 4 },
-      { name: 'Bud', threshold: 2, size: 6 },
-      { name: 'Bloom', threshold: 5, size: 8 },
-      { name: 'Mega Bloom', threshold: 9, size: 10 },
+      { name: 'Seedling', threshold: 0, detail: 0 },
+      { name: 'Sprout', threshold: 3, detail: 1 },
+      { name: 'Studied', threshold: 7, detail: 2 },
+      { name: 'Catalogued', threshold: 12, detail: 3 },
+      { name: 'Rare', threshold: 18, detail: 4 },
+      { name: 'Transcribed', threshold: 25, detail: 5 },
+    ];
+
+    const specimenNames = [
+      'Kumo', 'Tane', 'Kiri', 'Nami', 'Shio', 'Hotaru', 'Kasumi', 'Mori', 'Tsuki', 'Sora',
+      'Yuki', 'Hoshi', 'Umi', 'Mizu', 'Kaze', 'Kusa', 'Hana', 'Take', 'Kawa', 'Ishi',
+    ];
+
+    const speciesPalettes = [
+      { body: '#9caecc', eye: '#3a4250', accent: '#637596' },
+      { body: '#b9a0d8', eye: '#352d45', accent: '#8166ad' },
+      { body: '#9cc9b0', eye: '#2e4036', accent: '#5a8d74' },
+      { body: '#e0b28f', eye: '#4b3528', accent: '#ad7c5d' },
+      { body: '#d8a7b9', eye: '#4d2c39', accent: '#a7667c' },
+      { body: '#a7cdd8', eye: '#2f4350', accent: '#5f8fa1' },
+      { body: '#d3c88f', eye: '#474126', accent: '#9f9356' },
+      { body: '#b6b9cf', eye: '#35394f', accent: '#70779c' },
     ];
 
     const OBLIQUE_STRATEGIES = [
@@ -1534,9 +1624,15 @@
 
     const appState = {
       pet: {
+        id: 1,
+        name: 'Kumo',
+        colorKey: 0,
+        bodyShape: 'tall-narrow',
         completedPomodoros: 0,
         blink: false,
       },
+      retiredPets: [],
+      showSpecimenArchive: false,
       timer: {
         focusMinutes: 25,
         breakMinutes: 5,
@@ -2144,12 +2240,78 @@
       }
     }
 
+    function getBodyShapeByPetId(petId) {
+      const shapes = ['round', 'tall-narrow', 'wide-squat'];
+      return shapes[Math.abs(Number(petId) || 0) % shapes.length];
+    }
+
+    function createNextSpecimen(previousPet = appState.pet) {
+      const nextId = (Number(previousPet?.id) || 0) + 1;
+      return {
+        id: nextId,
+        name: specimenNames[nextId % specimenNames.length],
+        colorKey: ((Number(previousPet?.colorKey) || 0) + 1) % speciesPalettes.length,
+        bodyShape: getBodyShapeByPetId(nextId),
+        completedPomodoros: 0,
+        blink: false,
+      };
+    }
+
+    function normalizePet(rawPet) {
+      if (!rawPet || typeof rawPet !== 'object') return null;
+      const id = Number(rawPet.id);
+      const safeId = Number.isFinite(id) && id > 0 ? Math.floor(id) : 1;
+      return {
+        id: safeId,
+        name: String(rawPet.name || specimenNames[safeId % specimenNames.length]),
+        colorKey: Math.abs(Number(rawPet.colorKey) || 0) % speciesPalettes.length,
+        bodyShape: ['round', 'tall-narrow', 'wide-squat'].includes(rawPet.bodyShape) ? rawPet.bodyShape : getBodyShapeByPetId(safeId),
+        completedPomodoros: Math.max(0, Math.floor(Number(rawPet.completedPomodoros) || 0)),
+        blink: Boolean(rawPet.blink),
+      };
+    }
+
+    function normalizeRetiredPet(rawPet) {
+      if (!rawPet || typeof rawPet !== 'object') return null;
+      const id = Number(rawPet.id);
+      if (!Number.isFinite(id)) return null;
+      return {
+        id: Math.floor(id),
+        name: String(rawPet.name || 'Unknown'),
+        colorKey: Math.abs(Number(rawPet.colorKey) || 0) % speciesPalettes.length,
+        bodyShape: ['round', 'tall-narrow', 'wide-squat'].includes(rawPet.bodyShape) ? rawPet.bodyShape : 'round',
+        retiredAt: rawPet.retiredAt || new Date().toISOString(),
+        totalPomodoros: Math.max(0, Math.floor(Number(rawPet.totalPomodoros) || 0)),
+      };
+    }
+
+    function saveRetiredPets() {
+      localStorage.setItem('dwell_retired_pets', JSON.stringify(appState.retiredPets));
+    }
+
+    function loadRetiredPets() {
+      try {
+        const raw = localStorage.getItem('dwell_retired_pets');
+        const parsed = raw ? JSON.parse(raw) : [];
+        appState.retiredPets = Array.isArray(parsed) ? parsed.map(normalizeRetiredPet).filter(Boolean) : [];
+      } catch {
+        appState.retiredPets = [];
+      }
+    }
+
     function saveTimerSettings() {
       const payload = {
         focusMinutes: appState.timer.focusMinutes,
         breakMinutes: appState.timer.breakMinutes,
         session: appState.timer.session,
-        completedPomodoros: appState.pet.completedPomodoros,
+        pet: {
+          id: appState.pet.id,
+          name: appState.pet.name,
+          colorKey: appState.pet.colorKey,
+          bodyShape: appState.pet.bodyShape,
+          completedPomodoros: appState.pet.completedPomodoros,
+        },
+        showSpecimenArchive: appState.showSpecimenArchive,
         ambientEnabled: appState.audio.ambientEnabled,
         masterVolume: appState.audio.masterVolume,
       };
@@ -2164,7 +2326,11 @@
         appState.timer.focusMinutes = Number(saved.focusMinutes) || 25;
         appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
         appState.timer.session = Number(saved.session) || 1;
-        appState.pet.completedPomodoros = Number(saved.completedPomodoros) || 0;
+        const normalizedPet = normalizePet(saved.pet || saved);
+        if (normalizedPet) {
+          appState.pet = { ...appState.pet, ...normalizedPet };
+        }
+        appState.showSpecimenArchive = Boolean(saved.showSpecimenArchive);
         appState.audio.ambientEnabled = Boolean(saved.ambientEnabled);
         const savedVolume = Number(saved.masterVolume);
         if (Number.isFinite(savedVolume)) {
@@ -2362,12 +2528,14 @@
     function updatePetStats() {
       const stage = getGrowthStage();
       const growthProgress = getGrowthProgress();
+      $('#petNameValue').textContent = appState.pet.name;
       $('#pomodoroCountValue').textContent = String(appState.pet.completedPomodoros);
       $('#growthStageValue').textContent = stage.name;
       $('#growthProgressFill').style.width = `${growthProgress.progressPercent}%`;
       $('#growthProgressText').textContent = growthProgress.statusText;
       const progressTrack = document.querySelector('.pet-growth-track');
       progressTrack.setAttribute('aria-valuenow', String(growthProgress.ariaValueNow));
+      $('#petCanvas').classList.toggle('is-transcribed', stage.name === 'Transcribed');
     }
 
     function getGOLFillColor() {
@@ -2377,52 +2545,100 @@
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? '#1e1a14' : '#f2ebdd';
     }
 
-    function drawGOL() {
-      const canvas = $('#petCanvas');
+    function getShapeMetrics(shape, detail) {
+      if (shape === 'round') {
+        return { width: 5 + detail, height: 5 + detail, baseY: 11 };
+      }
+      if (shape === 'tall-narrow') {
+        return { width: 4 + Math.floor(detail / 2), height: 6 + detail, baseY: 11 };
+      }
+      return { width: 6 + detail, height: 4 + Math.floor(detail / 2), baseY: 12 };
+    }
+
+    function plotSpecimenPixels(ctx, {
+      width,
+      height,
+      centerX,
+      baseY,
+      bodyColor,
+      accentColor,
+      eyeColor,
+      blink = false,
+      detail = 0,
+    }) {
+      const left = centerX - Math.floor(width / 2);
+      const top = baseY - height;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const nx = width <= 1 ? 0 : (x / (width - 1)) * 2 - 1;
+          const ny = height <= 1 ? 0 : (y / (height - 1)) * 2 - 1;
+          const footprint = nx * nx + ny * ny;
+          if (footprint < 1.12) {
+            ctx.fillStyle = bodyColor;
+            ctx.fillRect(left + x, top + y, 1, 1);
+          }
+        }
+      }
+
+      ctx.fillStyle = accentColor;
+      const sproutHeight = 1 + Math.floor(detail / 2);
+      for (let i = 0; i < sproutHeight; i += 1) {
+        ctx.fillRect(centerX, top - 1 - i, 1, 1);
+      }
+      if (detail >= 1) {
+        ctx.fillRect(centerX - 1, top - 2, 1, 1);
+        ctx.fillRect(centerX + 1, top - 2, 1, 1);
+      }
+      if (detail >= 3) {
+        ctx.fillRect(left + 1, top + height - 2, 1, 1);
+        ctx.fillRect(left + width - 2, top + height - 2, 1, 1);
+      }
+      if (detail >= 4) {
+        ctx.fillRect(left + Math.floor(width / 2), top + Math.floor(height / 2), 1, 1);
+      }
+
+      const eyeY = top + Math.max(1, Math.floor(height / 3));
+      const leftEyeX = left + Math.max(1, Math.floor(width / 3));
+      const rightEyeX = left + width - Math.max(2, Math.floor(width / 3)) - 1;
+      ctx.fillStyle = eyeColor;
+      if (blink) {
+        ctx.fillRect(leftEyeX, eyeY, 1, 1);
+        ctx.fillRect(rightEyeX, eyeY, 1, 1);
+      } else {
+        ctx.fillRect(leftEyeX, eyeY, 1, 2);
+        ctx.fillRect(rightEyeX, eyeY, 1, 2);
+      }
+      if (detail >= 2) {
+        ctx.fillRect(centerX - 1, top + height - 2, 3, 1);
+      }
+    }
+
+    function drawGOL(canvas = $('#petCanvas'), specimen = appState.pet, { scale = 1, blink = appState.pet.blink } = {}) {
       const ctx = canvas.getContext('2d');
-      const { blink } = appState.pet;
-      const stage = getGrowthStage();
-      const size = stage.size;
-      const bodyX = Math.floor((canvas.width - size) / 2);
-      const bodyY = canvas.height - size - 2;
-      const bodyColor = '#9caecc';
-      const accentColor = '#637596';
-      const eyeColor = '#3a4250';
-      const leafColor = '#d9e3f3';
+      const stage = growthStages.reduce((current, checkpoint) => (
+        specimen.completedPomodoros >= checkpoint.threshold ? checkpoint : current
+      ), growthStages[0]);
+      const palette = speciesPalettes[specimen.colorKey % speciesPalettes.length];
+      const metrics = getShapeMetrics(specimen.bodyShape, stage.detail);
       const backgroundColor = getGOLFillColor();
 
+      ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const px = (x, y, w, h, color) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, w, h);
-      };
-
-      px(bodyX + 1, bodyY, Math.max(2, size - 2), 1, bodyColor);
-      px(bodyX, bodyY + 1, size, Math.max(2, size - 2), bodyColor);
-      px(bodyX + 1, bodyY + Math.max(2, size - 1), Math.max(2, size - 2), 1, bodyColor);
-
-      const stemX = bodyX + Math.floor(size / 2);
-      px(stemX, bodyY - 2, 1, 2, accentColor);
-      px(stemX - 1, bodyY - 3, 2, 1, leafColor);
-      px(stemX, bodyY - 4, 2, 1, leafColor);
-
-      const eyeY = bodyY + Math.max(1, Math.floor(size / 3));
-      const leftEyeX = bodyX + Math.max(1, Math.floor(size / 3));
-      const rightEyeX = bodyX + size - Math.max(2, Math.floor(size / 3)) - 1;
-
-      if (blink) {
-        px(leftEyeX, eyeY, 1, 1, eyeColor);
-        px(rightEyeX, eyeY, 1, 1, eyeColor);
-      } else {
-        px(leftEyeX, eyeY, 1, 2, eyeColor);
-        px(rightEyeX, eyeY, 1, 2, eyeColor);
-      }
-
-      const mouthWidth = Math.max(2, Math.floor(size / 3));
-      px(bodyX + Math.floor((size - mouthWidth) / 2), bodyY + size - 2, mouthWidth, 1, eyeColor);
+      ctx.scale(scale, scale);
+      plotSpecimenPixels(ctx, {
+        width: metrics.width,
+        height: metrics.height,
+        centerX: 8,
+        baseY: metrics.baseY,
+        bodyColor: palette.body,
+        accentColor: palette.accent,
+        eyeColor: palette.eye,
+        blink,
+        detail: stage.detail,
+      });
+      ctx.restore();
     }
 
     function drawPet() {
@@ -2432,6 +2648,82 @@
     function animatePet() {
       appState.pet.blink = Math.random() < 0.15;
       drawPet();
+    }
+
+    function formatRetiredDate(value) {
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return '--';
+      return parsed.toLocaleDateString([], { month: 'short', year: 'numeric' }).replace(' ', ' · ');
+    }
+
+    function renderSpecimenArchive() {
+      const root = $('#specimenArchiveGrid');
+      const toggle = $('#toggleSpecimenArchiveBtn');
+      root.hidden = !appState.showSpecimenArchive;
+      toggle.textContent = appState.showSpecimenArchive ? '▾ Close Archive' : '▸ Open Archive';
+
+      root.innerHTML = '';
+      if (!appState.retiredPets.length) {
+        const empty = document.createElement('div');
+        empty.className = 'specimen-date';
+        empty.textContent = 'No specimens transcribed yet. Keep working.';
+        root.appendChild(empty);
+        return;
+      }
+
+      appState.retiredPets.forEach((entry) => {
+        const card = document.createElement('article');
+        card.className = 'specimen-card';
+        const canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        canvas.className = 'specimen-canvas';
+        drawGOL(canvas, {
+          ...entry,
+          completedPomodoros: 25,
+          blink: false,
+        }, { scale: 1, blink: false });
+        const name = document.createElement('div');
+        name.className = 'specimen-name';
+        name.textContent = entry.name;
+        const date = document.createElement('div');
+        date.className = 'specimen-date';
+        date.textContent = formatRetiredDate(entry.retiredAt);
+        card.append(canvas, name, date);
+        root.appendChild(card);
+      });
+    }
+
+    function retireCurrentSpecimen() {
+      const currentPet = { ...appState.pet };
+      const retiredEntry = {
+        id: currentPet.id,
+        name: currentPet.name,
+        colorKey: currentPet.colorKey,
+        bodyShape: currentPet.bodyShape,
+        retiredAt: new Date().toISOString(),
+        totalPomodoros: currentPet.completedPomodoros,
+      };
+      appState.retiredPets.unshift(retiredEntry);
+      saveRetiredPets();
+      logFeed(`Field entry sealed. ${currentPet.name} has been transcribed to the permanent record. A new specimen stirs on the next page.`);
+      appState.pet = createNextSpecimen(currentPet);
+      updatePetStats();
+      drawPet();
+      renderSpecimenArchive();
+      saveTimerSettings();
+    }
+
+    function registerCompletedPomodoro() {
+      appState.pet.completedPomodoros += 1;
+      const maxThreshold = growthStages[growthStages.length - 1].threshold;
+      if (appState.pet.completedPomodoros > maxThreshold) {
+        retireCurrentSpecimen();
+        return;
+      }
+      updatePetStats();
+      drawPet();
+      logFeed(`Focus session complete. ${appState.pet.name} advanced to ${getGrowthStage().name} after pomodoro ${appState.pet.completedPomodoros}. Starting ${appState.timer.breakMinutes}-minute break.`);
     }
 
     function formatTime(seconds) {
@@ -2493,10 +2785,7 @@
         t.remainingSeconds = t.totalSeconds;
         playBreakStartCue();
         if (countCompletedPomodoro) {
-          appState.pet.completedPomodoros += 1;
-          updatePetStats();
-          drawPet();
-          logFeed(`Focus session complete. Pet grew after pomodoro ${appState.pet.completedPomodoros}. Starting ${t.breakMinutes}-minute break.`);
+          registerCompletedPomodoro();
         } else {
           logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
         }
@@ -2751,6 +3040,12 @@
         renderThoughts();
       });
 
+      $('#toggleSpecimenArchiveBtn').addEventListener('click', () => {
+        appState.showSpecimenArchive = !appState.showSpecimenArchive;
+        renderSpecimenArchive();
+        saveTimerSettings();
+      });
+
       $('#exportThoughtsBtn').addEventListener('click', exportThoughts);
 
       $('#weatherForm').addEventListener('submit', (event) => {
@@ -2794,10 +3089,12 @@
     function init() {
       loadThoughts();
       loadTimerSettings();
+      loadRetiredPets();
       loadTrackers();
       bindEvents();
       renderThoughts();
       renderTrackers();
+      renderSpecimenArchive();
       updatePetStats();
       refreshSessionInsight();
       updateTimerUI();
@@ -2807,7 +3104,7 @@
       renderCalendar();
       initWeather();
       logFeed('Dwell Notebook Workspace initialized.');
-      logFeed('Modules loaded: productivity tracker, pomodoro (+ pet companion), thought log, weather strip, calendar.');
+      logFeed('Modules loaded: productivity tracker, pomodoro (+ companion specimen), thought log, field record archive, weather strip, calendar.');
       setInterval(animatePet, 1200);
     }
 
