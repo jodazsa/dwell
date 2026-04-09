@@ -3,52 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dwell • Hobonichi Workspace</title>
+  <title>Dwell • Minimal Focus Column</title>
   <style>
     :root {
-      --bg: #f5f3ef;
-      --panel: #fefefe;
-      --panel-2: #f2f0ec;
-      --line: #ddd9d2;
-      --paper-margin: rgba(184, 92, 76, 0.22);
-      --paper-rule: #e5e2db;
-      --paper-row: #f0ede7;
-      --paper-top: #faf9f7;
-      --dot: rgba(140, 124, 104, 0.2);
-      --dot-dim: rgba(140, 124, 104, 0.15);
-      --gol-fill: #ede8e0;
-      --glow: #b85c4c;
-      --glow-dim: #c87c6c;
-      --text: #363028;
-      --text-soft: #857870;
-      --warn: #d4933c;
-      --danger: #c04840;
-      --info: #7aada0;
-      --shadow: rgba(80, 68, 52, 0.07);
-      --radius: 14px;
-      --gap: 16px;
-      --font-ui: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Sans", "Arial", sans-serif;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1c1a17;
-        --panel: #242018;
-        --panel-2: #1e1b14;
-        --line: #3a3228;
-        --text: #ddd0bc;
-        --text-soft: #8a7e6e;
-        --shadow: rgba(0,0,0,0.3);
-        --paper-margin: rgba(184, 92, 76, 0.2);
-        --paper-rule: #302a20;
-        --paper-row: #221d16;
-        --paper-top: #262118;
-        --dot: rgba(160, 140, 112, 0.2);
-        --dot-dim: rgba(160, 140, 112, 0.14);
-        --gol-fill: #1e1a14;
-        --glow: #c87060;
-        --glow-dim: #d49080;
-      }
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --line: #dfdfdb;
+      --text: #252523;
+      --muted: #6e6e69;
+      --accent: #303038;
+      --accent-soft: #ececf2;
+      --radius: 10px;
+      --gap: 10px;
+      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * { box-sizing: border-box; }
@@ -56,3006 +23,298 @@
     html, body {
       margin: 0;
       min-height: 100%;
-      background:
-        linear-gradient(to right, transparent 0 68px, var(--paper-margin) 68px 70px, transparent 70px 100%),
-        repeating-linear-gradient(to bottom, var(--paper-row) 0 33px, var(--paper-rule) 33px 34px),
-        linear-gradient(180deg, var(--paper-top) 0%, var(--bg) 100%);
+      background: var(--bg);
       color: var(--text);
-      font-family: var(--font-ui);
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 20px 34px, var(--dot) 0 4px, transparent 4px),
-        radial-gradient(circle at 20px 102px, var(--dot-dim) 0 4px, transparent 4px);
-      background-size: 100% 136px;
-      opacity: 0.6;
+      font-family: var(--font);
     }
 
     .shell {
-      max-width: 1400px;
+      width: min(100%, 360px);
       margin: 0 auto;
-      padding: 20px;
-    }
-
-    .weather-strip {
+      padding: 10px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: start;
-      gap: 10px;
-      margin-bottom: 12px;
-      padding: 8px 12px 10px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: linear-gradient(180deg, #fefefe, #f2f0ea);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.7), 0 4px 14px var(--shadow);
-    }
-
-    .weather-main {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-
-
-    .weather-copy {
-      min-width: 0;
-      display: grid;
-      gap: 1px;
-    }
-
-    .weather-row {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-
-    .weather-summary {
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .weather-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 0.74rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .weather-pill {
-      padding: 2px 8px;
-      border: 1px solid rgba(140,124,104,0.24);
-      border-radius: 999px;
-      background: rgba(140,124,104,0.08);
-    }
-
-    .weather-pill.warn {
-      border-color: rgba(255,209,102,0.34);
-      color: var(--warn);
-    }
-
-    .weather-pill.info {
-      border-color: rgba(122,173,160,0.34);
-      color: var(--info);
-    }
-
-    .weather-controls {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .weather-input {
-      width: min(220px, 40vw);
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(140,124,104,0.28);
-      background: rgba(244, 241, 236, 0.9);
-      color: var(--text);
-      outline: none;
-    }
-
-    .weather-input:focus {
-      border-color: var(--glow);
-      box-shadow: 0 0 0 3px rgba(140,124,104,0.12);
-    }
-
-    .weather-btn {
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-    }
-
-    .weather-forecast {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      padding-top: 8px;
-      border-top: 1px solid rgba(140,124,104,0.14);
-      margin-top: 6px;
-    }
-
-    .weather-forecast:empty {
-      display: none;
-    }
-
-    .forecast-day {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 5px 8px;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 8px;
-      background: rgba(140,124,104,0.05);
-      min-width: 44px;
-      gap: 1px;
-    }
-
-    .forecast-label {
-      font-size: 0.62rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .forecast-sigil {
-      font-size: 0.95rem;
-      line-height: 1.2;
-    }
-
-    .forecast-temps {
-      font-size: 0.67rem;
-      display: flex;
-      gap: 3px;
-    }
-
-    .forecast-lo {
-      color: var(--text-soft);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 320px minmax(0, 1fr) 360px;
       gap: var(--gap);
-    }
-
-    .column {
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
-      min-width: 0;
     }
 
     .panel {
-      position: relative;
+      background: var(--panel);
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, #fefefe, #f2f0ea);
       border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.75), 0 6px 18px var(--shadow);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 10px;
+      display: grid;
       gap: 10px;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(140,124,104,0.2);
     }
 
-    .panel-title {
+    .panel h2 {
       margin: 0;
-      font-size: 0.95rem;
-      letter-spacing: 0.1em;
-      text-transform: none;
-    }
-
-    .panel-label {
-      color: var(--text-soft);
-      font-size: 0.75rem;
-      opacity: 0.85;
-    }
-
-    .panel-status-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .audio-toggle {
-      padding: 5px 9px;
-      font-size: 0.72rem;
-      border-radius: 999px;
-      color: var(--text-soft);
-    }
-
-    .audio-toggle.is-on {
-      border-color: rgba(140,124,104,0.4);
-      color: var(--text);
-      background: rgba(140,124,104,0.14);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
-    }
-
-    .audio-volume {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.68rem;
-      color: var(--text-soft);
-      letter-spacing: 0.04em;
+      font-size: 0.86rem;
       text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
     }
 
-    .audio-volume input[type="range"] {
-      width: 76px;
-      accent-color: #b85c4c;
-    }
-
-    .module-stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .pet-stage {
-      border: 1px solid rgba(140,124,104,0.24);
-      background:
-        linear-gradient(180deg, rgba(254, 254, 253, 0.96), rgba(242, 240, 235, 0.92)),
-        repeating-linear-gradient(
-          to right,
-          rgba(140,124,104,0.08) 0,
-          rgba(140,124,104,0.08) 1px,
-          transparent 1px,
-          transparent 16px
-        ),
-        repeating-linear-gradient(
-          to bottom,
-          rgba(140,124,104,0.08) 0,
-          rgba(140,124,104,0.08) 1px,
-          transparent 1px,
-          transparent 16px
-        );
-      border-radius: 12px;
-      padding: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 96px;
-    }
-
-    canvas#petCanvas {
-      width: 16px;
-      height: 16px;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      filter: drop-shadow(0 0 6px rgba(140,124,104,0.4));
-    }
-
-    canvas#petCanvas.is-transcribed {
-      animation: wet-ink-glow 2200ms ease-in-out infinite;
-    }
-
-    @keyframes wet-ink-glow {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(140,124,104,0.35)); }
-      50% { filter: drop-shadow(0 0 9px rgba(184,92,76,0.6)); }
-    }
-
-    .gol-canvas-wrap {
-      background: var(--gol-fill);
-    }
-
-    .pet-stats {
-      display: grid;
-      gap: 6px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .pet-stat-card {
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 8px;
-      background: rgba(244, 241, 236, 0.82);
-      padding: 6px 8px;
-      display: grid;
-      gap: 2px;
-      min-height: 0;
-    }
-
-    .pet-stat-label {
-      font-size: 0.58rem;
-      color: var(--text-soft);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      line-height: 1.2;
-    }
-
-    .pet-stat-value {
-      font-size: 0.9rem;
-      color: var(--text);
-      line-height: 1.15;
-    }
-
-    .pet-growth-progress {
-      grid-column: 1 / -1;
-      display: grid;
-      gap: 4px;
-    }
-
-    .pet-growth-track {
-      width: 100%;
-      height: 6px;
-      border-radius: 999px;
-      border: 1px solid rgba(140,124,104,0.24);
-      background: rgba(140,124,104,0.12);
-      overflow: hidden;
-    }
-
-    .pet-growth-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #c87c6c, #b85c4c);
-      transition: width 180ms ease-in-out;
-    }
-
-    .pet-growth-text {
-      font-size: 0.64rem;
-      color: var(--text-soft);
-      text-align: left;
-    }
-
-    .controls, .timer-controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    button, input, textarea, select {
-      font: inherit;
-    }
-
-    button {
-      color: var(--text);
-      background: linear-gradient(180deg, #fefefe, #eeece6);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 8px 12px;
-      cursor: pointer;
-      text-transform: none;
-      letter-spacing: 0.02em;
-      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-      box-shadow: 0 2px 10px rgba(80, 68, 52, 0.09);
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 14px rgba(140,124,104,0.16);
-      border-color: var(--glow-dim);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button.secondary {
-      color: var(--text-soft);
-      background: #f0ede6;
-    }
-
-    .timer-display {
+    .timer-main {
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
     }
 
-    .big-time {
-      font-size: clamp(2.4rem, 6vw, 5rem);
+    .timer-value {
+      font-size: 2rem;
       line-height: 1;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       font-variant-numeric: tabular-nums;
     }
 
-    .phase {
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 0.85rem;
-      margin-top: 8px;
-    }
-
-    .ring-wrap {
-      width: 110px;
-      height: 110px;
-      position: relative;
-    }
-
-    .ring {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: conic-gradient(var(--glow) 0deg, rgba(140,124,104,0.12) 0deg);
-      display: grid;
-      place-items: center;
-      box-shadow: 0 0 16px rgba(140,124,104,0.2);
-    }
-
-    .ring::before {
-      content: "";
-      width: 72%;
-      height: 72%;
-      border-radius: 50%;
-      background: var(--panel);
-      border: 1px solid rgba(140,124,104,0.18);
-    }
-
-    .ring-label {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-
-    .timer-presets {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .pomodoro-pet-shell {
-      border-top: 1px solid rgba(140,124,104,0.15);
-      padding-top: 10px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .timer-pet-shell {
-      border-top: 0;
-      padding-top: 0;
-      width: min(210px, 26vw);
-    }
-
-    .pomodoro-pet-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 6px;
-      align-items: start;
-    }
-
-    .pomodoro-pet-grid .pet-stage {
-      min-height: 94px;
-      margin: 0;
-      padding: 10px;
-    }
-
-
-    .session-insight {
-      display: grid;
-      gap: 10px;
-      padding: 10px;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 12px;
-      background: rgba(140,124,104,0.05);
-    }
-
-    /* ── Audio Field Visualization ──────────────────────────────────────── */
-    .audio-field-wrap {
-      padding: 10px;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 12px;
-      background: rgba(140,124,104,0.05);
-    }
-
-    .audio-field-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-
-    .audio-field-label {
-      font-size: 0.64rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .audio-field-legend {
-      display: flex;
-      gap: 6px;
-    }
-
-    .audio-field-pip {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    #audioVizCanvas {
-      display: block;
-      width: 100%;
-      aspect-ratio: 8 / 3;
-      border-radius: 6px;
-      border: 1px solid var(--line);
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
-
-    .insight-card {
-      display: grid;
-      gap: 5px;
-      padding: 8px 10px;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244,241,236,0.92));
-    }
-
-    .insight-label {
-      font-size: 0.64rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .insight-value {
-      font-size: 0.8rem;
-      line-height: 1.45;
-      color: var(--text);
-    }
-
-    .notes-form {
-      display: grid;
-      gap: 10px;
-    }
-
-    .notes-note {
-      margin: -2px 2px 2px;
-      color: var(--text-soft);
-      font-size: 0.73rem;
-      opacity: 0.82;
-      line-height: 1.35;
-    }
-
-    .notes-form input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--text);
-      border: 1px solid rgba(140,124,104,0.28);
-      border-radius: 10px;
-      padding: 10px 12px;
-      outline: none;
-    }
-
-    .notes-form input:focus {
-      border-color: var(--glow);
-      box-shadow: 0 0 0 3px rgba(140,124,104,0.12);
-    }
-
-    .thought-log {
-      display: grid;
-      gap: 10px;
-      max-height: 560px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .archive-summary {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 7px 10px;
-      border: 1px solid rgba(140,124,104,0.18);
-      border-radius: 10px;
-      background: rgba(140,124,104,0.05);
-      color: var(--text-soft);
-      font-size: 0.73rem;
-    }
-
-    .archive-section {
-      display: grid;
-      gap: 8px;
-    }
-
-    .archive-header {
+    .timer-mode {
       font-size: 0.72rem;
-      color: var(--text-soft);
-      letter-spacing: 0.06em;
       text-transform: uppercase;
-      opacity: 0.85;
+      letter-spacing: 0.07em;
+      color: var(--muted);
       margin-top: 4px;
     }
 
-    .specimen-archive-panel {
-      display: grid;
-      gap: 10px;
-    }
-
-    .archive-toggle {
-      padding: 4px 8px;
-      font-size: 0.72rem;
-    }
-
-    .specimen-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      border-top: 1px dashed rgba(140,124,104,0.24);
-      padding-top: 10px;
-    }
-
-    .specimen-card {
-      width: 82px;
-      display: grid;
-      gap: 4px;
-      justify-items: center;
-      text-align: center;
-    }
-
-    .specimen-canvas {
-      width: 32px;
-      height: 32px;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      border: 1px solid rgba(140,124,104,0.22);
-      border-radius: 4px;
-      background: rgba(140,124,104,0.06);
-    }
-
-    .specimen-name {
-      font-size: 0.67rem;
-      font-variant: small-caps;
-      letter-spacing: 0.08em;
-      color: var(--text);
-    }
-
-    .specimen-date {
-      font-size: 0.62rem;
-      color: var(--text-soft);
-    }
-
-    .thought-card {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px;
-      align-items: start;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: rgba(140,124,104,0.08);
-    }
-
-    .thought-toggle {
-      width: 24px;
-      height: 24px;
-      margin-top: 2px;
+    .timer-session {
+      font-size: 0.68rem;
+      color: var(--muted);
+      border: 1px solid var(--line);
       border-radius: 999px;
-      border: 1px solid rgba(140,124,104,0.34);
-      background: rgba(244, 241, 236, 0.9);
-      color: var(--text);
-      display: grid;
-      place-items: center;
-      font-size: 0.95rem;
-      line-height: 1;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    button, input, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 7px 9px;
       cursor: pointer;
+      font-size: 0.78rem;
     }
 
-    .thought-toggle:hover {
-      border-color: var(--glow);
-      box-shadow: 0 0 0 2px rgba(140,124,104,0.12);
+    button:hover { border-color: #b7b7b0; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
     }
 
-    .thought-toggle.is-marked {
-      color: var(--danger);
-      border-color: rgba(255,107,107,0.4);
+    .preset {
+      background: var(--accent-soft);
+      border-color: #d7d7e6;
+      font-size: 0.72rem;
+      padding: 6px 8px;
     }
 
-    .thought-toggle.is-crossed {
-      color: var(--warn);
-      border-color: rgba(255,209,102,0.42);
+    .tracker-form,
+    .thought-form {
+      display: grid;
+      gap: 6px;
     }
 
-    .thought-content {
-      min-width: 0;
+    .inline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #fff;
+      outline: none;
+      font-size: 0.8rem;
+    }
+
+    textarea {
+      min-height: 58px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #a9a9b7;
+    }
+
+    .help,
+    .error {
+      margin: 0;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .error {
+      color: #8d3030;
+      min-height: 1em;
+    }
+
+    .tracker-list,
+    .thought-list {
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .tracker-card,
+    .thought-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px;
+      background: #fbfbfa;
+      display: grid;
+      gap: 6px;
+    }
+
+    .tracker-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tracker-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .tracker-range {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .tracker-grid {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .cell {
+      border: 1px solid #d2d2ce;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.65rem;
+      line-height: 1;
+      padding: 6px 0;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .cell.is-on {
+      background: #3a3a45;
+      border-color: #3a3a45;
+      color: #fff;
     }
 
     .thought-meta {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
-      color: var(--text-soft);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 6px;
+      gap: 8px;
+      font-size: 0.66rem;
+      color: var(--muted);
     }
 
     .thought-body {
-      color: var(--text-soft);
+      font-size: 0.78rem;
+      line-height: 1.4;
       white-space: pre-wrap;
-      font-size: 0.86rem;
-      line-height: 1.45;
-    }
-
-    .thought-card.is-crossed .thought-body {
-      text-decoration: line-through;
-      opacity: 0.72;
-    }
-
-    .terminal-feed {
-      min-height: 160px;
-      max-height: 240px;
-      overflow: auto;
-      display: grid;
-      gap: 6px;
-      font-size: 0.78rem;
-      color: var(--text-soft);
-    }
-
-    .feed-line::before {
-      content: "> ";
-      color: var(--glow-dim);
-    }
-
-    .footnote {
-      margin-top: 12px;
-      color: var(--text-soft);
-      font-size: 0.75rem;
-      opacity: 0.85;
-    }
-
-    .muted {
-      color: var(--text-soft);
-    }
-
-    .calendar-frame {
-      border: 1px solid rgba(140,124,104,0.24);
-      border-radius: 10px;
-      background: rgba(244, 241, 236, 0.9);
-      padding: 10px;
-    }
-
-    .calendar-month {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-    }
-
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 4px;
-      font-size: 0.75rem;
-    }
-
-    .calendar-cell {
-      min-height: 28px;
-      border: 1px solid rgba(140,124,104,0.16);
-      border-radius: 6px;
-      display: grid;
-      place-items: center;
-      color: var(--text-soft);
-      background: rgba(140,124,104,0.08);
-    }
-
-    .calendar-cell.is-label {
-      min-height: 22px;
-      border: none;
-      background: transparent;
-      font-size: 0.64rem;
-      letter-spacing: 0.08em;
-      opacity: 0.85;
-    }
-
-    .calendar-cell.is-empty {
-      border-color: rgba(140,124,104,0.08);
-      color: transparent;
-      background: rgba(140,124,104,0.06);
-    }
-
-    .calendar-cell.is-today {
-      border-color: rgba(140,124,104,0.44);
-      background: rgba(140,124,104,0.18);
-      box-shadow: inset 0 0 0 1px rgba(140,124,104,0.24);
-      color: var(--text);
-      text-shadow: 0 0 6px rgba(140,124,104,0.34);
-    }
-
-    .tracker-form {
-      display: grid;
-      gap: 8px;
-    }
-
-    .tracker-form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .tracker-form label {
-      display: grid;
-      gap: 5px;
-      font-size: 0.72rem;
-      color: var(--text-soft);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .tracker-form input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 9px;
-      border: 1px solid rgba(140,124,104,0.28);
-      background: rgba(255,255,255,0.9);
-      color: var(--text);
-      outline: none;
-    }
-
-    .tracker-form input:focus {
-      border-color: var(--glow);
-      box-shadow: 0 0 0 3px rgba(140,124,104,0.12);
-    }
-
-    .tracker-error {
-      min-height: 18px;
-      color: var(--danger);
-      font-size: 0.74rem;
-    }
-
-    .tracker-section-title {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .tracker-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .tracker-list-completed {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      align-items: start;
-    }
-
-    .tracker-card {
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 10px;
-      background: rgba(244, 241, 236, 0.9);
-      padding: 10px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .tracker-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: flex-start;
-      font-size: 0.74rem;
-      color: var(--text-soft);
-    }
-
-    .tracker-title {
-      color: var(--text);
-      font-size: 0.86rem;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .tracker-range {
-      font-size: 0.72rem;
-      color: var(--text-soft);
-    }
-
-    .tracker-count {
-      white-space: nowrap;
-      border: 1px solid rgba(140,124,104,0.2);
-      border-radius: 999px;
-      padding: 2px 8px;
-      background: rgba(140,124,104,0.06);
-    }
-
-    .tracker-grid-wrap {
-      overflow-x: auto;
-      padding-bottom: 0;
-    }
-
-    .tracker-grid {
-      display: grid;
-      gap: 0;
-      width: max-content;
-      min-width: 0;
-      grid-auto-flow: row;
-    }
-
-    .tracker-grid-cell {
-      appearance: none;
-      border: 1px solid #c8c0b4;
-      border-radius: 0;
-      box-shadow: none;
-      display: grid;
-      place-items: center;
-      font-size: 0.72rem;
-      aspect-ratio: 1 / 1;
-      width: clamp(34px, 3vw, 40px);
-      padding: 0;
-      font: inherit;
-      position: relative;
-      background: var(--bg);
-      color: var(--text-soft);
-    }
-
-    .tracker-cell-in-range {
-      color: var(--text);
-      cursor: pointer;
-      background: var(--bg);
-      font-weight: 500;
-    }
-
-    .tracker-cell-out-range {
-      color: rgba(140,124,104,0.72);
-      background: var(--bg);
-    }
-
-    .tracker-cell-in-range:hover {
-      box-shadow: none;
-    }
-
-    .tracker-cell-complete {
-      background: var(--bg);
-      color: transparent;
-      font-size: 0;
-    }
-
-    .tracker-cell-complete::before,
-    .tracker-cell-complete::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 100%;
-      height: 2px;
-      background: #7a6e62;
-      pointer-events: none;
-    }
-
-    .tracker-cell-complete::before {
-      transform: translateY(-50%) rotate(45deg) scale(1.44);
-    }
-
-    .tracker-cell-complete::after {
-      transform: translateY(-50%) rotate(-45deg) scale(1.44);
-    }
-
-    .tracker-empty {
-      color: rgba(140,124,104,0.7);
-      background: var(--bg);
-    }
-
-    .tracker-meta {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .tracker-empty-card {
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      border: 1px dashed rgba(140,124,104,0.28);
-      border-radius: 10px;
-      padding: 8px 10px;
-      background: rgba(140,124,104,0.04);
-    }
-
-    .tracker-range-editor {
-      display: grid;
-      gap: 6px;
-      border-top: 1px solid rgba(140,124,104,0.15);
-      padding-top: 8px;
-    }
-
-    .tracker-range-editor .tracker-form-grid {
-      gap: 6px;
-    }
-
-    .tracker-range-editor input {
-      width: 100%;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid rgba(140,124,104,0.28);
-      background: rgba(255,255,255,0.9);
-      color: var(--text);
-      outline: none;
-      font-size: 0.72rem;
-    }
-
-    .tracker-range-editor button {
-      justify-self: start;
-      padding: 6px 10px;
-      font-size: 0.7rem;
-    }
-
-    .tracker-card-compact {
-      gap: 6px;
-      padding: 8px;
-    }
-
-    .tracker-card-compact .tracker-title {
-      font-size: 0.8rem;
-      margin-bottom: 0;
-    }
-
-    .tracker-card-compact .tracker-range {
-      font-size: 0.67rem;
-    }
-
-    .tracker-card-compact .tracker-grid-wrap {
-      overflow: hidden;
-      padding-bottom: 0;
-    }
-
-    .tracker-card-compact .tracker-grid {
-      min-width: 0;
-      width: 100%;
-      justify-content: start;
-    }
-
-    .tracker-card-compact .tracker-grid-cell {
-      width: clamp(6px, 0.6vw, 8px);
-      border-width: 0.75px;
-      font-size: 0;
-      color: transparent;
-      pointer-events: none;
-    }
-
-    .tracker-card-compact .tracker-cell-complete::before,
-    .tracker-card-compact .tracker-cell-complete::after {
-      height: 1px;
-      background: rgba(122, 110, 98, 0.9);
-    }
-
-    .tracker-card-compact .tracker-meta {
-      font-size: 0.66rem;
-      justify-content: flex-start;
-    }
-
-
-    @media (max-width: 1120px) {
-      .weather-strip {
-        grid-template-columns: 1fr;
-        border-radius: 16px;
-      }
-
-      .weather-controls {
-        justify-content: flex-start;
-      }
-
-      .weather-input {
-        width: min(100%, 320px);
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .timer-display {
-        grid-template-columns: 1fr;
-      }
-
-      .timer-pet-shell {
-        width: 100%;
-      }
-
-      .tracker-form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .weather-main {
-        align-items: flex-start;
-      }
-
-      .weather-row,
-      .weather-meta {
-        flex-direction: column;
-        gap: 4px;
-        align-items: flex-start;
-      }
-
-      .weather-summary {
-        white-space: normal;
-      }
-
-      .weather-controls {
-        width: 100%;
-      }
-
-      .weather-input {
-        width: 100%;
-      }
+      overflow-wrap: anywhere;
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="weather-strip" aria-label="Local weather strip">
-      <div class="weather-main">
-        <div class="weather-copy">
-          <div class="weather-row">
-            <span class="weather-summary" id="weatherSummary">Acquiring local conditions…</span>
-          </div>
-          <div class="weather-meta">
-            <span class="weather-pill" id="weatherTemp">--°F</span>
-            <span class="weather-pill" id="weatherWind">WIND -- MPH</span>
-            <span class="weather-pill info" id="weatherSource">BOOT: GEO</span>
-            <span class="weather-pill" id="weatherUpdated">SYNC --</span>
-          </div>
+  <main class="shell">
+    <section class="panel" aria-labelledby="pomodoroTitle">
+      <h2 id="pomodoroTitle">Pomodoro</h2>
+      <div class="timer-main">
+        <div>
+          <div id="timeDisplay" class="timer-value">25:00</div>
+          <div id="modeDisplay" class="timer-mode">Focus</div>
         </div>
+        <div id="sessionDisplay" class="timer-session">S1</div>
       </div>
-      <form class="weather-controls" id="weatherForm">
-        <input
-          class="weather-input"
-          id="weatherLocationInput"
-          type="text"
-          name="location"
-          placeholder="Manual location fallback (city or ZIP)"
-          autocomplete="off"
-          aria-label="Enter a city or ZIP code for weather fallback"
-        />
-        <button type="submit" class="weather-btn secondary">Tune Location</button>
-      </form>
-      <div class="weather-forecast" id="weatherForecast" aria-label="7-day forecast"></div>
+      <div class="row">
+        <button id="startBtn" class="btn-primary" type="button">Start</button>
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="resetBtn" type="button">Reset</button>
+        <button id="skipBtn" type="button">Skip</button>
+      </div>
+      <div class="row">
+        <button class="preset" type="button" data-focus="25" data-break="5">25 / 5</button>
+        <button class="preset" type="button" data-focus="45" data-break="10">45 / 10</button>
+        <button class="preset" type="button" data-focus="52" data-break="17">52 / 17</button>
+      </div>
     </section>
 
-    <main class="grid">
-      <section class="column">
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Productivity Tracker</h2>
-            <span class="panel-label">Module 01B</span>
-          </div>
+    <section class="panel" aria-labelledby="trackerTitle">
+      <h2 id="trackerTitle">Grid Tracker</h2>
+      <form id="trackerForm" class="tracker-form">
+        <input id="trackerName" type="text" placeholder="Tracker name" maxlength="40" required />
+        <div class="inline">
+          <input id="trackerStart" type="number" placeholder="Start" required />
+          <input id="trackerEnd" type="number" placeholder="End" required />
+        </div>
+        <button type="submit">Add Tracker</button>
+        <p id="trackerError" class="error"></p>
+      </form>
+      <p class="help">Tap numbers to mark/unmark progress.</p>
+      <div id="trackerList" class="tracker-list"></div>
+    </section>
 
-          <div class="module-stack">
-            <form class="tracker-form" id="trackerForm">
-              <label>Tracker name
-                <input type="text" id="trackerNameInput" maxlength="60" placeholder="e.g. Push-up streak" required />
-              </label>
-              <div class="tracker-form-grid">
-                <label>Start number
-                  <input type="number" id="trackerStartInput" placeholder="0" required />
-                </label>
-                <label>End number
-                  <input type="number" id="trackerEndInput" placeholder="100" required />
-                </label>
-              </div>
-              <div class="controls">
-                <button type="submit">Create Tracker</button>
-              </div>
-              <div class="tracker-error" id="trackerError" role="status" aria-live="polite"></div>
-            </form>
-
-            <div class="tracker-section-title">Active Trackers</div>
-            <div class="tracker-list" id="activeTrackers"></div>
-
-            <div class="tracker-section-title">Completed Grids</div>
-            <div class="tracker-list tracker-list-completed" id="completedTrackers"></div>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Specimen Archive</h2>
-            <span class="panel-label">Field Record</span>
-          </div>
-          <div class="specimen-archive-panel">
-            <button type="button" id="toggleSpecimenArchiveBtn" class="secondary archive-toggle">▸ Open Archive</button>
-            <div class="specimen-grid" id="specimenArchiveGrid" hidden></div>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">System Feed</h2>
-            <span class="panel-label">Events</span>
-          </div>
-          <div class="terminal-feed" id="terminalFeed"></div>
-        </article>
-      </section>
-
-      <section class="column">
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Pomodoro Timer</h2>
-            <div class="panel-status-bar">
-              <button id="ambientToggleBtn" class="audio-toggle secondary" type="button" aria-pressed="false">◈ Generative</button>
-              <label class="audio-volume" for="audioVolumeInput">Vol
-                <input id="audioVolumeInput" type="range" min="0" max="100" value="35" aria-label="Master audio volume" />
-              </label>
-              <span class="panel-label">Module 02</span>
-            </div>
-          </div>
-
-          <div class="module-stack">
-            <div class="timer-display">
-              <div>
-                <div class="big-time" id="timeDisplay">25:00</div>
-                <div class="phase" id="phaseDisplay">Focus Session</div>
-              </div>
-
-              <div class="pomodoro-pet-shell timer-pet-shell">
-                <div class="panel-label">Companion Specimen</div>
-                <div class="pomodoro-pet-grid">
-                  <div class="pet-stage">
-                    <canvas id="petCanvas" width="16" height="16" aria-label="Pixel art pet"></canvas>
-                  </div>
-                </div>
-
-                <div class="pet-stats">
-                  <div class="pet-stat-card">
-                    <span class="pet-stat-label">Specimen</span>
-                    <span class="pet-stat-value" id="petNameValue">Kumo</span>
-                  </div>
-                  <div class="pet-stat-card">
-                    <span class="pet-stat-label">Pomodoros</span>
-                    <span class="pet-stat-value" id="pomodoroCountValue">0</span>
-                  </div>
-                  <div class="pet-stat-card">
-                    <span class="pet-stat-label">Stage</span>
-                    <span class="pet-stat-value" id="growthStageValue">Seedling</span>
-                  </div>
-                  <div class="pet-growth-progress">
-                    <div class="pet-growth-track" role="progressbar" aria-label="Progress to next growth stage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                      <div class="pet-growth-fill" id="growthProgressFill"></div>
-                    </div>
-                    <span class="pet-growth-text" id="growthProgressText">3 sessions until Sprout</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="timer-controls">
-              <button id="startTimerBtn">Start</button>
-              <button id="pauseTimerBtn" class="secondary">Pause</button>
-              <button id="resetTimerBtn" class="secondary">Reset</button>
-              <button id="skipTimerBtn">Skip</button>
-            </div>
-
-            <div class="timer-presets">
-              <button class="presetBtn secondary" data-focus="25" data-break="5">25 / 5</button>
-              <button class="presetBtn secondary" data-focus="50" data-break="10">50 / 10</button>
-              <button class="presetBtn secondary" data-focus="15" data-break="3">15 / 3</button>
-            </div>
-
-            <section class="session-insight" aria-live="polite" aria-label="Session insights">
-              <div class="panel-label">Session Insight</div>
-              <article class="insight-card">
-                <div class="insight-label">Oblique Strategy</div>
-                <div class="insight-value" id="strategyInsight">Awaiting next focus session…</div>
-              </article>
-              <article class="insight-card">
-                <div class="insight-label">Wisdom Quote</div>
-                <div class="insight-value" id="quoteInsight">Awaiting next focus session…</div>
-              </article>
-            </section>
-
-            <div class="audio-field-wrap">
-              <div class="audio-field-header">
-                <span class="audio-field-label">Audio Field · Six-Voice Cellular Pattern</span>
-                <div class="audio-field-legend" id="audioFieldLegend" aria-hidden="true"></div>
-              </div>
-              <canvas id="audioVizCanvas" width="240" height="90" aria-label="Generative audio visualization — cellular automaton seeded by the ambient music engine"></canvas>
-            </div>
-
-          </div>
-        </article>
-
-
-      </section>
-
-      <section class="column">
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Calendar</h2>
-            <span class="panel-label">Module 04</span>
-          </div>
-          <div class="module-stack">
-            <div class="calendar-frame">
-              <div class="calendar-month" id="calendarMonthLabel">----</div>
-              <div class="calendar-grid" id="calendarGrid" aria-label="Current month calendar"></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Thought Log</h2>
-            <span class="panel-label">Module 03</span>
-          </div>
-
-          <div class="module-stack">
-            <form class="notes-form" id="thoughtForm">
-              <input type="text" id="thoughtBody" placeholder="Capture a thought, task, idea, or reflection, then press Enter..." maxlength="200" />
-              <div class="controls">
-                <button type="submit">Log Entry</button>
-                <button type="button" id="exportThoughtsBtn" class="secondary">Export</button>
-                <button type="button" id="clearThoughtsBtn" class="secondary">Clear All</button>
-              </div>
-            </form>
-            <div class="notes-note">Live log keeps the 50 most recent entries. Older entries move to archive automatically. Export includes both.</div>
-
-            <div class="archive-summary" id="archiveSummary">
-              <span id="archiveSummaryText">Archive: 0 entries</span>
-              <button type="button" id="toggleArchiveBtn" class="secondary weather-btn">View Archive</button>
-            </div>
-
-            <div class="thought-log" id="thoughtLog"></div>
-            <div class="archive-section" id="archiveSection" hidden>
-              <div class="archive-header">Archived entries</div>
-              <div class="thought-log" id="archiveLog"></div>
-            </div>
-          </div>
-        </article>
-
-      </section>
-    </main>
-  </div>
+    <section class="panel" aria-labelledby="thoughtTitle">
+      <h2 id="thoughtTitle">Thought Log</h2>
+      <form id="thoughtForm" class="thought-form">
+        <textarea id="thoughtBody" placeholder="Capture a quick thought..." required></textarea>
+        <div class="row">
+          <button class="btn-primary" type="submit">Save</button>
+          <button id="clearThoughtsBtn" type="button">Clear</button>
+        </div>
+      </form>
+      <div id="thoughtList" class="thought-list"></div>
+    </section>
+  </main>
 
   <script>
     const $ = (selector) => document.querySelector(selector);
 
-    const growthStages = [
-      { name: 'Seedling', threshold: 0, detail: 0 },
-      { name: 'Sprout', threshold: 3, detail: 1 },
-      { name: 'Studied', threshold: 7, detail: 2 },
-      { name: 'Catalogued', threshold: 12, detail: 3 },
-      { name: 'Rare', threshold: 18, detail: 4 },
-      { name: 'Transcribed', threshold: 25, detail: 5 },
-    ];
+    const KEYS = {
+      timer: 'dwell.min.timer.v1',
+      trackers: 'dwell.min.trackers.v1',
+      thoughts: 'dwell.min.thoughts.v1',
+    };
 
-    const specimenNames = [
-      'Kumo', 'Tane', 'Kiri', 'Nami', 'Shio', 'Hotaru', 'Kasumi', 'Mori', 'Tsuki', 'Sora',
-      'Yuki', 'Hoshi', 'Umi', 'Mizu', 'Kaze', 'Kusa', 'Hana', 'Take', 'Kawa', 'Ishi',
-    ];
-
-    const speciesPalettes = [
-      { body: '#c8a898', eye: '#3e2e28', accent: '#b05040' },
-      { body: '#b9a0d8', eye: '#352d45', accent: '#8166ad' },
-      { body: '#9cc9b0', eye: '#2e4036', accent: '#5a8d74' },
-      { body: '#e0b28f', eye: '#4b3528', accent: '#ad7c5d' },
-      { body: '#d8a7b9', eye: '#4d2c39', accent: '#a7667c' },
-      { body: '#a7cdd8', eye: '#2f4350', accent: '#5f8fa1' },
-      { body: '#d3c88f', eye: '#474126', accent: '#9f9356' },
-      { body: '#b6b9cf', eye: '#35394f', accent: '#70779c' },
-    ];
-
-    const OBLIQUE_STRATEGIES = [
-      'Abandon normal instruments',
-      'Accept advice',
-      'Accretion',
-      'A line has two sides',
-      'Allow an easement (an easement is the abandonment of a stricture)',
-      'Are there sections? Consider transitions',
-      'Ask people to work against their better judgment',
-      'Ask your body',
-      'Assemble some of the elements in a group and treat the group',
-      'Balance the consistency principle with the inconsistency principle',
-      'Be dirty',
-      'Breathe more deeply',
-      'Bridges -build -burn',
-      'Cascades',
-      'Change instrument roles',
-      'Change nothing and continue with immaculate consistency',
-      "Children's voices -speaking -singing",
-      'Cluster analysis',
-      'Consider different fading systems',
-      'Consult other sources -promising -unpromising',
-      'Convert a melodic element into a rhythmic element',
-      'Courage!',
-      'Cut a vital connection',
-      'Decorate, decorate',
-      'Define an area as "safe" and use it as an anchor',
-      'Destroy -nothing -the most important thing',
-      'Discard an axiom',
-      'Disconnect from desire',
-      'Discover your formulas and abandon them',
-      'Distorting time',
-      'Do nothing for as long as possible',
-      "Don't be afraid of things because they're easy to do",
-      "Don't be frightened of cliches",
-      "Don't be frightened to display your talents",
-      "Don't break the silence",
-      "Don't stress one thing more than another",
-      'Do something boring',
-      'Do the washing up',
-      'Do the words need changing?',
-      'Emphasize differences',
-      'Emphasize repetitions',
-      'Emphasize the flaws',
-      'Faced with a choice, do both',
-      'Feedback recordings into an acoustic situation',
-      'Fill every beat with something',
-      'Get your neck massaged',
-      'Ghost echoes',
-      'Give the game away',
-      'Give way to your worst impulse',
-      'Go slowly all the way round the outside',
-      'Honor thy error as a hidden intention',
-      'How would someone else do it?',
-      'How would you have done it?',
-      'Humanize something free of error',
-      'Imagine the music as a moving chain or caterpillar',
-      'Imagine the music as a set of disconnected events',
-      'Infinitesimal gradations',
-      'Intentions -nobility of -humility of -credibility of',
-      'Into the impossible',
-      'Is it finished?',
-      'Is there something missing?',
-      'Is the tuning appropriate?',
-      'Just carry on',
-      'Left channel, right channel, center channel',
-      'Listen in total darkness, or in a very large room, very quietly',
-      'Listen to the quiet voice',
-      'Look at a very small object, look at its center',
-      'Look at the order in which you do things',
-      'Look closely at the most embarrassing details and amplify them',
-      'Lowest common denominator check -single beat -single note -single riff',
-      'Make a blank valuable by putting it in an exquisite frame',
-      'Make an exhaustive list of everything you might do and do the last thing on the list',
-      'Make a sudden, destructive, unpredictable action; incorporate',
-      'Mechanicalize something idiosyncratic',
-      'Mute and continue',
-      'Only one element of each kind',
-      '(Organic) machinery',
-      'Overtly resist change',
-      'Put in earplugs',
-      'Question the heroic approach',
-      'Remember those quiet evenings',
-      'Remove ambiguities and convert to specifics',
-      'Remove specifics and convert to ambiguities',
-      'Repetition is a form of change',
-      'Retrace your steps',
-      'Reverse',
-      'Short circuit (example: a man eating peas with the idea that they will improve his virility shovels them straight into his lap)',
-      'Shut the door and listen from outside',
-      'Simple subtraction',
-      'Spectrum analysis',
-      'Take a break',
-      'Take away the elements in order of apparent non-importance',
-      'Tape your mouth (given by Ritva Saarikko)',
-      'The inconsistency principle',
-      'The most easily forgotten thing is the most important',
-      'The tape is now the music',
-      'Think -inside the work -outside the work',
-      'Tidy up',
-      'Trust in the you of now',
-      'Turn it upside down',
-      'Twist the spine',
-      'Use an old idea',
-      'Use an unacceptable color',
-      'Use fewer notes',
-      'Use filters',
-      'Use "unqualified" people',
-      'Water',
-      'What are you really thinking about just now?',
-      'What is the reality of the situation?',
-      'What mistakes did you make last time?',
-      'What would your closest friend do?',
-      "What wouldn't you do?",
-      'Work at a different speed',
-      'You are an engineer',
-      'You can only make one dot at a time',
-      "You don't have to be ashamed of using your own ideas"
-    ];
-
-    const WISDOM_QUOTES = [
-      '"You have power over your mind—not outside events." — Marcus Aurelius',
-      '"The happiness of your life depends upon the quality of your thoughts." — Marcus Aurelius',
-      '"Waste no more time arguing what a good man should be. Be one." — Marcus Aurelius',
-      '"If it is not right, do not do it; if it is not true, do not say it." — Marcus Aurelius',
-      '"Dwell on the beauty of life. Watch the stars, and see yourself running with them." — Marcus Aurelius',
-      '"Very little is needed to make a happy life." — Marcus Aurelius',
-      '"The soul becomes dyed with the color of its thoughts." — Marcus Aurelius',
-      '"When you arise in the morning, think of what a privilege it is to be alive." — Marcus Aurelius',
-      '"No man is free who is not master of himself." — Epictetus',
-      "\"It's not what happens to you, but how you react to it that matters.\" — Epictetus",
-      '"First say to yourself what you would be; and then do what you have to do." — Epictetus',
-      '"We have two ears and one mouth so that we can listen twice as much as we speak." — Epictetus',
-      '"Make the best use of what is in your power, and take the rest as it happens." — Epictetus',
-      '"No great thing is created suddenly." — Epictetus',
-      '"Freedom is the only worthy goal in life. It is won by disregarding things that lie beyond our control." — Epictetus',
-      '"How long are you going to wait before you demand the best for yourself?" — Epictetus',
-      '"We suffer more often in imagination than in reality." — Seneca',
-      '"Luck is what happens when preparation meets opportunity." — Seneca',
-      '"Difficulties strengthen the mind, as labor does the body." — Seneca',
-      '"Begin at once to live, and count each separate day as a separate life." — Seneca',
-      '"As long as you live, keep learning how to live." — Seneca',
-      '"He who is brave is free." — Seneca',
-      '"No man was ever wise by chance." — Seneca',
-      '"True happiness is to enjoy the present, without anxious dependence upon the future." — Seneca',
-      '"He who has a why to live can bear almost any how." — Friedrich Nietzsche',
-      '"Man is disturbed not by things, but by the views he takes of them." — Epictetus',
-      '"The obstacle in the path becomes the path." — Marcus Aurelius',
-      '"If you want to improve, be content to be thought foolish and stupid." — Epictetus',
-      '"It is not that we have a short time to live, but that we waste much of it." — Seneca',
-      '"How does it help… to make troubles heavier by bemoaning them?" — Seneca',
-      '"To bear trials with a calm mind robs misfortune of its strength." — Seneca',
-      "\"Practice yourself, for heaven's sake, in little things.\" — Epictetus",
-      "\"External things are not the problem. It's your assessment of them.\" — Marcus Aurelius",
-      '"Confine yourself to the present." — Marcus Aurelius',
-      '"No one can rob us of our own will." — Epictetus',
-      '"A gem cannot be polished without friction." — Seneca',
-      "\"In the beginner's mind there are many possibilities, but in the expert's there are few.\" — Shunryu Suzuki",
-      '"Treat every moment as your last. It is not preparation for something else." — Shunryu Suzuki',
-      '"When you do something, you should burn yourself up completely, like a good bonfire." — Shunryu Suzuki',
-      '"Life is like stepping onto a boat which is about to sail out to sea and sink." — Shunryu Suzuki',
-      '"To live is enough." — Shunryu Suzuki',
-      '"The true purpose of Zen is to see things as they are." — Shunryu Suzuki',
-      '"You are perfect as you are, and you could use a little improvement." — Shunryu Suzuki',
-      '"The most important point is to accept yourself and stand on your two feet." — Shunryu Suzuki',
-      '"Smile, breathe, and go slowly." — Thich Nhat Hanh',
-      '"Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor." — Thich Nhat Hanh',
-      '"The present moment is filled with joy and happiness." — Thich Nhat Hanh',
-      '"Walk as if you are kissing the Earth with your feet." — Thich Nhat Hanh',
-      '"Peace is every step." — Thich Nhat Hanh',
-      '"There is no way to happiness — happiness is the way." — Thich Nhat Hanh',
-      '"The best way to take care of the future is to take care of the present moment." — Thich Nhat Hanh',
-      '"Because you are alive, everything is possible." — Thich Nhat Hanh',
-      '"Breathing in, I calm body and mind. Breathing out, I smile." — Thich Nhat Hanh',
-      '"Drink your tea slowly and reverently, as if it is the axis on which the world turns." — Thich Nhat Hanh',
-      '"To study the Way is to study the self." — Dogen',
-      '"To study the self is to forget the self." — Dogen',
-      '"To forget the self is to be enlightened by all things." — Dogen',
-      '"No trace of realization remains, and this no-trace continues endlessly." — Dogen',
-      '"A flower falls, even though we love it; and a weed grows, even though we do not love it." — Dogen',
-      '"Enlightenment is intimacy with all things." — Dogen',
-      '"Those who greatly realize delusion are buddhas." — Dogen',
-      '"When one side is illuminated, the other side is dark." — Dogen',
-      '"Time itself is being, and all being is time." — Dogen',
-      '"Be faithful to the thought of the moment." — Dogen',
-      '"When walking, walk. When eating, eat." — Zen proverb',
-      '"Before enlightenment: chop wood, carry water. After enlightenment: chop wood, carry water." — Zen saying',
-      '"Sit quietly, doing nothing; spring comes, and the grass grows by itself." — Zen saying',
-      '"Let go or be dragged." — Zen proverb',
-      '"No snowflake ever falls in the wrong place." — Zen saying',
-      '"If you understand, things are just as they are; if you do not understand, things are just as they are." — Zen saying',
-      '"When you realize nothing is lacking, the whole world belongs to you." — Lao Tzu',
-      '"Nature does not hurry, yet everything is accomplished." — Lao Tzu',
-      '"A journey of a thousand miles begins with a single step." — Lao Tzu',
-      '"Knowing others is intelligence; knowing yourself is true wisdom." — Lao Tzu',
-      '"The wise man is one who knows what he does not know." — Lao Tzu',
-      '"If you are depressed you are living in the past; if anxious, in the future; if at peace, in the present." — Lao Tzu',
-      '"Do not seek to follow in the footsteps of the wise; seek what they sought." — Basho',
-      '"Every day is a journey, and the journey itself is home." — Basho',
-      '"Sitting quietly, doing nothing, spring comes and the grass grows by itself." — Basho (attributed)',
-      '"Only when you can be extremely pliable and soft can you be extremely hard and strong." — Zen teaching',
-      "\"When you get there, there isn't any there there.\" — Zen teaching",
-      '"The whole moon and the entire sky are reflected in one dewdrop." — Dogen'
-    ];
-
-    function pickRandom(list) {
-      if (!Array.isArray(list) || list.length === 0) return '';
-      return list[Math.floor(Math.random() * list.length)];
-    }
-
-    function refreshSessionInsight() {
-      appState.timer.strategyInsight = pickRandom(OBLIQUE_STRATEGIES);
-      appState.timer.quoteInsight = pickRandom(WISDOM_QUOTES);
-      renderSessionInsight();
-    }
-
-    function renderSessionInsight() {
-      $('#strategyInsight').textContent = appState.timer.strategyInsight;
-      $('#quoteInsight').textContent = appState.timer.quoteInsight;
-    }
-
-    const appState = {
-      pet: {
-        id: 1,
-        name: 'Kumo',
-        colorKey: 0,
-        bodyShape: 'tall-narrow',
-        completedPomodoros: 0,
-        blink: false,
-      },
-      retiredPets: [],
-      showSpecimenArchive: false,
+    const state = {
       timer: {
         focusMinutes: 25,
         breakMinutes: 5,
-        totalSeconds: 25 * 60,
-        remainingSeconds: 25 * 60,
-        running: false,
         mode: 'focus',
         session: 1,
-        tickHandle: null,
-        strategyInsight: '',
-        quoteInsight: '',
+        running: false,
+        intervalId: null,
+        totalSeconds: 25 * 60,
+        remainingSeconds: 25 * 60,
       },
+      trackers: [],
       thoughts: [],
-      archivedThoughts: [],
-      showArchive: false,
-      weather: {
-        source: 'geo',
-        label: 'Awaiting fix',
-        status: 'Acquiring local conditions…',
-        temperatureF: null,
-        windMph: null,
-        updatedAt: null,
-        sigil: '⌛',
-        forecast: [],
-      },
-      productivity: {
-        trackers: [],
-      },
-      audio: {
-        ambientEnabled: false,
-        masterVolume: 35,
-      },
     };
-
-    // ─── Systems Music Engine ────────────────────────────────────────────────
-    // Generative ambient inspired by Brian Eno's "Music for Airports" and Steve
-    // Reich's phasing. Six melodic voices each loop at a co-prime interval
-    // (7 · 11 · 13 · 17 · 19 · 23 s). Their LCM is ~37 days — the evolving
-    // texture never quite repeats.
-    const VOICE_LOOP_MS = [7000, 11000, 13000, 17000, 19000, 23000];
-
-    // A minor pentatonic (A, C, D, E, G) — slightly tense, good for focus
-    const FOCUS_SCALE_HZ = [110, 130.81, 146.83, 164.81, 196, 220, 261.63, 329.63, 392, 440];
-
-    // A major pentatonic (A, B, C#, E, F#) — brighter, restful for breaks
-    const BREAK_SCALE_HZ = [110, 123.47, 138.59, 164.81, 185, 220, 246.94, 329.63, 369.99, 440];
-
-    const audioEngine = {
-      initialized: false,
-      ctx: null,
-      masterGain: null,
-      ambientGain: null,
-      reverbNode: null,
-      reverbGainNode: null,
-      voices: [],          // setTimeout handles for each loop voice
-      timerMode: 'focus',
-      warnedLocked: false,
-      warningTickMarks: new Set(),
-    };
-
-
-    const WEATHER_CODES = {
-      0: { label: 'Clear sky', sigil: '☼' },
-      1: { label: 'Mostly clear', sigil: '◔' },
-      2: { label: 'Partly cloudy', sigil: '◑' },
-      3: { label: 'Overcast', sigil: '☁' },
-      45: { label: 'Fog', sigil: '≋' },
-      48: { label: 'Rime fog', sigil: '≋' },
-      51: { label: 'Light drizzle', sigil: '☂' },
-      53: { label: 'Drizzle', sigil: '☂' },
-      55: { label: 'Dense drizzle', sigil: '☂' },
-      56: { label: 'Freezing drizzle', sigil: '❄' },
-      57: { label: 'Dense freezing drizzle', sigil: '❄' },
-      61: { label: 'Light rain', sigil: '☂' },
-      63: { label: 'Rain', sigil: '☂' },
-      65: { label: 'Heavy rain', sigil: '☂' },
-      66: { label: 'Freezing rain', sigil: '❄' },
-      67: { label: 'Heavy freezing rain', sigil: '❄' },
-      71: { label: 'Light snow', sigil: '❄' },
-      73: { label: 'Snow', sigil: '❄' },
-      75: { label: 'Heavy snow', sigil: '❄' },
-      77: { label: 'Snow grains', sigil: '❄' },
-      80: { label: 'Rain showers', sigil: '☔' },
-      81: { label: 'Strong showers', sigil: '☔' },
-      82: { label: 'Violent showers', sigil: '☔' },
-      85: { label: 'Snow showers', sigil: '❅' },
-      86: { label: 'Heavy snow showers', sigil: '❅' },
-      95: { label: 'Thunderstorm', sigil: '⚡' },
-      96: { label: 'Storm + hail', sigil: '⚡' },
-      99: { label: 'Severe storm', sigil: '⚡' },
-    };
-
-    function setWeatherState(nextState) {
-      appState.weather = { ...appState.weather, ...nextState };
-      renderWeather();
-    }
-
-    function renderWeather() {
-      const weather = appState.weather;
-      $('#weatherSummary').textContent = weather.status;
-      $('#weatherTemp').textContent = weather.temperatureF == null ? '--°F' : `${weather.temperatureF}°F`;
-      $('#weatherWind').textContent = weather.windMph == null ? 'WIND -- MPH' : `WIND ${weather.windMph} MPH`;
-      $('#weatherSource').textContent = `BOOT: ${String(weather.source || 'geo').toUpperCase()}`;
-      $('#weatherUpdated').textContent = weather.updatedAt || 'SYNC --';
-
-      const forecastEl = $('#weatherForecast');
-      const forecast = weather.forecast || [];
-      if (forecast.length) {
-        forecastEl.innerHTML = forecast.map(day => `<div class="forecast-day"><span class="forecast-label">${day.label}</span><span class="forecast-sigil">${day.sigil}</span><span class="forecast-temps"><span class="forecast-hi">${day.hi}°</span><span class="forecast-lo">${day.lo}°</span></span></div>`).join('');
-      } else {
-        forecastEl.innerHTML = '';
-      }
-    }
-
-    function getWeatherDescriptor(code) {
-      return WEATHER_CODES[code] || { label: 'Uncoded sky', sigil: '⌘' };
-    }
-
-    function roundNumber(value) {
-      return Number.isFinite(value) ? Math.round(value) : null;
-    }
-
-    function formatUpdatedTime(value) {
-      const date = value ? new Date(value) : new Date();
-      return `SYNC ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    function formatForecastStatus(locationLabel, descriptor, isDay) {
-      return `${locationLabel} · ${descriptor.label} · ${isDay ? 'day cycle' : 'night cycle'}`;
-    }
-
-    async function fetchWeatherForCoordinates(latitude, longitude, locationLabel, sourceLabel) {
-      setWeatherState({
-        source: sourceLabel,
-        label: locationLabel,
-        status: `Fetching Open-Meteo conditions for ${locationLabel}…`,
-        temperatureF: null,
-        windMph: null,
-        updatedAt: 'SYNC --',
-        sigil: '⌛',
-        forecast: [],
-      });
-
-      const url = new URL('https://api.open-meteo.com/v1/forecast');
-      url.search = new URLSearchParams({
-        latitude: String(latitude),
-        longitude: String(longitude),
-        current: 'temperature_2m,weather_code,wind_speed_10m,is_day',
-        daily: 'temperature_2m_max,temperature_2m_min,weather_code',
-        temperature_unit: 'fahrenheit',
-        wind_speed_unit: 'mph',
-        forecast_days: '7',
-        timezone: 'auto',
-      }).toString();
-
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`forecast ${response.status}`);
-      const payload = await response.json();
-      const current = payload.current;
-      if (!current) throw new Error('forecast missing current weather');
-
-      const descriptor = getWeatherDescriptor(current.weather_code);
-
-      const forecast = [];
-      const daily = payload.daily;
-      if (daily && Array.isArray(daily.time)) {
-        for (let i = 0; i < daily.time.length; i++) {
-          const date = new Date(daily.time[i] + 'T12:00:00');
-          const dayDesc = getWeatherDescriptor(daily.weather_code[i]);
-          forecast.push({
-            label: date.toLocaleDateString([], { weekday: 'short' }).toUpperCase().slice(0, 3),
-            sigil: dayDesc.sigil,
-            hi: roundNumber(daily.temperature_2m_max[i]),
-            lo: roundNumber(daily.temperature_2m_min[i]),
-          });
-        }
-      }
-
-      setWeatherState({
-        source: sourceLabel,
-        label: locationLabel,
-        status: formatForecastStatus(locationLabel, descriptor, Boolean(current.is_day)),
-        temperatureF: roundNumber(current.temperature_2m),
-        windMph: roundNumber(current.wind_speed_10m),
-        updatedAt: formatUpdatedTime(current.time),
-        sigil: descriptor.sigil,
-        forecast,
-      });
-      logFeed(`Weather strip synced via Open-Meteo for ${locationLabel}.`);
-    }
-
-    async function geocodeLocation(query) {
-      const url = new URL('https://geocoding-api.open-meteo.com/v1/search');
-      url.search = new URLSearchParams({
-        name: query,
-        count: '1',
-        language: 'en',
-        format: 'json',
-      }).toString();
-
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`geocode ${response.status}`);
-      const payload = await response.json();
-      const match = payload.results?.[0];
-      if (!match) throw new Error('no geocode result');
-
-      const parts = [match.name, match.admin1, match.country_code].filter(Boolean);
-      return {
-        latitude: match.latitude,
-        longitude: match.longitude,
-        label: parts.join(', '),
-      };
-    }
-
-    function loadSavedWeatherLocation() {
-      return localStorage.getItem('retroWeatherManualLocation') || '';
-    }
-
-    function saveWeatherLocation(query) {
-      localStorage.setItem('retroWeatherManualLocation', query);
-    }
-
-    function clearWeatherLocation() {
-      localStorage.removeItem('retroWeatherManualLocation');
-    }
-
-    async function useManualLocation(query) {
-      const cleanQuery = query.trim();
-      if (!cleanQuery) {
-        setWeatherState({
-          source: 'manual',
-          status: 'Enter a city or ZIP to override geolocation.',
-          sigil: '⌕',
-        });
-        return;
-      }
-
-      setWeatherState({
-        source: 'manual',
-        label: cleanQuery,
-        status: `Resolving ${cleanQuery}…`,
-        temperatureF: null,
-        windMph: null,
-        updatedAt: 'SYNC --',
-        sigil: '⌕',
-        forecast: [],
-      });
-
-      try {
-        const match = await geocodeLocation(cleanQuery);
-        saveWeatherLocation(cleanQuery);
-        await fetchWeatherForCoordinates(match.latitude, match.longitude, match.label, 'manual');
-      } catch (error) {
-        setWeatherState({
-          source: 'manual',
-          label: cleanQuery,
-          status: `Manual fallback failed for ${cleanQuery}. Try a broader city or ZIP.`,
-          sigil: '!',
-        });
-        logFeed(`Weather fallback failed for ${cleanQuery}: ${error.message}.`);
-      }
-    }
-
-    function triggerSavedWeatherFallback() {
-      const saved = loadSavedWeatherLocation().trim();
-      if (!saved) return false;
-      useManualLocation(saved);
-      return true;
-    }
-
-    function requestGeolocationWeather() {
-      if (!('geolocation' in navigator)) {
-        const restored = triggerSavedWeatherFallback();
-        if (!restored) {
-          setWeatherState({
-            source: 'manual',
-            status: 'Geolocation unavailable. Use the manual fallback field.',
-            sigil: '!',
-          });
-        }
-        logFeed('Weather strip: geolocation unavailable, manual fallback armed.');
-        return;
-      }
-
-      setWeatherState({
-        source: 'geo',
-        label: 'Current position',
-        status: 'Requesting one-time geolocation fix…',
-        sigil: '⌛',
-      });
-
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        clearWeatherLocation();
-        try {
-          await fetchWeatherForCoordinates(latitude, longitude, 'Current position', 'geo');
-        } catch (error) {
-          setWeatherState({
-            source: 'manual',
-            label: 'Fallback ready',
-            status: 'Weather lookup failed after geolocation. Try the manual location fallback.',
-            sigil: '!',
-          });
-          logFeed(`Weather fetch failed after geolocation: ${error.message}.`);
-        }
-      }, (error) => {
-        const restored = triggerSavedWeatherFallback();
-        if (!restored) {
-          setWeatherState({
-            source: 'manual',
-            label: 'Fallback ready',
-            status: 'Geolocation denied or timed out. Use the manual location fallback.',
-            sigil: '!',
-          });
-        }
-        logFeed(`Weather strip geolocation skipped (${error.code}). Manual fallback enabled.`);
-      }, {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 300000,
-      });
-    }
-
-    function initWeather() {
-      $('#weatherLocationInput').value = loadSavedWeatherLocation();
-      renderWeather();
-      requestGeolocationWeather();
-    }
-
-    function logFeed(message) {
-      const feed = $('#terminalFeed');
-      const line = document.createElement('div');
-      line.className = 'feed-line';
-      const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      line.textContent = `[${ts}] ${message}`;
-      feed.prepend(line);
-      while (feed.children.length > 18) feed.removeChild(feed.lastChild);
-    }
-
-    function saveThoughts() {
-      localStorage.setItem('retroThoughtLog', JSON.stringify(appState.thoughts));
-    }
-
-    function saveArchivedThoughts() {
-      localStorage.setItem('retroThoughtArchive', JSON.stringify(appState.archivedThoughts));
-    }
-
-    function archiveOverflowThoughts() {
-      if (appState.thoughts.length <= 50) return 0;
-      const overflow = appState.thoughts.slice(50);
-      appState.thoughts = appState.thoughts.slice(0, 50);
-      appState.archivedThoughts = [...overflow, ...appState.archivedThoughts];
-      return overflow.length;
-    }
-
-    function normalizeThought(entry) {
-      if (!entry) return null;
-      const body = String(entry.body ?? entry.text ?? '').trim();
-      if (!body) return null;
-      return {
-        body,
-        time: entry.time || new Date().toLocaleString(),
-        tag: entry.tag || 'FOCUS',
-        status: ['active', 'marked', 'crossed'].includes(entry.status) ? entry.status : 'active',
-      };
-    }
-
-    function loadThoughts() {
-      try {
-        const raw = localStorage.getItem('retroThoughtLog');
-        const parsed = raw ? JSON.parse(raw) : [];
-        appState.thoughts = Array.isArray(parsed) ? parsed.map(normalizeThought).filter(Boolean) : [];
-      } catch {
-        appState.thoughts = [];
-      }
-
-      try {
-        const rawArchive = localStorage.getItem('retroThoughtArchive');
-        const parsedArchive = rawArchive ? JSON.parse(rawArchive) : [];
-        appState.archivedThoughts = Array.isArray(parsedArchive) ? parsedArchive.map(normalizeThought).filter(Boolean) : [];
-      } catch {
-        appState.archivedThoughts = [];
-      }
-
-      const movedCount = archiveOverflowThoughts();
-      if (movedCount > 0) {
-        saveThoughts();
-        saveArchivedThoughts();
-      }
-    }
-
-
-
-    function saveTrackers() {
-      localStorage.setItem('retroProductivityTrackers', JSON.stringify(appState.productivity.trackers));
-    }
-
-    function normalizeTracker(rawTracker) {
-      if (!rawTracker || typeof rawTracker !== 'object') return null;
-      const name = String(rawTracker.name || '').trim();
-      const start = Number(rawTracker.start);
-      const end = Number(rawTracker.end);
-      if (!name || !Number.isInteger(start) || !Number.isInteger(end) || start > end) return null;
-      const checkedNumbers = Array.isArray(rawTracker.checkedNumbers)
-        ? rawTracker.checkedNumbers.map(Number).filter(Number.isInteger).filter((value) => value >= start && value <= end)
-        : [];
-      return {
-        id: rawTracker.id || `tracker-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        name,
-        start,
-        end,
-        checkedNumbers: [...new Set(checkedNumbers)],
-        createdAt: rawTracker.createdAt || new Date().toISOString(),
-        completedAt: rawTracker.completedAt || null,
-      };
-    }
-
-    function loadTrackers() {
-      try {
-        const raw = localStorage.getItem('retroProductivityTrackers');
-        const parsed = raw ? JSON.parse(raw) : [];
-        appState.productivity.trackers = Array.isArray(parsed) ? parsed.map(normalizeTracker).filter(Boolean) : [];
-        appState.productivity.trackers.forEach(markTrackerCompletionState);
-      } catch {
-        appState.productivity.trackers = [];
-      }
-    }
-
-    function formatTrackerTimestamp(isoDate) {
-      if (!isoDate) return '--';
-      const parsed = new Date(isoDate);
-      if (Number.isNaN(parsed.getTime())) return '--';
-      return parsed.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
-
-    function createTrackerGrid(tracker) {
-      const cells = [];
-      const firstColumnBase = Math.floor(tracker.start / 10) * 10;
-      const lastColumnBase = Math.floor(tracker.end / 10) * 10;
-      const columns = Math.floor((lastColumnBase - firstColumnBase) / 10) + 1;
-      const rows = 10;
-
-      for (let digit = 0; digit < rows; digit += 1) {
-        for (let column = 0; column < columns; column += 1) {
-          const value = firstColumnBase + (column * 10) + digit;
-          const inRange = value >= tracker.start && value <= tracker.end;
-          cells.push({
-            value,
-            inRange,
-            checked: inRange && tracker.checkedNumbers.includes(value),
-            label: inRange ? String(value) : '-',
-          });
-        }
-      }
-
-      return { cells, columns, rows };
-    }
-
-    function getTrackerInRangeCount(tracker) {
-      return tracker.end - tracker.start + 1;
-    }
-
-    function markTrackerCompletionState(tracker) {
-      const total = getTrackerInRangeCount(tracker);
-      const isComplete = tracker.checkedNumbers.length >= total;
-      tracker.completedAt = isComplete ? (tracker.completedAt || new Date().toISOString()) : null;
-      return isComplete;
-    }
-
-    function getTrackerCardMarkup(tracker) {
-      const total = getTrackerInRangeCount(tracker);
-      const checkedCount = tracker.checkedNumbers.length;
-      const { cells, columns, rows } = createTrackerGrid(tracker);
-
-      const gridMarkup = cells.map((cell) => {
-        if (!cell.inRange) {
-          return '<div class="tracker-grid-cell tracker-cell-out-range" aria-hidden="true">-</div>';
-        }
-        const completeClass = cell.checked ? ' tracker-cell-complete' : '';
-        return `<button type="button" class="tracker-grid-cell tracker-cell-in-range${completeClass}" data-tracker-id="${tracker.id}" data-number="${cell.value}" aria-label="Toggle ${cell.value} for ${escapeHtml(tracker.name)}">${cell.label}</button>`;
-      }).join('');
-
-      return `
-        <article class="tracker-card">
-          <div class="tracker-header">
-            <div>
-              <div class="tracker-title">${escapeHtml(tracker.name)}</div>
-              <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
-            </div>
-            <div class="tracker-count">${checkedCount}/${total}</div>
-          </div>
-          <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content); grid-template-rows: repeat(${rows}, max-content);" role="grid" aria-label="${escapeHtml(tracker.name)} grid tracker">
-              ${gridMarkup}
-            </div>
-          </div>
-          <form class="tracker-range-editor" data-tracker-range-form="${tracker.id}">
-            <div class="tracker-form-grid">
-              <label>Start
-                <input type="number" name="start" value="${tracker.start}" required />
-              </label>
-              <label>End
-                <input type="number" name="end" value="${tracker.end}" required />
-              </label>
-            </div>
-            <button type="submit" class="secondary">Update Range</button>
-          </form>
-          <div class="tracker-meta">
-            <span>Created ${formatTrackerTimestamp(tracker.createdAt)}</span>
-            ${tracker.completedAt ? `<span>Completed ${formatTrackerTimestamp(tracker.completedAt)}</span>` : '<span>In progress</span>'}
-          </div>
-        </article>
-      `;
-    }
-
-    function getCompletedTrackerCardMarkup(tracker) {
-      const { cells, columns, rows } = createTrackerGrid(tracker);
-      const gridMarkup = cells.map((cell) => {
-        if (!cell.inRange) {
-          return '<div class="tracker-grid-cell tracker-cell-out-range" aria-hidden="true">-</div>';
-        }
-        const completeClass = cell.checked ? ' tracker-cell-complete' : '';
-        return `<div class="tracker-grid-cell tracker-cell-in-range${completeClass}" aria-hidden="true">${cell.label}</div>`;
-      }).join('');
-
-      return `
-        <article class="tracker-card tracker-card-compact">
-          <div>
-            <div class="tracker-title">${escapeHtml(tracker.name)}</div>
-            <div class="tracker-range">${tracker.start} to ${tracker.end}</div>
-          </div>
-          <div class="tracker-grid-wrap">
-            <div class="tracker-grid" style="grid-template-columns: repeat(${columns}, max-content); grid-template-rows: repeat(${rows}, max-content);" aria-label="${escapeHtml(tracker.name)} completed grid snapshot">
-              ${gridMarkup}
-            </div>
-          </div>
-          <div class="tracker-meta">
-            <span>Completed ${formatTrackerTimestamp(tracker.completedAt)}</span>
-          </div>
-        </article>
-      `;
-    }
-
-    function renderTrackers() {
-      const activeRoot = $('#activeTrackers');
-      const completeRoot = $('#completedTrackers');
-      const activeTrackers = appState.productivity.trackers.filter((tracker) => !tracker.completedAt);
-      const completedTrackers = appState.productivity.trackers.filter((tracker) => tracker.completedAt);
-
-      activeRoot.innerHTML = activeTrackers.length
-        ? activeTrackers.map(getTrackerCardMarkup).join('')
-        : '<div class="tracker-empty-card">No active trackers yet.</div>';
-
-      completeRoot.innerHTML = completedTrackers.length
-        ? completedTrackers.map(getCompletedTrackerCardMarkup).join('')
-        : '<div class="tracker-empty-card">No completed grids yet.</div>';
-    }
-
-    function validateTrackerInputs(name, start, end) {
-      if (!name.trim()) return 'Tracker name is required.';
-      if (!Number.isInteger(start) || !Number.isInteger(end)) return 'Start and end values must be whole numbers.';
-      if (start > end) return 'Start number must be less than or equal to end number.';
-      const count = end - start + 1;
-      if (count > 1200) return 'Range is too large. Please keep each tracker at 1200 cells or fewer.';
-      return '';
-    }
-
-    function createTracker(name, start, end) {
-      const tracker = normalizeTracker({
-        id: `tracker-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-        name,
-        start,
-        end,
-        checkedNumbers: [],
-        createdAt: new Date().toISOString(),
-        completedAt: null,
-      });
-      if (!tracker) return;
-      appState.productivity.trackers.unshift(tracker);
-      saveTrackers();
-      renderTrackers();
-      logFeed(`Tracker created: ${tracker.name} (${tracker.start}-${tracker.end}).`);
-    }
-
-    function updateTrackerRange(trackerId, start, end) {
-      const tracker = appState.productivity.trackers.find((entry) => entry.id === trackerId);
-      if (!tracker) return 'Tracker not found.';
-      const error = validateTrackerInputs(tracker.name, start, end);
-      if (error) return error;
-      tracker.start = start;
-      tracker.end = end;
-      tracker.checkedNumbers = tracker.checkedNumbers.filter((value) => value >= start && value <= end);
-      markTrackerCompletionState(tracker);
-      saveTrackers();
-      renderTrackers();
-      logFeed(`Tracker range updated: ${tracker.name} (${tracker.start}-${tracker.end}).`);
-      return '';
-    }
-
-    function toggleTrackerCell(trackerId, value) {
-      const tracker = appState.productivity.trackers.find((entry) => entry.id === trackerId);
-      if (!tracker) return;
-      if (value < tracker.start || value > tracker.end) return;
-      const checkedSet = new Set(tracker.checkedNumbers);
-      if (checkedSet.has(value)) checkedSet.delete(value);
-      else checkedSet.add(value);
-      tracker.checkedNumbers = [...checkedSet].sort((a, b) => a - b);
-      const wasComplete = Boolean(tracker.completedAt);
-      const isComplete = markTrackerCompletionState(tracker);
-      saveTrackers();
-      renderTrackers();
-      if (!wasComplete && isComplete) {
-        logFeed(`Tracker completed: ${tracker.name}.`);
-      }
-      if (wasComplete && !isComplete) {
-        logFeed(`Tracker reopened: ${tracker.name}.`);
-      }
-    }
-
-    function getBodyShapeByPetId(petId) {
-      const shapes = ['round', 'tall-narrow', 'wide-squat'];
-      return shapes[Math.abs(Number(petId) || 0) % shapes.length];
-    }
-
-    function createNextSpecimen(previousPet = appState.pet) {
-      const nextId = (Number(previousPet?.id) || 0) + 1;
-      return {
-        id: nextId,
-        name: specimenNames[nextId % specimenNames.length],
-        colorKey: ((Number(previousPet?.colorKey) || 0) + 1) % speciesPalettes.length,
-        bodyShape: getBodyShapeByPetId(nextId),
-        completedPomodoros: 0,
-        blink: false,
-      };
-    }
-
-    function normalizePet(rawPet) {
-      if (!rawPet || typeof rawPet !== 'object') return null;
-      const id = Number(rawPet.id);
-      const safeId = Number.isFinite(id) && id > 0 ? Math.floor(id) : 1;
-      return {
-        id: safeId,
-        name: String(rawPet.name || specimenNames[safeId % specimenNames.length]),
-        colorKey: Math.abs(Number(rawPet.colorKey) || 0) % speciesPalettes.length,
-        bodyShape: ['round', 'tall-narrow', 'wide-squat'].includes(rawPet.bodyShape) ? rawPet.bodyShape : getBodyShapeByPetId(safeId),
-        completedPomodoros: Math.max(0, Math.floor(Number(rawPet.completedPomodoros) || 0)),
-        blink: Boolean(rawPet.blink),
-      };
-    }
-
-    function normalizeRetiredPet(rawPet) {
-      if (!rawPet || typeof rawPet !== 'object') return null;
-      const id = Number(rawPet.id);
-      if (!Number.isFinite(id)) return null;
-      return {
-        id: Math.floor(id),
-        name: String(rawPet.name || 'Unknown'),
-        colorKey: Math.abs(Number(rawPet.colorKey) || 0) % speciesPalettes.length,
-        bodyShape: ['round', 'tall-narrow', 'wide-squat'].includes(rawPet.bodyShape) ? rawPet.bodyShape : 'round',
-        retiredAt: rawPet.retiredAt || new Date().toISOString(),
-        totalPomodoros: Math.max(0, Math.floor(Number(rawPet.totalPomodoros) || 0)),
-      };
-    }
-
-    function saveRetiredPets() {
-      localStorage.setItem('dwell_retired_pets', JSON.stringify(appState.retiredPets));
-    }
-
-    function loadRetiredPets() {
-      try {
-        const raw = localStorage.getItem('dwell_retired_pets');
-        const parsed = raw ? JSON.parse(raw) : [];
-        appState.retiredPets = Array.isArray(parsed) ? parsed.map(normalizeRetiredPet).filter(Boolean) : [];
-      } catch {
-        appState.retiredPets = [];
-      }
-    }
-
-    function saveTimerSettings() {
-      const payload = {
-        focusMinutes: appState.timer.focusMinutes,
-        breakMinutes: appState.timer.breakMinutes,
-        session: appState.timer.session,
-        pet: {
-          id: appState.pet.id,
-          name: appState.pet.name,
-          colorKey: appState.pet.colorKey,
-          bodyShape: appState.pet.bodyShape,
-          completedPomodoros: appState.pet.completedPomodoros,
-        },
-        showSpecimenArchive: appState.showSpecimenArchive,
-        ambientEnabled: appState.audio.ambientEnabled,
-        masterVolume: appState.audio.masterVolume,
-      };
-      localStorage.setItem('retroPomodoroSettings', JSON.stringify(payload));
-    }
-
-    function loadTimerSettings() {
-      try {
-        const raw = localStorage.getItem('retroPomodoroSettings');
-        if (!raw) return;
-        const saved = JSON.parse(raw);
-        appState.timer.focusMinutes = Number(saved.focusMinutes) || 25;
-        appState.timer.breakMinutes = Number(saved.breakMinutes) || 5;
-        appState.timer.session = Number(saved.session) || 1;
-        const normalizedPet = normalizePet(saved.pet || saved);
-        if (normalizedPet) {
-          appState.pet = { ...appState.pet, ...normalizedPet };
-        }
-        appState.showSpecimenArchive = Boolean(saved.showSpecimenArchive);
-        appState.audio.ambientEnabled = Boolean(saved.ambientEnabled);
-        const savedVolume = Number(saved.masterVolume);
-        if (Number.isFinite(savedVolume)) {
-          appState.audio.masterVolume = Math.max(0, Math.min(100, Math.round(savedVolume)));
-        }
-        appState.timer.totalSeconds = appState.timer.focusMinutes * 60;
-        appState.timer.remainingSeconds = appState.timer.totalSeconds;
-      } catch {}
-    }
-
-    function setMasterVolume(value) {
-      const parsed = Number(value);
-      const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : 35;
-      appState.audio.masterVolume = Math.round(clamped);
-      if (audioEngine.masterGain && audioEngine.ctx) {
-        audioEngine.masterGain.gain.setTargetAtTime(clamped / 100, audioEngine.ctx.currentTime, 0.02);
-      }
-      const volumeInput = $('#audioVolumeInput');
-      if (volumeInput) volumeInput.value = String(Math.round(clamped));
-      saveTimerSettings();
-    }
-
-    // Build a synthetic convolution reverb from decaying white noise.
-    // Generates a lush, 3-second tail without needing an impulse-response file.
-    function createSyntheticReverb(ctx) {
-      const convolver = ctx.createConvolver();
-      const length = Math.floor(ctx.sampleRate * 3.2);
-      const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
-      for (let ch = 0; ch < 2; ch++) {
-        const data = impulse.getChannelData(ch);
-        for (let i = 0; i < length; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.exp(-2.4 * i / ctx.sampleRate);
-        }
-      }
-      convolver.buffer = impulse;
-      return convolver;
-    }
-
-    // ─── Audio Field Visualization ────────────────────────────────────────────
-    // A Game-of-Life-inspired cellular automaton seeded by the ambient engine.
-    // Each of the six voices maps to a row-band; fired notes seed living cells
-    // at a column derived from the note's pitch index. Cells age and die via
-    // Conway's rules, with slow energy decay so the pattern breathes naturally.
-
-    const VIZ_COLS = 48;
-    const VIZ_ROWS = 18;         // 3 rows per voice
-    const VIZ_ROWS_PER_VOICE = 3;
-    const VIZ_GOL_MS = 130;      // ms between automaton generations
-    const VIZ_NOISE_RATE = 0.004; // passive shimmer: prob per cell per tick
-
-    // RGB triples for each voice — warm palette for light mode
-    const VIZ_COLORS_LIGHT = [
-      [100, 130, 200],   // voice 0 · 7 s  · indigo
-      [90,  175, 130],   // voice 1 · 11 s · sage
-      [200, 148,  60],   // voice 2 · 13 s · amber
-      [195, 100, 110],   // voice 3 · 17 s · rose
-      [155, 118, 205],   // voice 4 · 19 s · violet
-      [65,  180, 185],   // voice 5 · 23 s · teal
-    ];
-    const VIZ_COLORS_DARK = [
-      [110, 155, 235],
-      [95,  210, 145],
-      [230, 170,  65],
-      [235, 110, 120],
-      [175, 138, 240],
-      [70,  215, 210],
-    ];
-
-    let _vizEnergy  = new Float32Array(VIZ_COLS * VIZ_ROWS);
-    let _vizVoice   = new Int8Array(VIZ_COLS * VIZ_ROWS).fill(-1);
-    let _vizLastTick = 0;
-
-    // Seed living cells when a voice fires a note.
-    function vizSeed(voiceIndex, noteIdx) {
-      const rowBase = voiceIndex * VIZ_ROWS_PER_VOICE;
-      // Map note index (0-9) across the full column width.
-      const col = Math.round((noteIdx / 9) * (VIZ_COLS - 4)) + 1;
-      const cluster = 1 + Math.floor(Math.random() * 3);
-      for (let s = 0; s < cluster; s++) {
-        const r = rowBase + Math.floor(Math.random() * VIZ_ROWS_PER_VOICE);
-        const c = Math.max(0, Math.min(VIZ_COLS - 1, col + Math.floor(Math.random() * 3) - 1));
-        const idx = r * VIZ_COLS + c;
-        _vizEnergy[idx] = 0.65 + Math.random() * 0.35;
-        _vizVoice[idx]  = voiceIndex;
-      }
-    }
-
-    // Advance one automaton generation.
-    function vizGolStep() {
-      const next      = new Float32Array(_vizEnergy);
-      const nextVoice = new Int8Array(_vizVoice);
-
-      for (let r = 0; r < VIZ_ROWS; r++) {
-        for (let c = 0; c < VIZ_COLS; c++) {
-          const idx = r * VIZ_COLS + c;
-          let live = 0;
-          const voiceTally = [0, 0, 0, 0, 0, 0];
-          let eSum = 0;
-
-          for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-              if (dr === 0 && dc === 0) continue;
-              const nr = r + dr, nc = c + dc;
-              if (nr >= 0 && nr < VIZ_ROWS && nc >= 0 && nc < VIZ_COLS) {
-                const nidx = nr * VIZ_COLS + nc;
-                if (_vizEnergy[nidx] > 0.18) {
-                  live++;
-                  eSum += _vizEnergy[nidx];
-                  if (_vizVoice[nidx] >= 0) voiceTally[_vizVoice[nidx]]++;
-                }
-              }
-            }
-          }
-
-          const alive = _vizEnergy[idx] > 0.18;
-          if (alive) {
-            // Stable neighbourhood: slow fade.  Crowded/lonely: faster decay.
-            next[idx] = (live === 2 || live === 3)
-              ? _vizEnergy[idx] * 0.95
-              : _vizEnergy[idx] * 0.72;
-            if (next[idx] < 0.02) { next[idx] = 0; nextVoice[idx] = -1; }
-          } else if (live === 3) {
-            // Birth — inherit dominant neighbour voice and a fraction of their energy.
-            next[idx] = (eSum / live) * 0.78;
-            const dom = voiceTally.indexOf(Math.max(...voiceTally));
-            nextVoice[idx] = dom;
-          } else if (_vizEnergy[idx] > 0.02) {
-            // Sub-threshold residual energy: keep decaying so ghosts don't freeze.
-            next[idx] = _vizEnergy[idx] * 0.80;
-            if (next[idx] < 0.02) { next[idx] = 0; nextVoice[idx] = -1; }
-          }
-        }
-      }
-
-      // Passive noise-floor shimmer: random faint seeds scattered everywhere.
-      for (let i = 0; i < VIZ_COLS * VIZ_ROWS; i++) {
-        if (next[i] < 0.02 && Math.random() < VIZ_NOISE_RATE) {
-          next[i] = 0.08 + Math.random() * 0.10;
-          nextVoice[i] = Math.floor(Math.random() * 6);
-        }
-      }
-
-      _vizEnergy = next;
-      _vizVoice  = nextVoice;
-    }
-
-    // Render the automaton grid onto the canvas each animation frame.
-    function vizRender(timestamp) {
-      const canvas = document.getElementById('audioVizCanvas');
-      if (!canvas) return;
-      const ctx2d = canvas.getContext('2d');
-      const W = canvas.width;
-      const H = canvas.height;
-
-      if (timestamp - _vizLastTick > VIZ_GOL_MS) {
-        vizGolStep();
-        _vizLastTick = timestamp;
-      }
-
-      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const COLORS = dark ? VIZ_COLORS_DARK : VIZ_COLORS_LIGHT;
-      const [bgR, bgG, bgB] = dark ? [28, 23, 16] : [242, 235, 221];
-
-      ctx2d.fillStyle = `rgb(${bgR},${bgG},${bgB})`;
-      ctx2d.fillRect(0, 0, W, H);
-
-      const cw = W / VIZ_COLS;
-      const ch = H / VIZ_ROWS;
-
-      for (let r = 0; r < VIZ_ROWS; r++) {
-        for (let c = 0; c < VIZ_COLS; c++) {
-          const e = _vizEnergy[r * VIZ_COLS + c];
-          if (e < 0.02) continue;
-          const v = _vizVoice[r * VIZ_COLS + c];
-          const [cr, cg, cb] = COLORS[v >= 0 ? v : 0];
-          const alpha = Math.min(1, Math.pow(e, 0.55));
-          ctx2d.fillStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(3)})`;
-          ctx2d.fillRect(
-            Math.round(c * cw),
-            Math.round(r * ch),
-            Math.max(1, Math.round(cw) - 1),
-            Math.max(1, Math.round(ch) - 1)
-          );
-        }
-      }
-
-      requestAnimationFrame(vizRender);
-    }
-
-    // Build legend pips (one per voice) — called once during init.
-    function initVizLegend() {
-      const legend = document.getElementById('audioFieldLegend');
-      if (!legend) return;
-      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const COLORS = dark ? VIZ_COLORS_DARK : VIZ_COLORS_LIGHT;
-      COLORS.forEach(([r, g, b], i) => {
-        const pip = document.createElement('span');
-        pip.className = 'audio-field-pip';
-        pip.style.background = `rgb(${r},${g},${b})`;
-        pip.title = `Voice ${i + 1} · ${VOICE_LOOP_MS[i] / 1000}s loop`;
-        legend.appendChild(pip);
-      });
-    }
-
-    // A single loop voice: picks a note from the current scale and schedules
-    // itself to fire again after its co-prime loop duration.
-    function scheduleVoice(index) {
-      if (!audioEngine.initialized || !audioEngine.ctx || !audioEngine.ambientGain) return;
-      const ctx = audioEngine.ctx;
-
-      if (ctx.state === 'running' && appState.audio.ambientEnabled) {
-        const scale = audioEngine.timerMode === 'focus' ? FOCUS_SCALE_HZ : BREAK_SCALE_HZ;
-        const density = audioEngine.timerMode === 'focus' ? 0.50 : 0.35;
-
-        if (Math.random() < density) {
-          // Weight note selection toward lower registers for gravity
-          const noteIdx = Math.floor(Math.pow(Math.random(), 1.5) * scale.length);
-          const freq = scale[noteIdx];
-          vizSeed(index, noteIdx);
-
-          const now = ctx.currentTime;
-          const attack  = 0.35 + Math.random() * 0.40;
-          const sustain = 0.30 + Math.random() * 1.20;
-          const release = 2.80 + Math.random() * 2.50;
-          const peak    = 0.028 + Math.random() * 0.018;
-
-          const osc = ctx.createOscillator();
-          const env = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = freq;
-          env.gain.setValueAtTime(0.0001, now);
-          env.gain.linearRampToValueAtTime(peak, now + attack);
-          env.gain.setValueAtTime(peak, now + attack + sustain);
-          env.gain.exponentialRampToValueAtTime(0.0001, now + attack + sustain + release);
-          osc.connect(env);
-          env.connect(audioEngine.ambientGain);         // dry
-          if (audioEngine.reverbGainNode) {
-            env.connect(audioEngine.reverbGainNode);    // wet send
-          }
-          osc.start(now);
-          osc.stop(now + attack + sustain + release + 0.1);
-        }
-      }
-
-      audioEngine.voices[index] = setTimeout(() => scheduleVoice(index), VOICE_LOOP_MS[index]);
-    }
-
-    function stopVoices() {
-      audioEngine.voices.forEach(h => clearTimeout(h));
-      audioEngine.voices = [];
-    }
-
-    // Stagger the initial voice firings so they don't all pile up at start.
-    // Cap initial offset at 2 s so the texture begins promptly after enabling.
-    function startVoices() {
-      stopVoices();
-      VOICE_LOOP_MS.forEach((loopMs, i) => {
-        const offset = Math.random() * Math.min(loopMs, 2000);
-        audioEngine.voices[i] = setTimeout(() => scheduleVoice(i), offset);
-      });
-    }
-
-    // Cue tones with optional reverb send — softer and bell-like compared to
-    // the old playTone(), so they blend with the generative texture.
-    function playChime(frequency, {
-      startAt = 0,
-      duration = 0.10,
-      gain = 0.08,
-      attack = 0.012,
-      release = 0.40,
-      endFrequency = null,
-      wet = 0.45,
-    } = {}) {
-      if (!audioEngine.initialized || !audioEngine.ctx || !audioEngine.masterGain) return;
-      if (audioEngine.ctx.state !== 'running') return;
-      const ctx = audioEngine.ctx;
-      const now = ctx.currentTime + startAt;
-      const osc = ctx.createOscillator();
-      const env = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(frequency, now);
-      if (Number.isFinite(endFrequency) && endFrequency > 0) {
-        osc.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
-      }
-      env.gain.setValueAtTime(0.0001, now);
-      env.gain.linearRampToValueAtTime(gain, now + attack);
-      env.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
-      osc.connect(env);
-      env.connect(audioEngine.masterGain);
-      if (audioEngine.reverbNode && wet > 0) {
-        const send = ctx.createGain();
-        send.gain.value = wet;
-        env.connect(send);
-        send.connect(audioEngine.reverbNode);
-        // reverbNode output already wired to masterGain in setupAmbientNodes
-      }
-      osc.start(now);
-      osc.stop(now + duration + release + 0.1);
-    }
-
-    // Focus start: two ascending notes from the root — expectant, upward.
-    function playFocusStartCue() {
-      playChime(220.00, { duration: 0.12, gain: 0.07, attack: 0.010, release: 0.55, wet: 0.5 });
-      playChime(329.63, { startAt: 0.20, duration: 0.10, gain: 0.08, attack: 0.010, release: 0.65, wet: 0.5 });
-    }
-
-    // Break start: gentle sweep from fifth down to root — a slow exhale.
-    function playBreakStartCue() {
-      playChime(329.63, { duration: 0.18, gain: 0.06, attack: 0.015, release: 0.90, endFrequency: 220.00, wet: 0.55 });
-    }
-
-    // Session complete: four-note ascending phrase with growing reverb.
-    function playSessionCompleteCue() {
-      playChime(220.00, { startAt: 0.00, duration: 0.12, gain: 0.065, attack: 0.010, release: 0.60, wet: 0.40 });
-      playChime(293.66, { startAt: 0.16, duration: 0.12, gain: 0.070, attack: 0.010, release: 0.70, wet: 0.45 });
-      playChime(369.99, { startAt: 0.34, duration: 0.14, gain: 0.075, attack: 0.010, release: 0.80, wet: 0.50 });
-      playChime(440.00, { startAt: 0.54, duration: 0.16, gain: 0.080, attack: 0.012, release: 1.00, wet: 0.60 });
-    }
-
-    // Warning: a soft overtone bell — present but not jarring.
-    function playWarningTick() {
-      playChime(880, { duration: 0.04, gain: 0.022, attack: 0.004, release: 0.18, wet: 0.30 });
-    }
-
-    function setupAmbientNodes() {
-      const { ctx } = audioEngine;
-
-      // Top-level ambient on/off gate (fades in/out cleanly)
-      const ambientGain = ctx.createGain();
-      ambientGain.gain.value = 0;
-
-      // Reverb: one shared ConvolverNode used by both ambient voices and cue tones.
-      // Its output goes straight to masterGain (not through ambientGain) so the
-      // reverb tail keeps sounding naturally when the ambient gate fades out.
-      // The dry ambient signals are gated through ambientGain; wet signals are not.
-      const reverb = createSyntheticReverb(ctx);
-      const reverbGainNode = ctx.createGain();
-      reverbGainNode.gain.value = 0.22;   // pre-reverb send level from ambient voices
-      reverbGainNode.connect(reverb);
-      reverb.connect(audioEngine.masterGain);
-
-      // Noise floor: very quiet bandpass-filtered noise whose centre frequency
-      // drifts slowly — adds barely-perceptible room breathiness.
-      const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
-      const noiseData = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < noiseData.length; i++) {
-        noiseData[i] = (Math.random() * 2 - 1) * 0.4;
-      }
-      const noiseSrc = ctx.createBufferSource();
-      noiseSrc.buffer = noiseBuffer;
-      noiseSrc.loop = true;
-      const noiseBpf = ctx.createBiquadFilter();
-      noiseBpf.type = 'bandpass';
-      noiseBpf.frequency.value = 210;
-      noiseBpf.Q.value = 2.5;
-      // Slow LFO sweeps bandpass centre ±90 Hz over ~40 s
-      const noiseLfo = ctx.createOscillator();
-      noiseLfo.type = 'sine';
-      noiseLfo.frequency.value = 0.025;
-      const noiseLfoBias = ctx.createGain();
-      noiseLfoBias.gain.value = 90;
-      noiseLfo.connect(noiseLfoBias);
-      noiseLfoBias.connect(noiseBpf.frequency);
-      noiseLfo.start();
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.value = 0.005;
-      noiseSrc.connect(noiseBpf);
-      noiseBpf.connect(noiseGain);
-      noiseGain.connect(ambientGain);
-      noiseSrc.start();
-
-      ambientGain.connect(audioEngine.masterGain);
-      audioEngine.ambientGain = ambientGain;
-      audioEngine.reverbNode = reverb;
-      audioEngine.reverbGainNode = reverbGainNode;
-    }
-
-    function updateAmbientUi() {
-      const btn = $('#ambientToggleBtn');
-      if (!btn) return;
-      btn.classList.toggle('is-on', appState.audio.ambientEnabled);
-      btn.setAttribute('aria-pressed', String(appState.audio.ambientEnabled));
-    }
-
-    function syncAmbientGain() {
-      if (!audioEngine.ambientGain || !audioEngine.ctx) return;
-      const target = appState.audio.ambientEnabled ? 1 : 0;
-      audioEngine.ambientGain.gain.setTargetAtTime(target, audioEngine.ctx.currentTime, 0.8);
-      if (appState.audio.ambientEnabled) {
-        startVoices();
-      } else {
-        stopVoices();
-      }
-    }
-
-    function initAudioContext() {
-      if (!audioEngine.initialized) {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) {
-          logFeed('Audio context unavailable in this browser.');
-          return false;
-        }
-        const ctx = new AudioCtx();
-        const masterGain = ctx.createGain();
-        masterGain.gain.value = appState.audio.masterVolume / 100;
-        masterGain.connect(ctx.destination);
-        audioEngine.ctx = ctx;
-        audioEngine.masterGain = masterGain;
-        audioEngine.initialized = true;
-        setupAmbientNodes();
-      }
-
-      const ctx = audioEngine.ctx;
-      if (ctx.state === 'suspended') {
-        ctx.resume().then(() => {
-          syncAmbientGain();
-        }).catch(() => {
-          logFeed('Browser blocked audio. Click Start again to unlock.');
-        });
-      } else {
-        syncAmbientGain();
-      }
-      return true;
-    }
-
-    function getGrowthStage() {
-      return growthStages.reduce((current, stage) => (
-        appState.pet.completedPomodoros >= stage.threshold ? stage : current
-      ), growthStages[0]);
-    }
-
-    function getGrowthProgress() {
-      const completed = appState.pet.completedPomodoros;
-      const currentStageIndex = growthStages.findIndex(stage => stage.name === getGrowthStage().name);
-      const nextStage = growthStages[currentStageIndex + 1];
-
-      if (!nextStage) {
-        return {
-          progressPercent: 100,
-          statusText: 'Max stage reached.',
-          ariaValueNow: 100,
-        };
-      }
-
-      const currentStageThreshold = growthStages[currentStageIndex].threshold;
-      const requiredForStage = nextStage.threshold - currentStageThreshold;
-      const progressInStage = completed - currentStageThreshold;
-      const progressPercent = Math.max(0, Math.min(100, (progressInStage / requiredForStage) * 100));
-      const sessionsUntilNextStage = Math.max(0, nextStage.threshold - completed);
-      const sessionLabel = sessionsUntilNextStage === 1 ? 'session' : 'sessions';
-
-      return {
-        progressPercent,
-        statusText: `${sessionsUntilNextStage} ${sessionLabel} until ${nextStage.name}`,
-        ariaValueNow: Math.round(progressPercent),
-      };
-    }
-
-    function updatePetStats() {
-      const stage = getGrowthStage();
-      const growthProgress = getGrowthProgress();
-      $('#petNameValue').textContent = appState.pet.name;
-      $('#pomodoroCountValue').textContent = String(appState.pet.completedPomodoros);
-      $('#growthStageValue').textContent = stage.name;
-      $('#growthProgressFill').style.width = `${growthProgress.progressPercent}%`;
-      $('#growthProgressText').textContent = growthProgress.statusText;
-      const progressTrack = document.querySelector('.pet-growth-track');
-      progressTrack.setAttribute('aria-valuenow', String(growthProgress.ariaValueNow));
-      $('#petCanvas').classList.toggle('is-transcribed', stage.name === 'Transcribed');
-    }
-
-    function getGOLFillColor() {
-      const rootStyle = getComputedStyle(document.documentElement);
-      const cssValue = rootStyle.getPropertyValue('--gol-fill').trim();
-      if (cssValue) return cssValue;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? '#1e1a14' : '#ede8e0';
-    }
-
-    function getShapeMetrics(shape, detail) {
-      if (shape === 'round') {
-        return { width: 5 + detail, height: 5 + detail, baseY: 11 };
-      }
-      if (shape === 'tall-narrow') {
-        return { width: 4 + Math.floor(detail / 2), height: 6 + detail, baseY: 11 };
-      }
-      return { width: 6 + detail, height: 4 + Math.floor(detail / 2), baseY: 12 };
-    }
-
-    function plotSpecimenPixels(ctx, {
-      width,
-      height,
-      centerX,
-      baseY,
-      bodyColor,
-      accentColor,
-      eyeColor,
-      blink = false,
-      detail = 0,
-    }) {
-      const left = centerX - Math.floor(width / 2);
-      const top = baseY - height;
-      for (let y = 0; y < height; y += 1) {
-        for (let x = 0; x < width; x += 1) {
-          const nx = width <= 1 ? 0 : (x / (width - 1)) * 2 - 1;
-          const ny = height <= 1 ? 0 : (y / (height - 1)) * 2 - 1;
-          const footprint = nx * nx + ny * ny;
-          if (footprint < 1.12) {
-            ctx.fillStyle = bodyColor;
-            ctx.fillRect(left + x, top + y, 1, 1);
-          }
-        }
-      }
-
-      ctx.fillStyle = accentColor;
-      const sproutHeight = 1 + Math.floor(detail / 2);
-      for (let i = 0; i < sproutHeight; i += 1) {
-        ctx.fillRect(centerX, top - 1 - i, 1, 1);
-      }
-      if (detail >= 1) {
-        ctx.fillRect(centerX - 1, top - 2, 1, 1);
-        ctx.fillRect(centerX + 1, top - 2, 1, 1);
-      }
-      if (detail >= 3) {
-        ctx.fillRect(left + 1, top + height - 2, 1, 1);
-        ctx.fillRect(left + width - 2, top + height - 2, 1, 1);
-      }
-      if (detail >= 4) {
-        ctx.fillRect(left + Math.floor(width / 2), top + Math.floor(height / 2), 1, 1);
-      }
-
-      const eyeY = top + Math.max(1, Math.floor(height / 3));
-      const leftEyeX = left + Math.max(1, Math.floor(width / 3));
-      const rightEyeX = left + width - Math.max(2, Math.floor(width / 3)) - 1;
-      ctx.fillStyle = eyeColor;
-      if (blink) {
-        ctx.fillRect(leftEyeX, eyeY, 1, 1);
-        ctx.fillRect(rightEyeX, eyeY, 1, 1);
-      } else {
-        ctx.fillRect(leftEyeX, eyeY, 1, 2);
-        ctx.fillRect(rightEyeX, eyeY, 1, 2);
-      }
-      if (detail >= 2) {
-        ctx.fillRect(centerX - 1, top + height - 2, 3, 1);
-      }
-    }
-
-    function drawGOL(canvas = $('#petCanvas'), specimen = appState.pet, { scale = 1, blink = appState.pet.blink } = {}) {
-      const ctx = canvas.getContext('2d');
-      const stage = growthStages.reduce((current, checkpoint) => (
-        specimen.completedPomodoros >= checkpoint.threshold ? checkpoint : current
-      ), growthStages[0]);
-      const palette = speciesPalettes[specimen.colorKey % speciesPalettes.length];
-      const metrics = getShapeMetrics(specimen.bodyShape, stage.detail);
-      const backgroundColor = getGOLFillColor();
-
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.scale(scale, scale);
-      plotSpecimenPixels(ctx, {
-        width: metrics.width,
-        height: metrics.height,
-        centerX: 8,
-        baseY: metrics.baseY,
-        bodyColor: palette.body,
-        accentColor: palette.accent,
-        eyeColor: palette.eye,
-        blink,
-        detail: stage.detail,
-      });
-      ctx.restore();
-    }
-
-    function drawPet() {
-      drawGOL();
-    }
-
-    function animatePet() {
-      appState.pet.blink = Math.random() < 0.15;
-      drawPet();
-    }
-
-    function formatRetiredDate(value) {
-      const parsed = new Date(value);
-      if (Number.isNaN(parsed.getTime())) return '--';
-      return parsed.toLocaleDateString([], { month: 'short', year: 'numeric' }).replace(' ', ' · ');
-    }
-
-    function renderSpecimenArchive() {
-      const root = $('#specimenArchiveGrid');
-      const toggle = $('#toggleSpecimenArchiveBtn');
-      root.hidden = !appState.showSpecimenArchive;
-      toggle.textContent = appState.showSpecimenArchive ? '▾ Close Archive' : '▸ Open Archive';
-
-      root.innerHTML = '';
-      if (!appState.retiredPets.length) {
-        const empty = document.createElement('div');
-        empty.className = 'specimen-date';
-        empty.textContent = 'No specimens transcribed yet. Keep working.';
-        root.appendChild(empty);
-        return;
-      }
-
-      appState.retiredPets.forEach((entry) => {
-        const card = document.createElement('article');
-        card.className = 'specimen-card';
-        const canvas = document.createElement('canvas');
-        canvas.width = 16;
-        canvas.height = 16;
-        canvas.className = 'specimen-canvas';
-        drawGOL(canvas, {
-          ...entry,
-          completedPomodoros: 25,
-          blink: false,
-        }, { scale: 1, blink: false });
-        const name = document.createElement('div');
-        name.className = 'specimen-name';
-        name.textContent = entry.name;
-        const date = document.createElement('div');
-        date.className = 'specimen-date';
-        date.textContent = formatRetiredDate(entry.retiredAt);
-        card.append(canvas, name, date);
-        root.appendChild(card);
-      });
-    }
-
-    function retireCurrentSpecimen() {
-      const currentPet = { ...appState.pet };
-      const retiredEntry = {
-        id: currentPet.id,
-        name: currentPet.name,
-        colorKey: currentPet.colorKey,
-        bodyShape: currentPet.bodyShape,
-        retiredAt: new Date().toISOString(),
-        totalPomodoros: currentPet.completedPomodoros,
-      };
-      appState.retiredPets.unshift(retiredEntry);
-      saveRetiredPets();
-      logFeed(`Field entry sealed. ${currentPet.name} has been transcribed to the permanent record. A new specimen stirs on the next page.`);
-      appState.pet = createNextSpecimen(currentPet);
-      updatePetStats();
-      drawPet();
-      renderSpecimenArchive();
-      saveTimerSettings();
-    }
-
-    function registerCompletedPomodoro() {
-      appState.pet.completedPomodoros += 1;
-      const maxThreshold = growthStages[growthStages.length - 1].threshold;
-      if (appState.pet.completedPomodoros > maxThreshold) {
-        retireCurrentSpecimen();
-        return;
-      }
-      updatePetStats();
-      drawPet();
-      logFeed(`Focus session complete. ${appState.pet.name} advanced to ${getGrowthStage().name} after pomodoro ${appState.pet.completedPomodoros}. Starting ${appState.timer.breakMinutes}-minute break.`);
-    }
 
     function formatTime(seconds) {
       const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -3063,203 +322,239 @@
       return `${mins}:${secs}`;
     }
 
-    function renderCalendar() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const today = now.getDate();
-      const firstDay = new Date(year, month, 1);
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      $('#calendarMonthLabel').textContent = now.toLocaleString([], {
-        month: 'long',
-        year: 'numeric',
-      });
-
-      const dayLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-      const cells = [...dayLabels.map(label => `<div class="calendar-cell is-label">${label}</div>`)];
-
-      for (let i = 0; i < firstDay.getDay(); i++) {
-        cells.push('<div class="calendar-cell is-empty">·</div>');
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const isToday = day === today;
-        cells.push(`<div class="calendar-cell${isToday ? ' is-today' : ''}">${day}</div>`);
-      }
-
-      $('#calendarGrid').innerHTML = cells.join('');
-    }
-
-    function updateTimerUI() {
-      const t = appState.timer;
+    function syncTimerUi() {
+      const t = state.timer;
       $('#timeDisplay').textContent = formatTime(t.remainingSeconds);
-      $('#phaseDisplay').textContent = t.mode === 'focus' ? 'Focus Session' : 'Break Session';
-      const sessionCount = $('#sessionCount');
-      if (sessionCount) {
-        sessionCount.textContent = `S${t.session}`;
-      }
-      const pct = 1 - (t.remainingSeconds / t.totalSeconds || 0);
-      const timerRing = $('#timerRing');
-      if (timerRing) {
-        timerRing.style.background = `conic-gradient(var(--glow) ${Math.max(0, pct) * 360}deg, rgba(140,124,104,0.12) 0deg)`;
+      $('#modeDisplay').textContent = t.mode === 'focus' ? 'Focus' : 'Break';
+      $('#sessionDisplay').textContent = `S${t.session}`;
+    }
+
+    function persistTimer() {
+      const t = state.timer;
+      localStorage.setItem(KEYS.timer, JSON.stringify({
+        focusMinutes: t.focusMinutes,
+        breakMinutes: t.breakMinutes,
+        mode: t.mode,
+        session: t.session,
+        totalSeconds: t.totalSeconds,
+        remainingSeconds: t.remainingSeconds,
+      }));
+    }
+
+    function loadTimer() {
+      const raw = localStorage.getItem(KEYS.timer);
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw);
+        state.timer.focusMinutes = Number(saved.focusMinutes) || 25;
+        state.timer.breakMinutes = Number(saved.breakMinutes) || 5;
+        state.timer.mode = saved.mode === 'break' ? 'break' : 'focus';
+        state.timer.session = Number(saved.session) > 0 ? Number(saved.session) : 1;
+        state.timer.totalSeconds = Number(saved.totalSeconds) || (state.timer.focusMinutes * 60);
+        state.timer.remainingSeconds = Number(saved.remainingSeconds) || state.timer.totalSeconds;
+      } catch {
+        // Ignore malformed local data.
       }
     }
 
-    function switchTimerMode(countCompletedPomodoro = true) {
-      const t = appState.timer;
-      playSessionCompleteCue();
-      audioEngine.warningTickMarks.clear();
-      if (t.mode === 'focus') {
-        t.mode = 'break';
-        audioEngine.timerMode = 'break';
-        t.totalSeconds = t.breakMinutes * 60;
-        t.remainingSeconds = t.totalSeconds;
-        playBreakStartCue();
-        if (countCompletedPomodoro) {
-          registerCompletedPomodoro();
-        } else {
-          logFeed(`Focus session skipped. Starting ${t.breakMinutes}-minute break.`);
-        }
-      } else {
-        t.mode = 'focus';
-        audioEngine.timerMode = 'focus';
-        t.session += 1;
+    function moveToMode(nextMode, countSessionAdvance = true) {
+      const t = state.timer;
+      t.mode = nextMode;
+      if (nextMode === 'focus') {
+        if (countSessionAdvance) t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
-        t.remainingSeconds = t.totalSeconds;
-        playFocusStartCue();
-        refreshSessionInsight();
-        logFeed(`Break complete. Starting focus session ${t.session}.`);
+      } else {
+        t.totalSeconds = t.breakMinutes * 60;
       }
-      saveTimerSettings();
-      updateTimerUI();
+      t.remainingSeconds = t.totalSeconds;
+      syncTimerUi();
+      persistTimer();
+    }
+
+    function tickTimer() {
+      const t = state.timer;
+      if (t.remainingSeconds > 0) {
+        t.remainingSeconds -= 1;
+        syncTimerUi();
+        persistTimer();
+        return;
+      }
+
+      if (t.mode === 'focus') {
+        moveToMode('break', true);
+      } else {
+        moveToMode('focus', true);
+      }
     }
 
     function startTimer() {
-      const t = appState.timer;
+      const t = state.timer;
       if (t.running) return;
-      const audioReady = initAudioContext();
-      if (audioReady && !audioEngine.warnedLocked) {
-        logFeed('Audio engine unlocked on first user gesture.');
-        audioEngine.warnedLocked = true;
-      }
       t.running = true;
-      if (t.mode === 'focus') playFocusStartCue();
-      else playBreakStartCue();
-      audioEngine.warningTickMarks.clear();
-      logFeed(`Timer started: ${t.mode} mode.`);
-      t.tickHandle = setInterval(() => {
-        if (t.remainingSeconds > 0) {
-          t.remainingSeconds -= 1;
-          if (t.remainingSeconds > 0 && t.remainingSeconds <= 60 && (t.remainingSeconds % 10 === 0) && !audioEngine.warningTickMarks.has(t.remainingSeconds)) {
-            playWarningTick();
-            audioEngine.warningTickMarks.add(t.remainingSeconds);
-          }
-          updateTimerUI();
-        } else {
-          clearInterval(t.tickHandle);
-          t.running = false;
-          switchTimerMode();
-          startTimer();
-        }
-      }, 1000);
+      t.intervalId = setInterval(tickTimer, 1000);
     }
 
     function pauseTimer() {
-      const t = appState.timer;
+      const t = state.timer;
       if (!t.running) return;
       t.running = false;
-      clearInterval(t.tickHandle);
-      logFeed('Timer paused.');
+      clearInterval(t.intervalId);
+      t.intervalId = null;
     }
 
     function resetTimer() {
-      const t = appState.timer;
+      const t = state.timer;
       pauseTimer();
-      audioEngine.warningTickMarks.clear();
       t.totalSeconds = (t.mode === 'focus' ? t.focusMinutes : t.breakMinutes) * 60;
       t.remainingSeconds = t.totalSeconds;
-      updateTimerUI();
-      logFeed('Timer reset.');
+      syncTimerUi();
+      persistTimer();
     }
 
     function skipTimer() {
       pauseTimer();
-      audioEngine.warningTickMarks.clear();
-      switchTimerMode(false);
-    }
-
-    function applyPreset(focus, breakMin) {
-      const t = appState.timer;
-      pauseTimer();
-      t.focusMinutes = focus;
-      t.breakMinutes = breakMin;
-      if (t.mode === 'focus') {
-        t.totalSeconds = focus * 60;
-        t.remainingSeconds = t.totalSeconds;
+      if (state.timer.mode === 'focus') {
+        moveToMode('break', false);
       } else {
-        t.totalSeconds = breakMin * 60;
-        t.remainingSeconds = t.totalSeconds;
+        moveToMode('focus', true);
       }
-      saveTimerSettings();
-      updateTimerUI();
-      logFeed(`Pomodoro preset loaded: ${focus}/${breakMin}.`);
     }
 
-    function getThoughtToggleSymbol(status) {
-      if (status === 'marked') return 'X';
-      return '•';
+    function applyPreset(focus, breakMinutes) {
+      pauseTimer();
+      const t = state.timer;
+      t.focusMinutes = focus;
+      t.breakMinutes = breakMinutes;
+      t.mode = 'focus';
+      t.totalSeconds = focus * 60;
+      t.remainingSeconds = t.totalSeconds;
+      syncTimerUi();
+      persistTimer();
     }
 
-    function getNextThoughtStatus(status) {
-      if (status === 'active') return 'marked';
-      if (status === 'marked') return 'crossed';
-      return 'active';
+    function persistTrackers() {
+      localStorage.setItem(KEYS.trackers, JSON.stringify(state.trackers));
     }
 
-    function renderThoughtList(root, entries, emptyText) {
+    function loadTrackers() {
+      const raw = localStorage.getItem(KEYS.trackers);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) state.trackers = parsed;
+      } catch {
+        // Ignore malformed local data.
+      }
+    }
+
+    function validateTrackerInput(name, start, end) {
+      if (!name.trim()) return 'Name is required.';
+      if (!Number.isInteger(start) || !Number.isInteger(end)) return 'Start and end must be whole numbers.';
+      if (end < start) return 'End must be greater than or equal to start.';
+      if (end - start > 160) return 'Range is too large for narrow mode.';
+      return '';
+    }
+
+    function trackerProgress(tracker) {
+      const total = tracker.end - tracker.start + 1;
+      return `${tracker.completed.length}/${total}`;
+    }
+
+    function toggleTrackerValue(id, value) {
+      const tracker = state.trackers.find((item) => item.id === id);
+      if (!tracker) return;
+      const index = tracker.completed.indexOf(value);
+      if (index >= 0) tracker.completed.splice(index, 1);
+      else tracker.completed.push(value);
+      tracker.completed.sort((a, b) => a - b);
+      persistTrackers();
+      renderTrackers();
+    }
+
+    function renderTrackers() {
+      const root = $('#trackerList');
       root.innerHTML = '';
-      if (!entries.length) {
+
+      if (!state.trackers.length) {
         const empty = document.createElement('div');
-        empty.className = 'thought-card';
-        empty.innerHTML = `<div></div><div class="thought-body">${escapeHtml(emptyText)}</div>`;
+        empty.className = 'tracker-card';
+        empty.textContent = 'No trackers yet.';
         root.appendChild(empty);
         return;
       }
 
-      entries.forEach((entry, index) => {
-        const card = document.createElement('div');
-        card.className = `thought-card${entry.status === 'crossed' ? ' is-crossed' : ''}`;
-        const statusClass = entry.status === 'active' ? '' : ` is-${entry.status}`;
+      state.trackers.forEach((tracker) => {
+        const card = document.createElement('article');
+        card.className = 'tracker-card';
+
+        const head = document.createElement('div');
+        head.className = 'tracker-head';
+        head.innerHTML = `
+          <div class="tracker-name">${escapeHtml(tracker.name)}</div>
+          <div class="tracker-range">${trackerProgress(tracker)}</div>
+        `;
+
+        const grid = document.createElement('div');
+        grid.className = 'tracker-grid';
+
+        for (let value = tracker.start; value <= tracker.end; value += 1) {
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = `cell${tracker.completed.includes(value) ? ' is-on' : ''}`;
+          cell.textContent = value;
+          cell.setAttribute('data-id', tracker.id);
+          cell.setAttribute('data-value', value);
+          grid.appendChild(cell);
+        }
+
+        card.append(head, grid);
+        root.appendChild(card);
+      });
+    }
+
+    function persistThoughts() {
+      localStorage.setItem(KEYS.thoughts, JSON.stringify(state.thoughts));
+    }
+
+    function loadThoughts() {
+      const raw = localStorage.getItem(KEYS.thoughts);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) state.thoughts = parsed;
+      } catch {
+        // Ignore malformed local data.
+      }
+    }
+
+    function renderThoughts() {
+      const root = $('#thoughtList');
+      root.innerHTML = '';
+
+      if (!state.thoughts.length) {
+        const empty = document.createElement('div');
+        empty.className = 'thought-card';
+        empty.textContent = 'No thoughts logged yet.';
+        root.appendChild(empty);
+        return;
+      }
+
+      state.thoughts.forEach((entry) => {
+        const card = document.createElement('article');
+        card.className = 'thought-card';
         card.innerHTML = `
-          <button type="button" class="thought-toggle${statusClass}" data-thought-index="${index}" aria-label="Toggle thought status">${getThoughtToggleSymbol(entry.status)}</button>
-          <div class="thought-content">
-            <div class="thought-meta">
-              <span>${escapeHtml(entry.tag)}</span>
-              <span>${escapeHtml(entry.time)}</span>
-            </div>
-            <div class="thought-body">${escapeHtml(entry.body)}</div>
+          <div class="thought-meta">
+            <span>${escapeHtml(entry.tag)}</span>
+            <span>${escapeHtml(entry.time)}</span>
           </div>
+          <div class="thought-body">${escapeHtml(entry.body)}</div>
         `;
         root.appendChild(card);
       });
     }
 
-    function updateArchiveSummary() {
-      const archiveCount = appState.archivedThoughts.length;
-      $('#archiveSummaryText').textContent = `Archive: ${archiveCount} ${archiveCount === 1 ? 'entry' : 'entries'}`;
-      $('#toggleArchiveBtn').textContent = appState.showArchive ? 'Hide Archive' : 'View Archive';
-      $('#archiveSection').hidden = !appState.showArchive;
-    }
-
-    function renderThoughts() {
-      renderThoughtList($('#thoughtLog'), appState.thoughts, 'No entries logged yet.');
-      renderThoughtList($('#archiveLog'), appState.archivedThoughts, 'No archived entries yet.');
-      updateArchiveSummary();
-    }
-
-    function escapeHtml(value) {
-      return value
+    function escapeHtml(text) {
+      return String(text)
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -3267,185 +562,87 @@
         .replaceAll("'", '&#039;');
     }
 
-    function addThought(body) {
-      const trimmedBody = body.trim();
-      if (!trimmedBody) return;
-      const now = new Date();
-      appState.thoughts.unshift({
-        body: trimmedBody,
-        time: now.toLocaleString([], {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        tag: appState.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
-        status: 'active',
-      });
-      const archivedCount = archiveOverflowThoughts();
-      saveThoughts();
-      saveArchivedThoughts();
-      renderThoughts();
-      logFeed('Thought captured to local log.');
-      if (archivedCount > 0) {
-        logFeed(`${archivedCount} older thought ${archivedCount === 1 ? 'entry moved' : 'entries moved'} to archive.`);
-      }
-    }
-
-    function cycleThoughtStatus(index) {
-      const thought = appState.thoughts[index];
-      if (!thought) return;
-      thought.status = getNextThoughtStatus(thought.status || 'active');
-      saveThoughts();
-      renderThoughts();
-    }
-
-    function exportThoughts() {
-      const exportedAt = new Date().toISOString();
-      const payload = {
-        exportedAt,
-        activeCount: appState.thoughts.length,
-        archivedCount: appState.archivedThoughts.length,
-        thoughts: appState.thoughts,
-        archivedThoughts: appState.archivedThoughts,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const stamp = exportedAt.replaceAll(':', '-').replaceAll('.', '-');
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `dwell-thought-log-${stamp}.json`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-      logFeed(`Thought log exported (${payload.activeCount} live, ${payload.archivedCount} archived) at ${new Date(exportedAt).toLocaleString()}.`);
-    }
-
     function bindEvents() {
-      $('#startTimerBtn').addEventListener('click', startTimer);
-      $('#pauseTimerBtn').addEventListener('click', pauseTimer);
-      $('#resetTimerBtn').addEventListener('click', resetTimer);
-      $('#skipTimerBtn').addEventListener('click', skipTimer);
-      $('#ambientToggleBtn').addEventListener('click', () => {
-        appState.audio.ambientEnabled = !appState.audio.ambientEnabled;
-        updateAmbientUi();
-        saveTimerSettings();
-        if (!audioEngine.initialized) {
-          logFeed('Ambient state queued. Press Start once to unlock browser audio.');
-          return;
-        }
-        syncAmbientGain();
-      });
-      $('#audioVolumeInput').addEventListener('input', (event) => {
-        setMasterVolume(event.target.value);
-      });
+      $('#startBtn').addEventListener('click', startTimer);
+      $('#pauseBtn').addEventListener('click', pauseTimer);
+      $('#resetBtn').addEventListener('click', resetTimer);
+      $('#skipBtn').addEventListener('click', skipTimer);
 
-      document.querySelectorAll('.presetBtn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          applyPreset(Number(btn.dataset.focus), Number(btn.dataset.break));
+      document.querySelectorAll('[data-focus]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const focus = Number(button.dataset.focus);
+          const breakMinutes = Number(button.dataset.break);
+          applyPreset(focus, breakMinutes);
         });
-      });
-
-      $('#thoughtForm').addEventListener('submit', (event) => {
-        event.preventDefault();
-        const body = $('#thoughtBody').value;
-        if (!body.trim()) return;
-        addThought(body);
-        $('#thoughtBody').value = '';
-      });
-
-      $('#thoughtLog').addEventListener('click', (event) => {
-        const toggle = event.target.closest('[data-thought-index]');
-        if (!toggle) return;
-        cycleThoughtStatus(Number(toggle.dataset.thoughtIndex));
-      });
-
-      $('#clearThoughtsBtn').addEventListener('click', () => {
-        appState.thoughts = [];
-        saveThoughts();
-        renderThoughts();
-        logFeed('Thought log cleared.');
-      });
-
-      $('#toggleArchiveBtn').addEventListener('click', () => {
-        appState.showArchive = !appState.showArchive;
-        renderThoughts();
-      });
-
-      $('#toggleSpecimenArchiveBtn').addEventListener('click', () => {
-        appState.showSpecimenArchive = !appState.showSpecimenArchive;
-        renderSpecimenArchive();
-        saveTimerSettings();
-      });
-
-      $('#exportThoughtsBtn').addEventListener('click', exportThoughts);
-
-      $('#weatherForm').addEventListener('submit', (event) => {
-        event.preventDefault();
-        useManualLocation($('#weatherLocationInput').value);
       });
 
       $('#trackerForm').addEventListener('submit', (event) => {
         event.preventDefault();
-        const name = $('#trackerNameInput').value;
-        const start = Number($('#trackerStartInput').value);
-        const end = Number($('#trackerEndInput').value);
-        const error = validateTrackerInputs(name, start, end);
+        const name = $('#trackerName').value;
+        const start = Number($('#trackerStart').value);
+        const end = Number($('#trackerEnd').value);
+        const error = validateTrackerInput(name, start, end);
         $('#trackerError').textContent = error;
         if (error) return;
-        createTracker(name, start, end);
-        $('#trackerForm').reset();
+
+        state.trackers.unshift({
+          id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          name: name.trim(),
+          start,
+          end,
+          completed: [],
+        });
+
+        persistTrackers();
+        renderTrackers();
+        event.target.reset();
       });
 
-      const onTrackerToggle = (event) => {
-        const cell = event.target.closest('[data-tracker-id][data-number]');
+      $('#trackerList').addEventListener('click', (event) => {
+        const cell = event.target.closest('[data-id][data-value]');
         if (!cell) return;
-        toggleTrackerCell(cell.dataset.trackerId, Number(cell.dataset.number));
-      };
-
-      $('#activeTrackers').addEventListener('click', onTrackerToggle);
-
-      document.addEventListener('submit', (event) => {
-        const rangeForm = event.target.closest('[data-tracker-range-form]');
-        if (!rangeForm) return;
-        event.preventDefault();
-        const trackerId = rangeForm.dataset.trackerRangeForm;
-        const start = Number(rangeForm.elements.start.value);
-        const end = Number(rangeForm.elements.end.value);
-        const error = updateTrackerRange(trackerId, start, end);
-        $('#trackerError').textContent = error;
+        toggleTrackerValue(cell.dataset.id, Number(cell.dataset.value));
       });
 
+      $('#thoughtForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const body = $('#thoughtBody').value.trim();
+        if (!body) return;
+
+        state.thoughts.unshift({
+          body,
+          tag: state.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
+          time: new Date().toLocaleString([], {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        });
+
+        state.thoughts = state.thoughts.slice(0, 200);
+        persistThoughts();
+        renderThoughts();
+        event.target.reset();
+      });
+
+      $('#clearThoughtsBtn').addEventListener('click', () => {
+        state.thoughts = [];
+        persistThoughts();
+        renderThoughts();
+      });
+
+      window.addEventListener('beforeunload', pauseTimer);
     }
 
     function init() {
-      loadThoughts();
-      loadTimerSettings();
-      loadRetiredPets();
+      loadTimer();
       loadTrackers();
-      bindEvents();
-      renderThoughts();
+      loadThoughts();
+      syncTimerUi();
       renderTrackers();
-      renderSpecimenArchive();
-      updatePetStats();
-      refreshSessionInsight();
-      updateTimerUI();
-      updateAmbientUi();
-      setMasterVolume(appState.audio.masterVolume);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && audioEngine.ctx && audioEngine.ctx.state === 'suspended') {
-          audioEngine.ctx.resume().catch(() => {});
-        }
-      });
-      drawPet();
-      renderCalendar();
-      initWeather();
-      initVizLegend();
-      requestAnimationFrame(vizRender);
-      logFeed('Dwell Notebook Workspace initialized.');
-      logFeed('Modules loaded: productivity tracker, pomodoro (+ companion specimen), thought log, field record archive, weather strip, calendar.');
-      setInterval(animatePet, 1200);
+      renderThoughts();
+      bindEvents();
     }
 
     init();
