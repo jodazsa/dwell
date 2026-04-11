@@ -53,6 +53,8 @@
       color: var(--muted);
     }
 
+    /* ---- Pomodoro ---- */
+
     .timer-main {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -84,6 +86,38 @@
       white-space: nowrap;
     }
 
+    .session-log-wrap {
+      display: grid;
+      gap: 4px;
+    }
+
+    .session-log-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .session-log {
+      display: grid;
+      gap: 0;
+      max-height: 90px;
+      overflow: auto;
+    }
+
+    .session-log-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.66rem;
+      color: var(--muted);
+      padding: 3px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .session-log-row:last-child { border-bottom: none; }
+
+    /* ---- Shared controls ---- */
+
     .row {
       display: flex;
       gap: 6px;
@@ -112,12 +146,20 @@
       border-color: var(--accent);
     }
 
+    .btn-tiny {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+
     .preset {
       background: var(--accent-soft);
       border-color: #d7d7e6;
       font-size: 0.72rem;
       padding: 6px 8px;
     }
+
+    /* ---- Forms ---- */
 
     .tracker-form,
     .thought-form {
@@ -164,55 +206,75 @@
       min-height: 1em;
     }
 
-    .tracker-list,
-    .thought-list {
+    /* ---- Active tracker list ---- */
+
+    .tracker-list {
       display: grid;
-      gap: 8px;
-      max-height: 220px;
+      gap: 5px;
+      max-height: 300px;
       overflow: auto;
       padding-right: 2px;
     }
 
-    .tracker-card,
-    .thought-card {
+    .tracker-card {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px;
+      border-radius: 7px;
+      padding: 5px 6px;
       background: #fbfbfa;
       display: grid;
-      gap: 6px;
+      gap: 3px;
     }
 
     .tracker-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
+    }
+
+    .tracker-head-left {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      min-width: 0;
+      flex: 1;
     }
 
     .tracker-name {
-      font-size: 0.78rem;
+      font-size: 0.7rem;
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .tracker-range {
-      font-size: 0.68rem;
+      font-size: 0.6rem;
       color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
+    .tracker-head-actions {
+      display: flex;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Smaller 10-column grid */
     .tracker-grid {
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 4px;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 2px;
     }
 
     .cell {
       border: 1px solid #d2d2ce;
-      border-radius: 6px;
+      border-radius: 3px;
       background: #fff;
-      font-size: 0.65rem;
+      font-size: 0.48rem;
       line-height: 1;
-      padding: 6px 0;
+      padding: 4px 0;
       text-align: center;
       cursor: pointer;
       user-select: none;
@@ -222,6 +284,40 @@
       background: #3a3a45;
       border-color: #3a3a45;
       color: #fff;
+    }
+
+    /* Extend row */
+    .extend-row {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+      padding-top: 2px;
+    }
+
+    .extend-row .extend-num {
+      width: 42px;
+      padding: 2px 4px;
+      font-size: 0.65rem;
+      border-radius: 5px;
+    }
+
+    /* ---- Thought log ---- */
+
+    .thought-list {
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .thought-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px;
+      background: #fbfbfa;
+      display: grid;
+      gap: 6px;
     }
 
     .thought-meta {
@@ -238,10 +334,61 @@
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
+
+    /* ---- Completed trackers ---- */
+
+    .completed-tracker-list {
+      display: grid;
+      gap: 4px;
+      max-height: 200px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .completed-card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 4px 7px;
+      background: #fbfbfa;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .completed-info {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+    }
+
+    .completed-name {
+      font-size: 0.66rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .completed-dates {
+      font-size: 0.57rem;
+      color: var(--muted);
+      display: flex;
+      gap: 6px;
+    }
+
+    .completed-progress {
+      font-size: 0.6rem;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
   <main class="shell">
+
+    <!-- Pomodoro -->
     <section class="panel" aria-labelledby="pomodoroTitle">
       <h2 id="pomodoroTitle">Pomodoro</h2>
       <div class="timer-main">
@@ -256,14 +403,20 @@
         <button id="pauseBtn" type="button">Pause</button>
         <button id="resetBtn" type="button">Reset</button>
         <button id="skipBtn" type="button">Skip</button>
+        <button id="endBreakBtn" type="button" style="display:none">End Break</button>
       </div>
       <div class="row">
         <button class="preset" type="button" data-focus="25" data-break="5">25 / 5</button>
         <button class="preset" type="button" data-focus="45" data-break="10">45 / 10</button>
         <button class="preset" type="button" data-focus="52" data-break="17">52 / 17</button>
       </div>
+      <div id="sessionLogWrap" class="session-log-wrap" style="display:none">
+        <div class="session-log-label">Sessions per day</div>
+        <div id="sessionLog" class="session-log"></div>
+      </div>
     </section>
 
+    <!-- Active Trackers -->
     <section class="panel" aria-labelledby="trackerTitle">
       <h2 id="trackerTitle">Grid Tracker</h2>
       <form id="trackerForm" class="tracker-form">
@@ -279,6 +432,7 @@
       <div id="trackerList" class="tracker-list"></div>
     </section>
 
+    <!-- Thought Log -->
     <section class="panel" aria-labelledby="thoughtTitle">
       <h2 id="thoughtTitle">Thought Log</h2>
       <form id="thoughtForm" class="thought-form">
@@ -290,13 +444,20 @@
       </form>
       <div id="thoughtList" class="thought-list"></div>
     </section>
+
+    <!-- Completed Trackers -->
+    <section id="completedSection" class="panel" aria-labelledby="completedTitle" style="display:none">
+      <h2 id="completedTitle">Completed Trackers</h2>
+      <div id="completedList" class="completed-tracker-list"></div>
+    </section>
+
   </main>
 
   <script>
-    const $ = (selector) => document.querySelector(selector);
+    const $ = (sel) => document.querySelector(sel);
 
     const KEYS = {
-      timer: 'dwell.min.timer.v1',
+      timer:    'dwell.min.timer.v1',
       trackers: 'dwell.min.trackers.v1',
       thoughts: 'dwell.min.thoughts.v1',
     };
@@ -311,15 +472,19 @@
         intervalId: null,
         totalSeconds: 25 * 60,
         remainingSeconds: 25 * 60,
+        sessionLog: [],   // [{ date: "Apr 11", count: 3 }, ...]
       },
       trackers: [],
       thoughts: [],
+      extendOpen: new Set(),  // tracker IDs with extend row visible
     };
 
+    // ========== Timer ==========
+
     function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-      const secs = (seconds % 60).toString().padStart(2, '0');
-      return `${mins}:${secs}`;
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
     }
 
     function syncTimerUi() {
@@ -327,17 +492,19 @@
       $('#timeDisplay').textContent = formatTime(t.remainingSeconds);
       $('#modeDisplay').textContent = t.mode === 'focus' ? 'Focus' : 'Break';
       $('#sessionDisplay').textContent = `S${t.session}`;
+      $('#endBreakBtn').style.display = t.mode === 'break' ? '' : 'none';
     }
 
     function persistTimer() {
       const t = state.timer;
       localStorage.setItem(KEYS.timer, JSON.stringify({
-        focusMinutes: t.focusMinutes,
-        breakMinutes: t.breakMinutes,
-        mode: t.mode,
-        session: t.session,
-        totalSeconds: t.totalSeconds,
+        focusMinutes:     t.focusMinutes,
+        breakMinutes:     t.breakMinutes,
+        mode:             t.mode,
+        session:          t.session,
+        totalSeconds:     t.totalSeconds,
         remainingSeconds: t.remainingSeconds,
+        sessionLog:       t.sessionLog,
       }));
     }
 
@@ -345,23 +512,22 @@
       const raw = localStorage.getItem(KEYS.timer);
       if (!raw) return;
       try {
-        const saved = JSON.parse(raw);
-        state.timer.focusMinutes = Number(saved.focusMinutes) || 25;
-        state.timer.breakMinutes = Number(saved.breakMinutes) || 5;
-        state.timer.mode = saved.mode === 'break' ? 'break' : 'focus';
-        state.timer.session = Number(saved.session) > 0 ? Number(saved.session) : 1;
-        state.timer.totalSeconds = Number(saved.totalSeconds) || (state.timer.focusMinutes * 60);
-        state.timer.remainingSeconds = Number(saved.remainingSeconds) || state.timer.totalSeconds;
-      } catch {
-        // Ignore malformed local data.
-      }
+        const s = JSON.parse(raw);
+        state.timer.focusMinutes     = Number(s.focusMinutes)  || 25;
+        state.timer.breakMinutes     = Number(s.breakMinutes)  || 5;
+        state.timer.mode             = s.mode === 'break' ? 'break' : 'focus';
+        state.timer.session          = Number(s.session) > 0 ? Number(s.session) : 1;
+        state.timer.totalSeconds     = Number(s.totalSeconds)  || (state.timer.focusMinutes * 60);
+        state.timer.remainingSeconds = Number(s.remainingSeconds) || state.timer.totalSeconds;
+        state.timer.sessionLog       = Array.isArray(s.sessionLog) ? s.sessionLog : [];
+      } catch { /* ignore */ }
     }
 
-    function moveToMode(nextMode, countSessionAdvance = true) {
+    function moveToMode(nextMode, countAdvance = true) {
       const t = state.timer;
       t.mode = nextMode;
       if (nextMode === 'focus') {
-        if (countSessionAdvance) t.session += 1;
+        if (countAdvance) t.session += 1;
         t.totalSeconds = t.focusMinutes * 60;
       } else {
         t.totalSeconds = t.breakMinutes * 60;
@@ -369,6 +535,17 @@
       t.remainingSeconds = t.totalSeconds;
       syncTimerUi();
       persistTimer();
+    }
+
+    function recordFocusCompleted() {
+      const today = new Date().toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const log = state.timer.sessionLog;
+      if (log.length > 0 && log[0].date === today) {
+        log[0].count += 1;
+      } else {
+        log.unshift({ date: today, count: 1 });
+        if (log.length > 30) log.pop();
+      }
     }
 
     function tickTimer() {
@@ -379,8 +556,9 @@
         persistTimer();
         return;
       }
-
       if (t.mode === 'focus') {
+        recordFocusCompleted();
+        renderSessionLog();
         moveToMode('break', true);
       } else {
         moveToMode('focus', true);
@@ -403,8 +581,8 @@
     }
 
     function resetTimer() {
-      const t = state.timer;
       pauseTimer();
+      const t = state.timer;
       t.totalSeconds = (t.mode === 'focus' ? t.focusMinutes : t.breakMinutes) * 60;
       t.remainingSeconds = t.totalSeconds;
       syncTimerUi();
@@ -420,17 +598,41 @@
       }
     }
 
-    function applyPreset(focus, breakMinutes) {
+    function endBreak() {
+      if (state.timer.mode !== 'break') return;
+      pauseTimer();
+      moveToMode('focus', false);
+    }
+
+    function applyPreset(focus, brk) {
       pauseTimer();
       const t = state.timer;
       t.focusMinutes = focus;
-      t.breakMinutes = breakMinutes;
+      t.breakMinutes = brk;
       t.mode = 'focus';
       t.totalSeconds = focus * 60;
       t.remainingSeconds = t.totalSeconds;
       syncTimerUi();
       persistTimer();
     }
+
+    function renderSessionLog() {
+      const log = state.timer.sessionLog;
+      const wrap = $('#sessionLogWrap');
+      const root = $('#sessionLog');
+      if (!log.length) { wrap.style.display = 'none'; return; }
+      wrap.style.display = '';
+      root.innerHTML = '';
+      log.forEach(entry => {
+        const row = document.createElement('div');
+        row.className = 'session-log-row';
+        const n = entry.count;
+        row.innerHTML = `<span>${escapeHtml(entry.date)}</span><span>${n} session${n !== 1 ? 's' : ''}</span>`;
+        root.appendChild(row);
+      });
+    }
+
+    // ========== Trackers ==========
 
     function persistTrackers() {
       localStorage.setItem(KEYS.trackers, JSON.stringify(state.trackers));
@@ -442,16 +644,14 @@
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) state.trackers = parsed;
-      } catch {
-        // Ignore malformed local data.
-      }
+      } catch { /* ignore */ }
     }
 
     function validateTrackerInput(name, start, end) {
       if (!name.trim()) return 'Name is required.';
       if (!Number.isInteger(start) || !Number.isInteger(end)) return 'Start and end must be whole numbers.';
-      if (end < start) return 'End must be greater than or equal to start.';
-      if (end - start > 160) return 'Range is too large for narrow mode.';
+      if (end < start) return 'End must be ≥ start.';
+      if (end - start > 199) return 'Range is too large (max 200).';
       return '';
     }
 
@@ -460,13 +660,60 @@
       return `${tracker.completed.length}/${total}`;
     }
 
+    function todayStr() {
+      return new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
     function toggleTrackerValue(id, value) {
-      const tracker = state.trackers.find((item) => item.id === id);
-      if (!tracker) return;
-      const index = tracker.completed.indexOf(value);
-      if (index >= 0) tracker.completed.splice(index, 1);
+      const tracker = state.trackers.find(t => t.id === id);
+      if (!tracker || tracker.isDone) return;
+      const idx = tracker.completed.indexOf(value);
+      if (idx >= 0) tracker.completed.splice(idx, 1);
       else tracker.completed.push(value);
       tracker.completed.sort((a, b) => a - b);
+      persistTrackers();
+      renderTrackers();
+    }
+
+    function completeTracker(id) {
+      const tracker = state.trackers.find(t => t.id === id);
+      if (!tracker) return;
+      tracker.isDone = true;
+      tracker.dateCompleted = todayStr();
+      state.extendOpen.delete(id);
+      persistTrackers();
+      renderTrackers();
+      renderCompleted();
+    }
+
+    function reopenTracker(id) {
+      const tracker = state.trackers.find(t => t.id === id);
+      if (!tracker) return;
+      tracker.isDone = false;
+      tracker.dateCompleted = null;
+      persistTrackers();
+      renderTrackers();
+      renderCompleted();
+    }
+
+    function extendTrackerStart(id, count) {
+      const tracker = state.trackers.find(t => t.id === id);
+      if (!tracker) return;
+      const newStart = tracker.start - count;
+      if (tracker.end - newStart + 1 > 200) { return; }
+      tracker.start = newStart;
+      state.extendOpen.delete(id);
+      persistTrackers();
+      renderTrackers();
+    }
+
+    function extendTrackerEnd(id, count) {
+      const tracker = state.trackers.find(t => t.id === id);
+      if (!tracker) return;
+      const newEnd = tracker.end + count;
+      if (newEnd - tracker.start + 1 > 200) { return; }
+      tracker.end = newEnd;
+      state.extendOpen.delete(id);
       persistTrackers();
       renderTrackers();
     }
@@ -474,43 +721,144 @@
     function renderTrackers() {
       const root = $('#trackerList');
       root.innerHTML = '';
+      const active = state.trackers.filter(t => !t.isDone);
 
-      if (!state.trackers.length) {
+      if (!active.length) {
         const empty = document.createElement('div');
-        empty.className = 'tracker-card';
-        empty.textContent = 'No trackers yet.';
+        empty.style.cssText = 'font-size:0.7rem;color:var(--muted);padding:4px 2px';
+        empty.textContent = 'No active trackers.';
         root.appendChild(empty);
         return;
       }
 
-      state.trackers.forEach((tracker) => {
+      active.forEach(tracker => {
+        const isOpen = state.extendOpen.has(tracker.id);
         const card = document.createElement('article');
         card.className = 'tracker-card';
 
+        // Header
         const head = document.createElement('div');
         head.className = 'tracker-head';
-        head.innerHTML = `
-          <div class="tracker-name">${escapeHtml(tracker.name)}</div>
-          <div class="tracker-range">${trackerProgress(tracker)}</div>
-        `;
 
+        const left = document.createElement('div');
+        left.className = 'tracker-head-left';
+        left.innerHTML = `<span class="tracker-name">${escapeHtml(tracker.name)}</span><span class="tracker-range">${trackerProgress(tracker)}</span>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'tracker-head-actions';
+
+        const extBtn = document.createElement('button');
+        extBtn.type = 'button';
+        extBtn.className = 'btn-tiny';
+        extBtn.textContent = isOpen ? '✕' : 'Extend';
+        extBtn.dataset.action = 'toggle-extend';
+        extBtn.dataset.id = tracker.id;
+
+        const doneBtn = document.createElement('button');
+        doneBtn.type = 'button';
+        doneBtn.className = 'btn-tiny';
+        doneBtn.textContent = 'Done';
+        doneBtn.dataset.action = 'complete';
+        doneBtn.dataset.id = tracker.id;
+
+        actions.append(extBtn, doneBtn);
+        head.append(left, actions);
+
+        // Grid
         const grid = document.createElement('div');
         grid.className = 'tracker-grid';
-
-        for (let value = tracker.start; value <= tracker.end; value += 1) {
+        for (let v = tracker.start; v <= tracker.end; v++) {
           const cell = document.createElement('button');
           cell.type = 'button';
-          cell.className = `cell${tracker.completed.includes(value) ? ' is-on' : ''}`;
-          cell.textContent = value;
-          cell.setAttribute('data-id', tracker.id);
-          cell.setAttribute('data-value', value);
+          cell.className = `cell${tracker.completed.includes(v) ? ' is-on' : ''}`;
+          cell.textContent = v;
+          cell.dataset.id = tracker.id;
+          cell.dataset.value = v;
           grid.appendChild(cell);
         }
 
         card.append(head, grid);
+
+        // Extend row (conditional)
+        if (isOpen) {
+          const extRow = document.createElement('div');
+          extRow.className = 'extend-row';
+
+          const startBtn = document.createElement('button');
+          startBtn.type = 'button';
+          startBtn.className = 'btn-tiny';
+          startBtn.textContent = '← Start';
+          startBtn.dataset.action = 'extend-start';
+          startBtn.dataset.id = tracker.id;
+
+          const numIn = document.createElement('input');
+          numIn.type = 'number';
+          numIn.className = 'extend-num';
+          numIn.min = '1';
+          numIn.max = '50';
+          numIn.value = '1';
+          numIn.dataset.extendInput = tracker.id;
+
+          const endBtn = document.createElement('button');
+          endBtn.type = 'button';
+          endBtn.className = 'btn-tiny';
+          endBtn.textContent = 'End →';
+          endBtn.dataset.action = 'extend-end';
+          endBtn.dataset.id = tracker.id;
+
+          extRow.append(startBtn, numIn, endBtn);
+          card.appendChild(extRow);
+        }
+
         root.appendChild(card);
       });
     }
+
+    function renderCompleted() {
+      const root = $('#completedList');
+      const section = $('#completedSection');
+      root.innerHTML = '';
+      const done = state.trackers.filter(t => t.isDone);
+
+      if (!done.length) { section.style.display = 'none'; return; }
+      section.style.display = '';
+
+      done.forEach(tracker => {
+        const card = document.createElement('article');
+        card.className = 'completed-card';
+
+        const info = document.createElement('div');
+        info.className = 'completed-info';
+
+        const name = document.createElement('div');
+        name.className = 'completed-name';
+        name.textContent = tracker.name;
+
+        const dates = document.createElement('div');
+        dates.className = 'completed-dates';
+        const started  = tracker.dateCreated   || '—';
+        const finished = tracker.dateCompleted || '—';
+        dates.innerHTML = `<span>Started: ${escapeHtml(started)}</span><span>Done: ${escapeHtml(finished)}</span>`;
+
+        info.append(name, dates);
+
+        const progress = document.createElement('div');
+        progress.className = 'completed-progress';
+        progress.textContent = trackerProgress(tracker);
+
+        const reopenBtn = document.createElement('button');
+        reopenBtn.type = 'button';
+        reopenBtn.className = 'btn-tiny';
+        reopenBtn.textContent = 'Reopen';
+        reopenBtn.dataset.action = 'reopen';
+        reopenBtn.dataset.id = tracker.id;
+
+        card.append(info, progress, reopenBtn);
+        root.appendChild(card);
+      });
+    }
+
+    // ========== Thoughts ==========
 
     function persistThoughts() {
       localStorage.setItem(KEYS.thoughts, JSON.stringify(state.thoughts));
@@ -522,15 +870,12 @@
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) state.thoughts = parsed;
-      } catch {
-        // Ignore malformed local data.
-      }
+      } catch { /* ignore */ }
     }
 
     function renderThoughts() {
       const root = $('#thoughtList');
       root.innerHTML = '';
-
       if (!state.thoughts.length) {
         const empty = document.createElement('div');
         empty.className = 'thought-card';
@@ -538,8 +883,7 @@
         root.appendChild(empty);
         return;
       }
-
-      state.thoughts.forEach((entry) => {
+      state.thoughts.forEach(entry => {
         const card = document.createElement('article');
         card.className = 'thought-card';
         card.innerHTML = `
@@ -553,6 +897,8 @@
       });
     }
 
+    // ========== Utilities ==========
+
     function escapeHtml(text) {
       return String(text)
         .replaceAll('&', '&amp;')
@@ -562,25 +908,24 @@
         .replaceAll("'", '&#039;');
     }
 
+    // ========== Events ==========
+
     function bindEvents() {
       $('#startBtn').addEventListener('click', startTimer);
       $('#pauseBtn').addEventListener('click', pauseTimer);
       $('#resetBtn').addEventListener('click', resetTimer);
       $('#skipBtn').addEventListener('click', skipTimer);
+      $('#endBreakBtn').addEventListener('click', endBreak);
 
-      document.querySelectorAll('[data-focus]').forEach((button) => {
-        button.addEventListener('click', () => {
-          const focus = Number(button.dataset.focus);
-          const breakMinutes = Number(button.dataset.break);
-          applyPreset(focus, breakMinutes);
-        });
+      document.querySelectorAll('[data-focus]').forEach(btn => {
+        btn.addEventListener('click', () => applyPreset(Number(btn.dataset.focus), Number(btn.dataset.break)));
       });
 
-      $('#trackerForm').addEventListener('submit', (event) => {
-        event.preventDefault();
-        const name = $('#trackerName').value;
+      $('#trackerForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const name  = $('#trackerName').value;
         const start = Number($('#trackerStart').value);
-        const end = Number($('#trackerEnd').value);
+        const end   = Number($('#trackerEnd').value);
         const error = validateTrackerInput(name, start, end);
         $('#trackerError').textContent = error;
         if (error) return;
@@ -590,40 +935,61 @@
           name: name.trim(),
           start,
           end,
-          completed: [],
+          completed:     [],
+          isDone:        false,
+          dateCreated:   todayStr(),
+          dateCompleted: null,
         });
 
         persistTrackers();
         renderTrackers();
-        event.target.reset();
+        e.target.reset();
       });
 
-      $('#trackerList').addEventListener('click', (event) => {
-        const cell = event.target.closest('[data-id][data-value]');
-        if (!cell) return;
-        toggleTrackerValue(cell.dataset.id, Number(cell.dataset.value));
+      // Active tracker clicks (delegation)
+      $('#trackerList').addEventListener('click', e => {
+        const actionEl = e.target.closest('[data-action]');
+        if (actionEl) {
+          const { action, id } = actionEl.dataset;
+          if (action === 'toggle-extend') {
+            state.extendOpen.has(id) ? state.extendOpen.delete(id) : state.extendOpen.add(id);
+            renderTrackers();
+          } else if (action === 'complete') {
+            completeTracker(id);
+          } else if (action === 'extend-start') {
+            const inp = document.querySelector(`[data-extend-input="${id}"]`);
+            const n = inp ? Math.max(1, parseInt(inp.value, 10) || 1) : 1;
+            extendTrackerStart(id, n);
+          } else if (action === 'extend-end') {
+            const inp = document.querySelector(`[data-extend-input="${id}"]`);
+            const n = inp ? Math.max(1, parseInt(inp.value, 10) || 1) : 1;
+            extendTrackerEnd(id, n);
+          }
+          return;
+        }
+        const cell = e.target.closest('[data-value]');
+        if (cell) toggleTrackerValue(cell.dataset.id, Number(cell.dataset.value));
       });
 
-      $('#thoughtForm').addEventListener('submit', (event) => {
-        event.preventDefault();
+      // Completed tracker clicks (delegation)
+      $('#completedList').addEventListener('click', e => {
+        const btn = e.target.closest('[data-action="reopen"]');
+        if (btn) reopenTracker(btn.dataset.id);
+      });
+
+      $('#thoughtForm').addEventListener('submit', e => {
+        e.preventDefault();
         const body = $('#thoughtBody').value.trim();
         if (!body) return;
-
         state.thoughts.unshift({
           body,
           tag: state.timer.mode === 'focus' ? 'FOCUS' : 'BREAK',
-          time: new Date().toLocaleString([], {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          time: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
         });
-
         state.thoughts = state.thoughts.slice(0, 200);
         persistThoughts();
         renderThoughts();
-        event.target.reset();
+        e.target.reset();
       });
 
       $('#clearThoughtsBtn').addEventListener('click', () => {
@@ -635,13 +1001,17 @@
       window.addEventListener('beforeunload', pauseTimer);
     }
 
+    // ========== Init ==========
+
     function init() {
       loadTimer();
       loadTrackers();
       loadThoughts();
       syncTimerUi();
       renderTrackers();
+      renderCompleted();
       renderThoughts();
+      renderSessionLog();
       bindEvents();
     }
 
